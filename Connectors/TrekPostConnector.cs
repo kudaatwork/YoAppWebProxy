@@ -102,5 +102,50 @@ namespace YoAppWebProxy.Connectors
 
             return trekCardTransactionsByDateResponse;
         }
+
+        public TrekCardBalanceResponse GetCardBalance(TrekCardBalanceRequest trekCardBalanceRequest)
+        {
+            TrekCardBalanceResponse trekCardBalanceResponse = new TrekCardBalanceResponse();
+
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback
+                (
+                    delegate { return true; }
+                );
+
+                string url = String.Format("https://agroyield.trek.engineering/api/transaction/date");
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                httpWebRequest.PreAuthenticate = true;
+                httpWebRequest.Timeout = 120000;
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + Token.StringToken);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "POST";
+                httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
+
+                string json = JsonConvert.SerializeObject(trekCardBalanceRequest);
+
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    streamWriter.Write(json);
+                    streamWriter.Flush();
+                    streamWriter.Close();
+
+                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+                    using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                    {
+                        var result = streamReader.ReadToEnd();
+                        trekCardBalanceResponse = JsonConvert.DeserializeObject<TrekCardBalanceResponse>(result);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                TrekLog.HttpErrorLog(e.Message);
+            }
+
+            return trekCardBalanceResponse;
+        }
     }
 }

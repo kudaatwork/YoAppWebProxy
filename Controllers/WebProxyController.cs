@@ -179,6 +179,24 @@ namespace YoAppWebProxy.Controllers
         public YoAppResponse CbzTrekRedemptionsProxy(YoAppRequest yoAppRequest)
         {
             #region Declared Objects
+            TrekBearerTokenRequest trekBearerTokenRequest = new TrekBearerTokenRequest();
+            TrekBearerTokenResponse trekBearerTokenResponse = new TrekBearerTokenResponse();
+
+            TrekCredentials trekCredentials = new TrekCredentials();
+
+            TrekMethods trekMethods = new TrekMethods();
+
+            TrekCardTransactionsByDateAndCardNumberRequest trekCardTransactionsByDateAndCardNumberRequest = new TrekCardTransactionsByDateAndCardNumberRequest();
+            TrekCardTransactionsByDateAndCardNumberResponse trekCardTransactionsByDateAndCardNumberResponse = new TrekCardTransactionsByDateAndCardNumberResponse();
+
+            TrekCardTransactionsByDateRequest trekCardTransactionsByDateRequest = new TrekCardTransactionsByDateRequest();
+            TrekCardTransactionsByDateResponse trekCardTransactionsByDateResponse = new TrekCardTransactionsByDateResponse();
+
+            TrekPostConnector trekPostConnector = new TrekPostConnector();
+
+            TrekCardBalanceRequest trekCardBalanceRequest = new TrekCardBalanceRequest();
+            TrekCardBalanceResponse trekCardBalanceResponse = new TrekCardBalanceResponse();
+
             YoAppResponse yoAppResponse = new YoAppResponse();
             #endregion
 
@@ -212,118 +230,101 @@ namespace YoAppWebProxy.Controllers
                 }
                 else
                 {
+                    // Authorization --- Get Token
+                    trekBearerTokenRequest.email = trekCredentials.Username;
+                    trekBearerTokenRequest.password = trekCredentials.Password;
+
+                    var token = trekMethods.GetBearerToken(trekBearerTokenRequest);
+
+                    var deserializeTokenResponse = JsonConvert.DeserializeObject<TrekBearerTokenResponse>(token);
+                    Token.StringToken = deserializeTokenResponse.data.access_token;
+
                     switch (yoAppRequest.ServiceId)
                     {
-                        case 1: // Trek Service
+                        case 1: // Devices
 
-                            #region Declared Objects
-                            TrekBearerTokenRequest trekBearerTokenRequest = new TrekBearerTokenRequest();
-                            TrekBearerTokenResponse trekBearerTokenResponse = new TrekBearerTokenResponse();
-                            TrekCredentials trekCredentials = new TrekCredentials();
-                            TrekMethods trekMethods = new TrekMethods();
-                            TrekCardTransactionsByDateAndCardNumberRequest trekCardTransactionsByDateAndCardNumberRequest = new TrekCardTransactionsByDateAndCardNumberRequest();
-                            TrekCardTransactionsByDateAndCardNumberResponse trekCardTransactionsByDateAndCardNumberResponse = new TrekCardTransactionsByDateAndCardNumberResponse();
-                            TrekCardTransactionsByDateRequest trekCardTransactionsByDateRequest = new TrekCardTransactionsByDateRequest();
-                            TrekCardTransactionsByDateResponse trekCardTransactionsByDateResponse = new TrekCardTransactionsByDateResponse();
-                            TrekPostConnector trekPostConnector = new TrekPostConnector();
-                            TrekCardBalanceRequest trekCardBalanceRequest = new TrekCardBalanceRequest();
-                            TrekCardBalanceResponse trekCardBalanceResponse = new TrekCardBalanceResponse();
-                            #endregion
+                            TrekGetConnector trekGetConnector = new TrekGetConnector();
+                            TrekDevicesResponse trekDevicesResponse = new TrekDevicesResponse();
 
-                            // Authorization --- Get Token
-                            trekBearerTokenRequest.email = trekCredentials.Username;
-                            trekBearerTokenRequest.password = trekCredentials.Password;
+                            trekDevicesResponse = trekGetConnector.GetAllTrekDevices();
 
-                            var token = trekMethods.GetBearerToken(trekBearerTokenRequest);
-
-                            var deserializeTokenResponse = JsonConvert.DeserializeObject<TrekBearerTokenResponse>(token);
-                            Token.StringToken = deserializeTokenResponse.data.access_token;
-
-                            switch (yoAppRequest.ActionId)
+                            if (trekDevicesResponse != null)
                             {
-                                case 1: // Devices
+                                yoAppResponse.ResponseCode = "00000";
+                                yoAppResponse.Note = "Success";
+                                yoAppResponse.Description = "All Trek Devices have been fetched for you";
 
-                                    TrekGetConnector trekGetConnector = new TrekGetConnector();
-                                    TrekDevicesResponse trekDevicesResponse = new TrekDevicesResponse();
+                                var serializedDevicesResponse = JsonConvert.SerializeObject(trekDevicesResponse);
 
-                                    trekDevicesResponse = trekGetConnector.GetAllTrekDevices();
+                                yoAppResponse.Narrative = serializedDevicesResponse;
 
-                                    if (trekDevicesResponse != null)
-                                    {
-                                        yoAppResponse.ResponseCode = "00000";
-                                        yoAppResponse.Note = "Success";
-                                        yoAppResponse.Description = "All Trek Devices have been fetched for you";
+                                return yoAppResponse;
+                            }
+                            else
+                            {
+                                yoAppResponse.ResponseCode = "00008";
+                                yoAppResponse.Note = "Failed";
+                                yoAppResponse.Description = "Failed to fetch trek devices";
 
-                                        var serializedDevicesResponse = JsonConvert.SerializeObject(trekDevicesResponse);
-
-                                        yoAppResponse.Narrative = serializedDevicesResponse;
-
-                                        return yoAppResponse;
-                                    }
-                                    else
-                                    {
-                                        yoAppResponse.ResponseCode = "00008";
-                                        yoAppResponse.Note = "Failed";
-                                        yoAppResponse.Description = "Failed to fetch trek devices";
-
-                                        return yoAppResponse;
-                                    }
-
-                                case 2: // Card Balance
-                                    trekCardBalanceRequest.card_number = yoAppRequest.CustomerAccount;
-
-                                    TrekLog.GetTrekCardNumberBalanceRequest(trekCardBalanceRequest);
-
-                                    break;
-
-                                case 3: // Get Card Transactions by Card Number and dates
-
-                                    trekCardTransactionsByDateAndCardNumberRequest.card_number = yoAppRequest.CustomerAccount;
-                                    trekCardTransactionsByDateAndCardNumberRequest.start_date = yoAppRequest.StartDate;
-                                    trekCardTransactionsByDateAndCardNumberRequest.end_date = yoAppRequest.EndDate;
-
-                                    TrekLog.GetTrekTransactionsByDatesAndCardNumberRequest(trekCardTransactionsByDateAndCardNumberRequest);
-
-                                    trekCardTransactionsByDateAndCardNumberResponse = trekPostConnector.GetTrekCardTransactionsByDateAndCardNumber(trekCardTransactionsByDateAndCardNumberRequest);
-
-                                    TrekLog.GetTrekTransactionsByDatesAndCardNumberResponse(trekCardTransactionsByDateAndCardNumberResponse);
-
-                                    var serializedTransactionsByDatesAndCardNumberResponse = JsonConvert.SerializeObject(trekCardTransactionsByDateAndCardNumberResponse);
-
-                                    yoAppResponse.ResponseCode = "00000";
-                                    yoAppResponse.Description = "Success";
-                                    yoAppResponse.Note = "Success";
-                                    yoAppResponse.Narrative = serializedTransactionsByDatesAndCardNumberResponse;
-
-                                    break;
-
-                                case 4: // Get Card Transactions by dates
-                                    trekCardTransactionsByDateRequest.start_date = yoAppRequest.StartDate;
-                                    trekCardTransactionsByDateRequest.end_date = yoAppRequest.EndDate;
-
-                                    TrekLog.GetTrekTransactionsByDatesRequest(trekCardTransactionsByDateRequest);
-
-                                    trekCardTransactionsByDateResponse = trekPostConnector.GetTrekCardTransactionsByDates(trekCardTransactionsByDateRequest);
-
-                                    TrekLog.GetTrekTransactionsByDatesResponse(trekCardTransactionsByDateResponse);
-
-                                    var serializedTransactionsByDatesResponse = JsonConvert.SerializeObject(trekCardTransactionsByDateResponse);
-
-                                    yoAppResponse.ResponseCode = "00000";
-                                    yoAppResponse.Description = "Success";
-                                    yoAppResponse.Note = "Success";
-                                    yoAppResponse.Narrative = serializedTransactionsByDatesResponse;
-
-                                    return yoAppResponse;
+                                return yoAppResponse;
                             }
 
+                        case 2: // Card Balance
+
+                            trekCardBalanceRequest.card_number = yoAppRequest.CustomerAccount;
+
+                            TrekLog.GetTrekCardNumberBalanceRequest(trekCardBalanceRequest);
+
+                            trekCardBalanceResponse = trekPostConnector.GetCardBalance(trekCardBalanceRequest);
+
                             break;
+
+                        case 3: // Get Card Transactions by Card Number and Dates
+
+                            trekCardTransactionsByDateAndCardNumberRequest.card_number = yoAppRequest.CustomerAccount;
+                            trekCardTransactionsByDateAndCardNumberRequest.start_date = yoAppRequest.StartDate;
+                            trekCardTransactionsByDateAndCardNumberRequest.end_date = yoAppRequest.EndDate;
+
+                            TrekLog.GetTrekTransactionsByDatesAndCardNumberRequest(trekCardTransactionsByDateAndCardNumberRequest);
+
+                            trekCardTransactionsByDateAndCardNumberResponse = trekPostConnector.GetTrekCardTransactionsByDateAndCardNumber(trekCardTransactionsByDateAndCardNumberRequest);
+
+                            TrekLog.GetTrekTransactionsByDatesAndCardNumberResponse(trekCardTransactionsByDateAndCardNumberResponse);
+
+                            var serializedTransactionsByDatesAndCardNumberResponse = JsonConvert.SerializeObject(trekCardTransactionsByDateAndCardNumberResponse);
+
+                            yoAppResponse.ResponseCode = "00000";
+                            yoAppResponse.Description = "Success";
+                            yoAppResponse.Note = "Success";
+                            yoAppResponse.Narrative = serializedTransactionsByDatesAndCardNumberResponse;
+
+                            break;
+
+                        case 4: // Get Card Transactions by Dates
+
+                            trekCardTransactionsByDateRequest.start_date = yoAppRequest.StartDate;
+                            trekCardTransactionsByDateRequest.end_date = yoAppRequest.EndDate;
+
+                            TrekLog.GetTrekTransactionsByDatesRequest(trekCardTransactionsByDateRequest);
+
+                            trekCardTransactionsByDateResponse = trekPostConnector.GetTrekCardTransactionsByDates(trekCardTransactionsByDateRequest);
+
+                            TrekLog.GetTrekTransactionsByDatesResponse(trekCardTransactionsByDateResponse);
+
+                            var serializedTransactionsByDatesResponse = JsonConvert.SerializeObject(trekCardTransactionsByDateResponse);
+
+                            yoAppResponse.ResponseCode = "00000";
+                            yoAppResponse.Description = "Success";
+                            yoAppResponse.Note = "Success";
+                            yoAppResponse.Narrative = serializedTransactionsByDatesResponse;
+
+                            return yoAppResponse;
                     }
                 }
 
                 return yoAppResponse;
             }
-        }        
+        }
 
         /// <summary>
         /// CBZ API Requests and Responses
@@ -505,7 +506,7 @@ namespace YoAppWebProxy.Controllers
         /// </summary>
         /// <param name="yoAppRequest"></param>
         /// <returns></returns>
-        [Route("api/yoapp/new-field")]
+        [Route("api/agribank/bulk-payments")]
         [HttpPost]
         public YoAppResponse AgriBankBulkPaymentsProxy(YoAppRequest yoAppRequest)
         {
@@ -577,7 +578,6 @@ namespace YoAppWebProxy.Controllers
                             yoAppResponse.Narrative = serializedResponse;
 
                             break;
-
                     }
                 }
             }
@@ -630,15 +630,10 @@ namespace YoAppWebProxy.Controllers
                 {
                     switch (yoAppRequest.ServiceId)
                     {
+                        case 1: // Get Merchants
 
-                        case 1:
-
-                            switch (yoAppRequest.ActionId)
-                            {
-                                case 1: // Get Merchants
-
-                                    #region Declared List
-                                    List<Merchants> merchantsList = new List<Merchants>
+                            #region Declared List
+                            List<Merchants> merchantsList = new List<Merchants>
                                                 {
                                                     new Merchants{ Merchant = "ZETDC", Product = "ZETDC_PREPAID", SupportsCustomerInfo = true },
                                                     new Merchants{ Merchant = "NETONE", Product = "NETONE_AIRTIME", SupportsCustomerInfo = false },
@@ -654,114 +649,111 @@ namespace YoAppWebProxy.Controllers
                                                     new Merchants{ Merchant = "GWERU", Product = "GWERU", SupportsCustomerInfo = true }
 
                                                 };
-                                    #endregion
+                            #endregion
 
-                                    var serializedMerchantsList = JsonConvert.SerializeObject(merchantsList);
-                                    yoAppResponse.ResponseCode = "00000";
-                                    yoAppResponse.Description = "Merchant List Returned Successfully! Check in the Narrative Object";
-                                    yoAppResponse.Narrative = serializedMerchantsList;
+                            var serializedMerchantsList = JsonConvert.SerializeObject(merchantsList);
+                            yoAppResponse.ResponseCode = "00000";
+                            yoAppResponse.Description = "Merchant List Returned Successfully! Check in the Narrative Object";
+                            yoAppResponse.Narrative = serializedMerchantsList;
 
-                                    return yoAppResponse;
+                            return yoAppResponse;
 
-                                case 2: // API Calls
+                        case 2: // API Calls
 
-                                    #region Declared Objects
-                                    ESolutionsRequest eSolutionsRequest = new ESolutionsRequest();
-                                    ESolutionsApiObjects eSolutionsApiObjects = new ESolutionsApiObjects();
-                                    ESolutionsMethods eSolutionsMethods = new ESolutionsMethods();
-                                    #endregion
+                            #region Declared Objects
+                            ESolutionsRequest eSolutionsRequest = new ESolutionsRequest();
+                            ESolutionsApiObjects eSolutionsApiObjects = new ESolutionsApiObjects();
+                            ESolutionsMethods eSolutionsMethods = new ESolutionsMethods();
+                            #endregion
 
-                                    if (String.IsNullOrEmpty(yoAppRequest.MTI)) // without mti and processingCode
-                                    {
-                                        string message = "Your request does not have an mti e.g. 0200. " +
-                                            "Please put the correct mti and resend your request";
+                            if (String.IsNullOrEmpty(yoAppRequest.MTI)) // without mti and processingCode
+                            {
+                                string message = "Your request does not have an mti e.g. 0200. " +
+                                    "Please put the correct mti and resend your request";
 
-                                        Request.CreateResponse(HttpStatusCode.OK, message);
+                                Request.CreateResponse(HttpStatusCode.OK, message);
 
-                                        yoAppResponse.ResponseCode = "00008";
-                                        yoAppResponse.Note = "Failed";
-                                        yoAppResponse.Description = message;
+                                yoAppResponse.ResponseCode = "00008";
+                                yoAppResponse.Note = "Failed";
+                                yoAppResponse.Description = message;
 
-                                        var serializedRequest = JsonConvert.SerializeObject(eSolutionsRequest);
+                                var serializedRequest = JsonConvert.SerializeObject(eSolutionsRequest);
 
-                                        yoAppResponse.Narrative = serializedRequest;
+                                yoAppResponse.Narrative = serializedRequest;
 
-                                        return yoAppResponse;
-                                    }
-                                    else // With mti and processingCode
-                                    {
-                                        eSolutionsRequest.mti = yoAppRequest.MTI;
-                                        eSolutionsRequest.processingCode = yoAppRequest.ProcessingCode;
-                                        eSolutionsRequest.vendorReference = yoAppRequest.TransactionRef;
-                                        eSolutionsRequest.transactionAmount = (long)yoAppRequest.Amount;
+                                return yoAppResponse;
+                            }
+                            else // With mti and processingCode
+                            {
+                                eSolutionsRequest.mti = yoAppRequest.MTI;
+                                eSolutionsRequest.processingCode = yoAppRequest.ProcessingCode;
+                                eSolutionsRequest.vendorReference = yoAppRequest.TransactionRef;
+                                eSolutionsRequest.transactionAmount = (long)yoAppRequest.Amount;
 
-                                        switch (eSolutionsRequest.mti)
+                                switch (eSolutionsRequest.mti)
+                                {
+                                    case "0200": // Transaction Request
+
+                                        switch (eSolutionsRequest.processingCode)
                                         {
-                                            case "0200": // Transaction Request
-
-                                                switch (eSolutionsRequest.processingCode)
-                                                {
-                                                    case "300000": // Vendor Balance Enquiry
-                                                        yoAppResponse = eSolutionsMethods.VendorBalanceEnquiry(eSolutionsRequest);
-                                                        break;
-
-                                                    case "310000": // Customer Information
-                                                        yoAppResponse = eSolutionsMethods.CustomerInformation(eSolutionsRequest);
-                                                        break;
-
-                                                    case "320000": // Last Customer Token
-                                                        yoAppResponse = eSolutionsMethods.CustomerInformation(eSolutionsRequest);
-                                                        break;
-
-                                                    case "U50000": // Purchase Token
-                                                        yoAppResponse = eSolutionsMethods.ServicePurchase(eSolutionsRequest);
-                                                        break;
-
-                                                    case "520000": // Direct Payment for Service e.g. Airtime
-                                                        yoAppResponse = eSolutionsMethods.DirectServicePurchase(eSolutionsRequest);
-                                                        break;
-
-                                                    case "":
-                                                        string message = "Your request does not have an processingCode e.g. 300000. " +
-                                                            "Please put the correct processingCode and resend your request";
-
-                                                        Request.CreateResponse(HttpStatusCode.OK, message);
-
-                                                        yoAppResponse.ResponseCode = "00008";
-                                                        yoAppResponse.Note = "Failed";
-                                                        yoAppResponse.Description = message;
-
-                                                        var serializedRequest = JsonConvert.SerializeObject(eSolutionsRequest);
-
-                                                        yoAppResponse.Narrative = serializedRequest;
-
-                                                        return yoAppResponse;
-                                                }
-
+                                            case "300000": // Vendor Balance Enquiry
+                                                yoAppResponse = eSolutionsMethods.VendorBalanceEnquiry(eSolutionsRequest);
                                                 break;
 
-                                            default:
+                                            case "310000": // Customer Information
+                                                yoAppResponse = eSolutionsMethods.CustomerInformation(eSolutionsRequest);
+                                                break;
+
+                                            case "320000": // Last Customer Token
+                                                yoAppResponse = eSolutionsMethods.CustomerInformation(eSolutionsRequest);
+                                                break;
+
+                                            case "U50000": // Purchase Token
+                                                yoAppResponse = eSolutionsMethods.ServicePurchase(eSolutionsRequest);
+                                                break;
+
+                                            case "520000": // Direct Payment for Service e.g. Airtime
+                                                yoAppResponse = eSolutionsMethods.DirectServicePurchase(eSolutionsRequest);
+                                                break;
+
+                                            case "":
+                                                string message = "Your request does not have an processingCode e.g. 300000. " +
+                                                    "Please put the correct processingCode and resend your request";
+
+                                                Request.CreateResponse(HttpStatusCode.OK, message);
 
                                                 yoAppResponse.ResponseCode = "00008";
                                                 yoAppResponse.Note = "Failed";
-                                                yoAppResponse.Description = "Request did not follow proper channels";
+                                                yoAppResponse.Description = message;
+
+                                                var serializedRequest = JsonConvert.SerializeObject(eSolutionsRequest);
+
+                                                yoAppResponse.Narrative = serializedRequest;
 
                                                 return yoAppResponse;
                                         }
-                                    }
 
-                                    break;
+                                        break;
 
-                                default:
+                                    default:
 
-                                    yoAppResponse.ResponseCode = "00008";
-                                    yoAppResponse.Note = "Failed";
-                                    yoAppResponse.Description = "Request did not follow proper channels";
+                                        yoAppResponse.ResponseCode = "00008";
+                                        yoAppResponse.Note = "Failed";
+                                        yoAppResponse.Description = "Request did not follow proper channels";
 
-                                    return yoAppResponse;
+                                        return yoAppResponse;
+                                }
                             }
 
                             break;
+
+                        default:
+
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Note = "Failed";
+                            yoAppResponse.Description = "Request did not follow proper channels";
+
+                            return yoAppResponse;
                     }
                 }
             }

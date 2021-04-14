@@ -521,7 +521,39 @@
             YoApp WebProxy Documentation 
             </summary>
         </member>
-        <member name="M:YoAppWebProxy.Controllers.WebProxyController.Proxy(YoAppWebProxy.Models.YoAppRequest)">
+        <member name="M:YoAppWebProxy.Controllers.WebProxyController.RealTimeVoucherPaymentsProxy(YoAppWebProxy.Models.YoAppRequest)">
+            <summary>
+            Receives YoApp Response, 
+            Structures response to match client's Request, 
+            Sends client's Request to the Client's URL endpoint,
+            Receives client's Response
+            Structures client's Response to match YoApp's Request
+            Sends Request to YoApp
+            </summary>
+            <param name="yoAppRequest">Request from YoApp</param>
+        </member>
+        <member name="M:YoAppWebProxy.Controllers.WebProxyController.CbzTrekRedemptionsProxy(YoAppWebProxy.Models.YoAppRequest)">
+            <summary>
+            CBZ API Requests and Responses
+            </summary>
+            <param name="yoAppRequest"></param>
+            <returns></returns>
+        </member>
+        <member name="M:YoAppWebProxy.Controllers.WebProxyController.NewFieldProxy(YoAppWebProxy.Models.YoAppRequest)">
+            <summary>
+            CBZ API Requests and Responses
+            </summary>
+            <param name="yoAppRequest"></param>
+            <returns></returns>
+        </member>
+        <member name="M:YoAppWebProxy.Controllers.WebProxyController.AgriBankBulkPaymentsProxy(YoAppWebProxy.Models.YoAppRequest)">
+            <summary>
+            CBZ API Requests and Responses
+            </summary>
+            <param name="yoAppRequest"></param>
+            <returns></returns>
+        </member>
+        <member name="M:YoAppWebProxy.Controllers.WebProxyController.ESolutionsServicesProxy(YoAppWebProxy.Models.YoAppRequest)">
             <summary>
             CBZ API Requests and Responses
             </summary>

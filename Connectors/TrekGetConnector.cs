@@ -31,23 +31,16 @@ namespace YoAppWebProxy.Connectors
                 httpWebRequest.Headers.Add("Authorization", "Bearer " + Token.StringToken);
                 httpWebRequest.ContentType = "application/json";
                 httpWebRequest.Method = "GET";
-                httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;                
+                httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
 
-                var json = JsonConvert.SerializeObject(String.Empty);
+                HttpWebResponse httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
 
-                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                using (Stream stream = httpResponse.GetResponseStream())
+
+                using (StreamReader streamReader = new StreamReader(httpResponse.GetResponseStream()))
                 {
-                    streamWriter.Write(json);
-                    streamWriter.Flush();
-                    streamWriter.Close();
-
-                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-
-                    using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
-                    {
-                        var result = streamReader.ReadToEnd();
-                        trekDevicesResponse = JsonConvert.DeserializeObject<TrekDevicesResponse>(result);
-                    }
+                    var result = streamReader.ReadToEnd();
+                    trekDevicesResponse = JsonConvert.DeserializeObject<TrekDevicesResponse>(result);
                 }
             }
             catch (Exception e)
