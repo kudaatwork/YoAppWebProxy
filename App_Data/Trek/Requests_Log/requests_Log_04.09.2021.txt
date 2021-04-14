@@ -1,0 +1,4 @@
+DateTimeRequestLogged: 04/09/2021/ 19:38:10,RequestObject: {"card_number":"6094480010000004007","start_date":"2021-02-01","end_date":"2021-05-01"}
+=============================================
+DateTimeRequestLogged: 04/09/2021/ 19:49:48,RequestObject: {"start_date":"2021-02-01","end_date":"2021-05-01"}
+=============================================

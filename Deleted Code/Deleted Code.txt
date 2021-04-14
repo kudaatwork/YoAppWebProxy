@@ -1,0 +1,356 @@
+<============================ CBZ Real-Time-Voucher Payments Code ============================>
+
+/// <summary>
+        /// Receives YoApp Response, 
+        /// Structures response to match client's Request, 
+        /// Sends client's Request to the Client's URL endpoint,
+        /// Receives client's Response
+        /// Structures client's Response to match YoApp's Request
+        /// Sends Request to YoApp
+        /// </summary>
+        /// <param name="yoAppRequest">Request from YoApp</param>
+        [Route("api/CBZ/Real-Time-Voucher-Payments")]
+        public YoAppResponse Post(YoAppRequest yoAppRequest)
+        {
+            #region Declared Objects
+            YoAppResponse yoAppResponse = new YoAppResponse();
+            CbzPaymentRequest cbzRequest = new CbzPaymentRequest();
+            CbzVoucherPaymentDetails voucherPaymentDetails = new CbzVoucherPaymentDetails();
+            CbzConnector cbzAPIConnector = new CbzConnector();
+            CbzMethods cbzMethods = new CbzMethods();
+            #endregion
+
+            if (yoAppRequest != null) // && yoAppRequest.ResponseCode == "00000"
+            {
+                String hostName = String.Empty;
+                hostName = Dns.GetHostName();
+                var yoAppIp = SiteIdentity.GetCBZIpAddress(hostName);
+
+                if (yoAppIp.ResponseCode != "00000")
+                {
+                    return yoAppIp;
+                }
+                else
+                {
+                    deserializedYoAppNarrative = JsonConvert.DeserializeObject<Narrative>(yoAppRequest.Narrative);
+
+                    //cbzRequest.VoucherPaymentDetails = new List<VoucherPaymentDetails>();
+
+                    //cbzRequest.VoucherPaymentDetails.Add(new VoucherPaymentDetails
+                    //{
+                    //    referenceNumber = yoAppResponse.TransactionRef,
+                    //    username = WebServiceObjects.Username,
+                    //    password = WebServiceObjects.Password,
+                    //    ReceiverNationalId = deserializedApiResponse.ReceiversIdentification,
+                    //    CropType = GetCropType(deserializedApiResponse.ProductDetails),
+                    //    Summary = GetProductsList(deserializedApiResponse.Products)
+                    //});
+
+                    voucherPaymentDetails.referenceNumber = yoAppRequest.TransactionRef;
+                    voucherPaymentDetails.username = CbzCredentials.Username;
+                    voucherPaymentDetails.password = CbzCredentials.Password;
+                    voucherPaymentDetails.ReceiverNationalId = deserializedYoAppNarrative.ReceiversIdentification;
+
+                    voucherPaymentDetails.CropType = cbzMethods.GetCropType(deserializedYoAppNarrative.ProductDetails);
+
+                    voucherPaymentDetails.Summary = new List<Product>();
+
+                    foreach (var item in deserializedYoAppNarrative.Products)
+                    {
+                        voucherPaymentDetails.Summary.Add(new Product { ProductRedeemed = item.Name, QuantityRedeemed = item.Collected, PricePerUnit = item.Price });
+                    }
+
+                    CbzLog.Request(voucherPaymentDetails);
+
+                    var vPaymentDetails = new List<CbzVoucherPaymentDetails>();
+                    vPaymentDetails.Add(voucherPaymentDetails);
+
+                    var apiResponse = cbzAPIConnector.GetCBZResponse(vPaymentDetails);
+
+                    if (apiResponse.ResponseCode == "00")
+                    {
+                        var serilizedApiResponse = JsonConvert.SerializeObject(apiResponse);
+
+                        yoAppResponse.ResponseCode = "00000";
+                        yoAppResponse.Note = "Success";
+                        yoAppResponse.Description = apiResponse.RespnseMessage;
+                        yoAppResponse.Narrative = serilizedApiResponse;
+
+                        CbzLog.Response(voucherPaymentDetails);
+
+                        return yoAppResponse;
+                    }
+
+                    if (apiResponse.ResponseCode == "05")
+                    {
+                        var serilizedApiResponse = JsonConvert.SerializeObject(apiResponse);
+
+                        yoAppResponse.ResponseCode = "00008";
+                        yoAppResponse.Note = "Failed";
+                        yoAppResponse.Description = apiResponse.RespnseMessage;
+                        yoAppResponse.Narrative = serilizedApiResponse;
+
+                        CbzLog.Response(voucherPaymentDetails);
+
+                        return yoAppResponse;
+                    }
+
+                    if (apiResponse.ResponseCode == "95")
+                    {
+                        var serilizedApiResponse = JsonConvert.SerializeObject(apiResponse);
+
+                        yoAppResponse.ResponseCode = "00008";
+                        yoAppResponse.Note = "Failed";
+                        yoAppResponse.Description = apiResponse.RespnseMessage;
+                        yoAppResponse.Narrative = serilizedApiResponse;
+
+                        CbzLog.Response(voucherPaymentDetails);
+
+                        return yoAppResponse;
+                    }
+                }
+            }
+
+            return yoAppResponse;
+        }
+
+<=======================================Agribank Connection===================================>
+
+ /// <summary>
+        /// Agribank Proxy
+        /// </summary>
+        /// <returns></returns>
+        [Route("api/agribank")]
+        [HttpPost]
+        public YoAppResponse AgribankProxy(YoAppRequest yoAppRequest)
+        {
+            #region Objects to use for the Application
+            AgribankMethods agribankMethods = new AgribankMethods();
+            AgribankCredentials agribankCredentials = new AgribankCredentials();
+            AgribankPostConnector postConnector = new AgribankPostConnector();
+            AgribankTokenRequest agribankTokenRequest = new AgribankTokenRequest();
+            AgribankPaymentRequest agribankPaymentRequest = new AgribankPaymentRequest();
+            AgribankPaymentResponse agribankPaymentResponse = new AgribankPaymentResponse();
+            YoAppResponse yoAppResponse = new YoAppResponse();
+            #endregion
+
+            String hostName = String.Empty;
+            hostName = Dns.GetHostName();
+            var yoAppIp = SiteIdentity.GetAgriBankIpAddress(hostName);
+
+            if (yoAppIp.ResponseCode != "00000")
+            {
+                return yoAppIp;
+            }
+            else
+            {
+                if (yoAppRequest == null)
+                {
+                    string message = "Received Nothing. Your request object is null";
+
+                    Request.CreateResponse(HttpStatusCode.OK, message);
+
+                    yoAppResponse.ResponseCode = "00008";
+                    yoAppResponse.Note = "Failed";
+                    yoAppResponse.Description = message;
+
+                    var serializedRequest = JsonConvert.SerializeObject(yoAppRequest);
+
+                    yoAppResponse.Narrative = serializedRequest;
+
+                    return yoAppResponse;
+                }
+                else
+                {
+                    agribankTokenRequest.Username = agribankCredentials.Username;
+                    agribankTokenRequest.Password = agribankCredentials.Password;
+
+                    // Get Token
+                    var token = agribankMethods.GetBearerToken(agribankTokenRequest);
+                    Token.StringToken = token;
+
+                    agribankPaymentRequest.batch_currency = yoAppRequest.Currency;
+                    agribankPaymentRequest.batch_reference = yoAppRequest.TransactionRef;
+                    agribankPaymentRequest.destination_acc = agribankCredentials.ClientName;
+
+                    AgriBankLog.Request(agribankPaymentRequest);
+
+                    var paymentResponse = postConnector.PostPayment(agribankPaymentRequest);
+
+                    AgriBankLog.Response(agribankPaymentResponse);
+
+                    var serializedResponse = JsonConvert.SerializeObject(paymentResponse);
+
+                    yoAppResponse.Narrative = serializedResponse;
+                }
+            }
+
+            return yoAppResponse;
+        }
+
+
+<========================================Get Merchants Code=====================================>
+
+/// <summary>
+        /// Get a List of E Solution's Merchants
+        /// </summary>
+        /// <returns></returns>
+        [Route("api/esolutions/merchants")]
+        [HttpPost]
+        public YoAppResponse Merchants()
+        {
+            #region Declared Objects
+            List<Merchants> merchantsList = new List<Merchants>
+         {
+             new Merchants{ Merchant = "ZETDC", Product = "ZETDC_PREPAID", SupportsCustomerInfo = true },
+             new Merchants{ Merchant = "NETONE", Product = "NETONE_AIRTIME", SupportsCustomerInfo = false },
+             new Merchants{ Merchant = "ECONET", Product = "ECONET_AIRTIME", SupportsCustomerInfo = false },
+             new Merchants{ Merchant = "TELECEL", Product = "TELECEL", SupportsCustomerInfo = false },
+             new Merchants{ Merchant = "EDGARS", Product = "EDGARS", SupportsCustomerInfo = false },
+             new Merchants{ Merchant = "EDGARS", Product = "JET", SupportsCustomerInfo = false },
+             new Merchants{ Merchant = "ZOL", Product = "ZOL", SupportsCustomerInfo = true },
+             new Merchants{ Merchant = "TELONE", Product = "", SupportsCustomerInfo = true },
+             new Merchants{ Merchant = "DSTV", Product = "DSTV", SupportsCustomerInfo = true },
+             new Merchants{ Merchant = "BYOBILL", Product = "BYOBILL", SupportsCustomerInfo = true },
+             new Merchants{ Merchant = "HARARE", Product = "HARARE", SupportsCustomerInfo = true },
+             new Merchants{ Merchant = "GWERU", Product = "GWERU", SupportsCustomerInfo = true }
+
+         };
+            YoAppResponse yoAppResponse = new YoAppResponse();
+            #endregion
+
+            String hostName = String.Empty;
+            hostName = Dns.GetHostName();
+            var yoAppIp = SiteIdentity.GetESolutionsIpAddress(hostName);
+
+            var serializedMerchantsList = JsonConvert.SerializeObject(merchantsList);
+            yoAppResponse.ResponseCode = "00000";
+            yoAppResponse.Description = "Merchant List Returned Successfully! Check in the Narrative Object";
+            yoAppResponse.Narrative = serializedMerchantsList;
+
+            return yoAppResponse;
+        }
+
+<==============================================E Solutions API=====================================>
+
+ /// <summary>
+        /// E Solutions' Proxy
+        /// </summary>
+        /// <returns></returns>
+        [Route("api/esolutions")]
+        [HttpPost]
+        public YoAppResponse EsolutionsProxy(YoAppRequest yoAppRequest)
+        {
+            #region Declared Objects
+            ESolutionsRequest eSolutionsRequest = new ESolutionsRequest();
+            ESolutionsApiObjects eSolutionsApiObjects = new ESolutionsApiObjects();
+            ESolutionsMethods eSolutionsMethods = new ESolutionsMethods();
+            YoAppResponse yoAppResponse = new YoAppResponse();
+            #endregion
+
+            String hostName = String.Empty;
+            hostName = Dns.GetHostName();
+            var yoAppIp = SiteIdentity.GetESolutionsIpAddress(hostName);
+
+            if (yoAppIp.ResponseCode != "00000")
+            {
+                return yoAppIp;
+            }
+            else
+            {
+                if (yoAppRequest == null)
+                {
+                    string message = "Received Nothing. Your request object is null";
+
+                    Request.CreateResponse(HttpStatusCode.OK, message);
+
+                    yoAppResponse.ResponseCode = "00008";
+                    yoAppResponse.Note = "Failed";
+                    yoAppResponse.Description = message;
+
+                    var serializedRequest = JsonConvert.SerializeObject(eSolutionsRequest);
+
+                    yoAppResponse.Narrative = serializedRequest;
+
+                    return yoAppResponse;
+                }
+                else
+                {
+                    if (String.IsNullOrEmpty(yoAppRequest.MTI)) // without mti and processingCode
+                    {
+                        string message = "Your request does not have an mti e.g. 0200. " +
+                            "Please put the correct mti and resend your request";
+
+                        Request.CreateResponse(HttpStatusCode.OK, message);
+
+                        yoAppResponse.ResponseCode = "00008";
+                        yoAppResponse.Note = "Failed";
+                        yoAppResponse.Description = message;
+
+                        var serializedRequest = JsonConvert.SerializeObject(eSolutionsRequest);
+
+                        yoAppResponse.Narrative = serializedRequest;
+
+                        return yoAppResponse;
+                    }
+                    else // With mti and processingCode
+                    {
+                        eSolutionsRequest.mti = yoAppRequest.MTI;
+                        eSolutionsRequest.processingCode = yoAppRequest.ProcessingCode;
+                        eSolutionsRequest.vendorReference = yoAppRequest.TransactionRef;
+                        eSolutionsRequest.transactionAmount = (long)yoAppRequest.Amount;
+
+                        switch (eSolutionsRequest.mti)
+                        {
+                            case "0200": // Transaction Request
+
+                                switch (eSolutionsRequest.processingCode)
+                                {
+                                    case "300000": // Vendor Balance Enquiry
+                                        yoAppResponse = eSolutionsMethods.VendorBalanceEnquiry(eSolutionsRequest);
+                                        break;
+
+                                    case "310000": // Customer Information
+                                        yoAppResponse = eSolutionsMethods.CustomerInformation(eSolutionsRequest);
+                                        break;
+
+                                    case "320000": // Last Customer Token
+                                        yoAppResponse = eSolutionsMethods.CustomerInformation(eSolutionsRequest);
+                                        break;
+
+                                    case "U50000": // Purchase Token
+                                        yoAppResponse = eSolutionsMethods.ServicePurchase(eSolutionsRequest);
+                                        break;
+
+                                    case "520000": // Direct Payment for Service e.g. Airtime
+                                        yoAppResponse = eSolutionsMethods.DirectServicePurchase(eSolutionsRequest);
+                                        break;
+
+                                    case "":
+                                        string message = "Your request does not have an processingCode e.g. 300000. " +
+                                            "Please put the correct processingCode and resend your request";
+
+                                        Request.CreateResponse(HttpStatusCode.OK, message);
+
+                                        yoAppResponse.ResponseCode = "00008";
+                                        yoAppResponse.Note = "Failed";
+                                        yoAppResponse.Description = message;
+
+                                        var serializedRequest = JsonConvert.SerializeObject(eSolutionsRequest);
+
+                                        yoAppResponse.Narrative = serializedRequest;
+
+                                        return yoAppResponse;
+                                }
+
+                                break;
+
+                            default:
+                                break;
+                        }
+                    }
+                }
+            }
+
+            return yoAppResponse;
+        }
