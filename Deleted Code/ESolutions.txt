@@ -1,0 +1,130 @@
+case "5-0001-0000502": // E Solutions
+
+                                switch (yoAppRequest.ServiceId)
+                                {
+                                    case 1:
+
+                                        switch (yoAppRequest.ActionId)
+                                        {
+                                            case 1: // Get Merchants
+
+                                                List<Merchants> merchantsList = new List<Merchants>
+                                                {
+                                                    new Merchants{ Merchant = "ZETDC", Product = "ZETDC_PREPAID", SupportsCustomerInfo = true },
+                                                    new Merchants{ Merchant = "NETONE", Product = "NETONE_AIRTIME", SupportsCustomerInfo = false },
+                                                    new Merchants{ Merchant = "ECONET", Product = "ECONET_AIRTIME", SupportsCustomerInfo = false },
+                                                    new Merchants{ Merchant = "TELECEL", Product = "TELECEL", SupportsCustomerInfo = false },
+                                                    new Merchants{ Merchant = "EDGARS", Product = "EDGARS", SupportsCustomerInfo = false },
+                                                    new Merchants{ Merchant = "EDGARS", Product = "JET", SupportsCustomerInfo = false },
+                                                    new Merchants{ Merchant = "ZOL", Product = "ZOL", SupportsCustomerInfo = true },
+                                                    new Merchants{ Merchant = "TELONE", Product = "", SupportsCustomerInfo = true },
+                                                    new Merchants{ Merchant = "DSTV", Product = "DSTV", SupportsCustomerInfo = true },
+                                                    new Merchants{ Merchant = "BYOBILL", Product = "BYOBILL", SupportsCustomerInfo = true },
+                                                    new Merchants{ Merchant = "HARARE", Product = "HARARE", SupportsCustomerInfo = true },
+                                                    new Merchants{ Merchant = "GWERU", Product = "GWERU", SupportsCustomerInfo = true }
+
+                                                };
+
+                                                var serializedMerchantsList = JsonConvert.SerializeObject(merchantsList);
+                                                yoAppResponse.ResponseCode = "00000";
+                                                yoAppResponse.Description = "Merchant List Returned Successfully! Check in the Narrative Object";
+                                                yoAppResponse.Narrative = serializedMerchantsList;
+
+                                                return yoAppResponse;
+
+                                            case 2: // API Calls
+
+                                                #region Declared Objects
+                                                ESolutionsRequest eSolutionsRequest = new ESolutionsRequest();
+                                                ESolutionsApiObjects eSolutionsApiObjects = new ESolutionsApiObjects();
+                                                ESolutionsMethods eSolutionsMethods = new ESolutionsMethods();
+                                                #endregion
+
+                                                if (String.IsNullOrEmpty(yoAppRequest.MTI)) // without mti and processingCode
+                                                {
+                                                    string message = "Your request does not have an mti e.g. 0200. " +
+                                                        "Please put the correct mti and resend your request";
+
+                                                    Request.CreateResponse(HttpStatusCode.OK, message);
+
+                                                    yoAppResponse.ResponseCode = "00008";
+                                                    yoAppResponse.Note = "Failed";
+                                                    yoAppResponse.Description = message;
+
+                                                    var serializedRequest = JsonConvert.SerializeObject(eSolutionsRequest);
+
+                                                    yoAppResponse.Narrative = serializedRequest;
+
+                                                    return yoAppResponse;
+                                                }
+                                                else // With mti and processingCode
+                                                {
+                                                    eSolutionsRequest.mti = yoAppRequest.MTI;
+                                                    eSolutionsRequest.processingCode = yoAppRequest.ProcessingCode;
+                                                    eSolutionsRequest.vendorReference = yoAppRequest.TransactionRef;
+                                                    eSolutionsRequest.transactionAmount = (long)yoAppRequest.Amount;
+
+                                                    switch (eSolutionsRequest.mti)
+                                                    {
+                                                        case "0200": // Transaction Request
+
+                                                            switch (eSolutionsRequest.processingCode)
+                                                            {
+                                                                case "300000": // Vendor Balance Enquiry
+                                                                    yoAppResponse = eSolutionsMethods.VendorBalanceEnquiry(eSolutionsRequest);
+                                                                    break;
+
+                                                                case "310000": // Customer Information
+                                                                    yoAppResponse = eSolutionsMethods.CustomerInformation(eSolutionsRequest);
+                                                                    break;
+
+                                                                case "320000": // Last Customer Token
+                                                                    yoAppResponse = eSolutionsMethods.CustomerInformation(eSolutionsRequest);
+                                                                    break;
+
+                                                                case "U50000": // Purchase Token
+                                                                    yoAppResponse = eSolutionsMethods.ServicePurchase(eSolutionsRequest);
+                                                                    break;
+
+                                                                case "520000": // Direct Payment for Service e.g. Airtime
+                                                                    yoAppResponse = eSolutionsMethods.DirectServicePurchase(eSolutionsRequest);
+                                                                    break;
+
+                                                                case "":
+                                                                    string message = "Your request does not have an processingCode e.g. 300000. " +
+                                                                        "Please put the correct processingCode and resend your request";
+
+                                                                    Request.CreateResponse(HttpStatusCode.OK, message);
+
+                                                                    yoAppResponse.ResponseCode = "00008";
+                                                                    yoAppResponse.Note = "Failed";
+                                                                    yoAppResponse.Description = message;
+
+                                                                    var serializedRequest = JsonConvert.SerializeObject(eSolutionsRequest);
+
+                                                                    yoAppResponse.Narrative = serializedRequest;
+
+                                                                    return yoAppResponse;
+                                                            }
+
+                                                            break;
+
+                                                        default:
+                                                            break;
+                                                    }
+                                                }
+
+                                                break;
+
+                                            default:
+                                                break;
+                                        }
+
+                                        break;
+
+
+                                    default:
+                                        break;
+                                }
+
+                                break;

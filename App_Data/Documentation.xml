@@ -528,23 +528,5 @@
             <param name="yoAppRequest"></param>
             <returns></returns>
         </member>
-        <member name="M:YoAppWebProxy.Controllers.WebProxyController.Merchants">
-            <summary>
-            Get a List of E Solution's Merchants
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:YoAppWebProxy.Controllers.WebProxyController.EsolutionsProxy(YoAppWebProxy.Models.YoAppRequest)">
-            <summary>
-            E Solutions' Proxy
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:YoAppWebProxy.Controllers.WebProxyController.AgribankProxy(YoAppWebProxy.Models.YoAppRequest)">
-            <summary>
-            Agribank Proxy
-            </summary>
-            <returns></returns>
-        </member>
     </members>
 </doc>

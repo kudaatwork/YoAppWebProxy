@@ -1,0 +1,123 @@
+ case 3: // CBZ Service (External Column Service)
+
+                            var fuelCardNumber = "";
+
+                            var dateTimeNow = DateTime.Now.ToString();
+                            var dateTimeNowToBeLogged = DateTime.Parse(dateTimeNow, CultureInfo.InvariantCulture).ToString("MM/dd/yyyy/ HH:mm:ss");
+                            var dateTimeNowFileName = DateTime.Parse(dateTimeNow, CultureInfo.InvariantCulture).ToString("MM.dd.yyyy");
+
+                            var serializedRequest = JsonConvert.SerializeObject(yoAppRequest);
+
+                            var fileName = "trek_cards";
+                            var logFileName = "cards_log";
+
+                            string filePath = HttpContext.Current.Server.MapPath("~/App_Data/CBZ/Fuel_Cards/" + fileName + ".txt");
+
+                            string logFilePath = HttpContext.Current.Server.MapPath("~/App_Data/CBZ/Fuel_Cards_Log/" + logFileName + "_" + dateTimeNowFileName + ".txt");
+
+                            var logString = "DateTimeCardNumberLogged: " + dateTimeNowToBeLogged + "," + "ServiceProvider: " + yoAppRequest.ServiceProvider + ","
+                                + "ServiceId: " + yoAppRequest.ServiceId + "," + "ActionId: " + yoAppRequest.ActionId + "Fuel Card Number Allocated: " + fuelCardNumber
+                                + "RequestObject: " + serializedRequest;
+
+                            string[] firstlines = File.ReadAllLines(filePath);
+
+                            try
+                            {
+                                if (File.Exists(filePath))
+                                {
+                                    if (firstlines == null)
+                                    {
+                                        yoAppResponse.CustomerAccount = fuelCardNumber;
+
+                                        yoAppResponse.ResponseCode = "00008";
+                                        yoAppResponse.Note = "Failed";
+                                        yoAppResponse.Description = "All card numbers have been allocated, we have run out of card numbers";
+
+                                        var serializedResponse = JsonConvert.SerializeObject(yoAppRequest);
+
+                                        yoAppResponse.Narrative = serializedResponse;
+
+                                        return yoAppResponse;
+                                    }
+                                    else
+                                    {
+                                        List<string> lines = new List<string>(firstlines);
+
+                                        fuelCardNumber = lines[0];
+
+                                        lines.Remove(lines[0]);
+
+                                        using (StreamWriter streamWriter = File.AppendText(logFilePath))
+                                        {
+                                            streamWriter.WriteLine(logString);
+                                            streamWriter.WriteLine("=============================================");
+                                        }
+
+                                        string[] arrayLines = lines.ToArray();
+
+                                        File.WriteAllLines(filePath, arrayLines);
+                                    }
+                                }
+                                else
+                                {
+                                    if (firstlines == null)
+                                    {
+                                        yoAppResponse.CustomerAccount = fuelCardNumber;
+
+                                        yoAppResponse.ResponseCode = "00008";
+                                        yoAppResponse.Note = "Failed";
+                                        yoAppResponse.Description = "All card numbers have been allocated, we have run out of card numbers";
+
+                                        var serializedResponse = JsonConvert.SerializeObject(yoAppRequest);
+
+                                        yoAppResponse.Narrative = serializedResponse;
+
+                                        return yoAppResponse;
+                                    }
+                                    else
+                                    {
+                                        List<string> lines = new List<string>(firstlines);
+
+                                        fuelCardNumber = lines[0];
+
+                                        lines.Remove(lines[0]);
+
+                                        using (StreamWriter streamWriter = File.CreateText(logFilePath))
+                                        {
+                                            streamWriter.WriteLine(logString);
+                                            streamWriter.WriteLine("=============================================");
+                                        }
+
+                                        string[] arrayLines = lines.ToArray();
+
+                                        File.WriteAllLines(filePath, arrayLines);
+                                    }
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e.Message);
+                            }
+
+                            if (String.IsNullOrEmpty(fuelCardNumber))
+                            {
+                                yoAppResponse.ResponseCode = "00008";
+                                yoAppResponse.Note = "Failed";
+                                yoAppResponse.Description = "Failed to Allocate Fuel Card Number";
+
+                                return yoAppResponse;
+                            }
+                            else
+                            {
+                                yoAppResponse.CustomerAccount = fuelCardNumber;
+
+                                yoAppResponse.ResponseCode = "00000";
+                                yoAppResponse.Note = "Success";
+                                yoAppResponse.Description = "Card Number " + fuelCardNumber + " has been successfully allocated to farmer";
+
+                                var serializedResponse = JsonConvert.SerializeObject(yoAppRequest);
+
+                                yoAppResponse.Narrative = serializedResponse;
+
+                                return yoAppResponse;
+                            }

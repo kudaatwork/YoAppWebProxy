@@ -31,9 +31,9 @@ namespace YoAppWebProxy.Connectors
                 httpWebRequest.Headers.Add("Authorization", "Bearer " + Token.StringToken);
                 httpWebRequest.ContentType = "application/json";
                 httpWebRequest.Method = "GET";
-                httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
+                httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;                
 
-                var json = String.Empty;
+                var json = JsonConvert.SerializeObject(String.Empty);
 
                 using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
                 {
