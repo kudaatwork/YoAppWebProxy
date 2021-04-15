@@ -277,6 +277,33 @@ namespace YoAppWebProxy.Controllers
 
                             trekCardBalanceResponse = trekPostConnector.GetCardBalance(trekCardBalanceRequest);
 
+                            TrekLog.GetTrekCardNumberBalanceResponse(trekCardBalanceResponse);
+
+                            if (trekCardBalanceResponse.status == "Success")
+                            {
+                                yoAppResponse.ResponseCode = "00000";
+                                yoAppResponse.Note = "Success";
+                                yoAppResponse.Description = "Card Balance retrived successfully";
+
+                                var serializedCardNumberRequest = JsonConvert.SerializeObject(yoAppResponse);
+
+                                yoAppResponse.Narrative = serializedCardNumberRequest;
+
+                                return yoAppResponse;
+                            }
+                            else
+                            {
+                                yoAppResponse.ResponseCode = "00008";
+                                yoAppResponse.Note = "Failed";
+                                yoAppResponse.Description = "Failed to retrive Card Balance";
+
+                                var serializedCardNumberRequest = JsonConvert.SerializeObject(yoAppResponse);
+
+                                yoAppResponse.Narrative = serializedCardNumberRequest;
+
+                                return yoAppResponse;
+                            }
+
                             break;
 
                         case 3: // Get Card Transactions by Card Number and Dates
@@ -568,6 +595,8 @@ namespace YoAppWebProxy.Controllers
                             agribankPaymentRequest.destination_acc = agribankCredentials.ClientName;
 
                             AgriBankLog.Request(agribankPaymentRequest);
+
+                            Log.RequestsAndResponses("Request", yoAppRequest.ServiceProvider, agribankPaymentRequest);
 
                             var paymentResponse = postConnector.PostPayment(agribankPaymentRequest);
 

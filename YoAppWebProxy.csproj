@@ -185,6 +185,7 @@
     <Compile Include="Logs\ESolutionsLog.cs" />
     <Compile Include="Logs\CbzLog.cs" />
     <Compile Include="Logs\IpLog.cs" />
+    <Compile Include="Logs\Log.cs" />
     <Compile Include="Logs\TrekLog.cs" />
     <Compile Include="Models\AgriBank\AgribankPaymentRequest.cs" />
     <Compile Include="Models\AgriBank\AgribankPaymentResponse.cs" />
