@@ -1,0 +1,6 @@
+DateTime Logged: 05/18/2021/ 09:56:16, ServiceProvider: CBZ-AquSales, Request Object: "The underlying connection was closed: The connection was closed unexpectedly."
+=============================================
+DateTime Logged: 05/18/2021/ 11:22:17, ServiceProvider: CBZ-AquSales, Request Object: "The remote server returned an error: (404) Not Found."
+=============================================
+DateTime Logged: 05/18/2021/ 11:23:06, ServiceProvider: CBZ-AquSales, Request Object: "The remote server returned an error: (404) Not Found."
+=============================================

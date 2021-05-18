@@ -496,26 +496,6 @@
             Respresents Transaction Response from YoApp
             </summary>
         </member>
-        <member name="P:YoAppWebProxy.Models.YoAppResponse.ActionId">
-            <summary>
-            ServiceActionId on YoApp
-            </summary>
-        </member>
-        <member name="P:YoAppWebProxy.Models.YoAppResponse.ResponseCode">
-            <summary>
-            ResponseCode from the Initiated Transaction on YoApp
-            </summary>
-        </member>
-        <member name="P:YoAppWebProxy.Models.YoAppResponse.Description">
-            <summary>
-            Response Description from the Initiated Transaction on YoApp
-            </summary>
-        </member>
-        <member name="P:YoAppWebProxy.Models.YoAppResponse.Balance">
-            <summary>
-            Supplier Account's Balance on YoApp
-            </summary>
-        </member>
         <member name="T:YoAppWebProxy.Controllers.WebProxyController">
             <summary>
             YoApp WebProxy Documentation 
@@ -532,14 +512,14 @@
             </summary>
             <param name="yoAppRequest">Request from YoApp</param>
         </member>
-        <member name="M:YoAppWebProxy.Controllers.WebProxyController.CbzTrekRedemptionsProxy(YoAppWebProxy.Models.YoAppRequest)">
+        <member name="M:YoAppWebProxy.Controllers.WebProxyController.TrekServicesProxy(YoAppWebProxy.Models.YoAppRequest)">
             <summary>
             CBZ API Requests and Responses
             </summary>
             <param name="yoAppRequest"></param>
             <returns></returns>
         </member>
-        <member name="M:YoAppWebProxy.Controllers.WebProxyController.NewFieldProxy(YoAppWebProxy.Models.YoAppRequest)">
+        <member name="M:YoAppWebProxy.Controllers.WebProxyController.PopulateFieldProxy(YoAppWebProxy.Models.YoAppRequest)">
             <summary>
             CBZ API Requests and Responses
             </summary>

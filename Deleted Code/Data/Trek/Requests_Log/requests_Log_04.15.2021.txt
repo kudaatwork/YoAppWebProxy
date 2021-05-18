@@ -1,0 +1,4 @@
+DateTimeRequestLogged: 04/15/2021/ 10:20:04,RequestObject: {"card_number":null}
+=============================================
+DateTimeRequestLogged: 04/15/2021/ 10:21:56,RequestObject: {"card_number":"6094480010000004007"}
+=============================================

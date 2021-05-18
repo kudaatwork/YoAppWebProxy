@@ -135,9 +135,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Api_Credentials\AgribankCredentials.cs" />
+    <Compile Include="Api_Credentials\AqusalesCredentials.cs" />
+    <Compile Include="Api_Credentials\EosCredentials.cs" />
     <Compile Include="Connectors\AgribankBearerConnector.cs" />
+    <Compile Include="Connectors\AquSalesConnector.cs" />
+    <Compile Include="Connectors\EosConnector.cs" />
     <Compile Include="Connectors\TrekGetConnector.cs" />
     <Compile Include="Connectors\TrekPostConnector.cs" />
+    <Compile Include="Helpful_Functions\ExternalFieldMethods.cs" />
     <Compile Include="Helpful_Objects\AgribankObjects.cs" />
     <Compile Include="Connectors\AgribankPostConnector.cs" />
     <Compile Include="Api_Credentials\TrekCredentials.cs" />
@@ -176,6 +181,7 @@
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
     <Compile Include="Connectors\CbzConnector.cs" />
     <Compile Include="Helpful_Functions\CbzMethods.cs" />
+    <Compile Include="Helpful_Objects\AqusalesObjects.cs" />
     <Compile Include="Helpful_Objects\ESolutionsApiObjects.cs" />
     <Compile Include="Connectors\ESolutionsConnector.cs" />
     <Compile Include="Api_Credentials\ESolutionsCredentials.cs" />
@@ -192,6 +198,14 @@
     <Compile Include="Models\AgriBank\AgribankTokenResponse.cs" />
     <Compile Include="Models\AgriBank\AgribankTokenRequest.cs" />
     <Compile Include="Models\AgriBank\ApiVariables.cs" />
+    <Compile Include="Models\Aqusales\GRVTransaction.cs" />
+    <Compile Include="Models\Aqusales\SaleTransaction.cs" />
+    <Compile Include="Models\Aqusales\APITransactionResponse.cs" />
+    <Compile Include="Models\Aqusales\TranCurrencyInfoVM.cs" />
+    <Compile Include="Models\Aqusales\TranData.cs" />
+    <Compile Include="Models\Aqusales\TranSourceDetails.cs" />
+    <Compile Include="Models\EOS\EosRequest.cs" />
+    <Compile Include="Models\EOS\EosResponse.cs" />
     <Compile Include="Models\Trek\CardBalance.cs" />
     <Compile Include="Models\Trek\CardTransactions.cs" />
     <Compile Include="Models\Trek\CardTransactionsByDate.cs" />
@@ -203,6 +217,8 @@
     <Compile Include="Models\Token.cs" />
     <Compile Include="Models\CBZ\CbzVoucherPaymentDetails.cs" />
     <Compile Include="Models\CBZ\CbzPaymentResponse.cs" />
+    <Compile Include="Models\YoApp\YoAppGrvResponse.cs" />
+    <Compile Include="Models\YoApp\InitialProducts.cs" />
     <Compile Include="Models\YoApp\ListResponse.cs" />
     <Compile Include="Models\ProxyWebServiceModel.Context.cs">
       <AutoGen>True</AutoGen>
@@ -299,6 +315,7 @@
       <DependentUpon>ProxyWebServiceModel.edmx</DependentUpon>
     </Content>
     <Content Include="libman.json" />
+    <None Include="Properties\PublishProfiles\YWP.pubxml" />
     <None Include="Scripts\jquery-3.4.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.4.1.js" />
     <Content Include="Scripts\jquery-3.4.1.min.js" />
@@ -377,7 +394,7 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>63822</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>https://localhost:44319/</IISUrl>
+          <IISUrl>http://localhost:44319/</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>

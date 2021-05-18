@@ -4,9 +4,9 @@ using System.Linq;
 using System.Web;
 using YoAppWebProxy.Models.YoApp;
 
-namespace YoAppWebProxy.Models
+namespace YoAppWebProxy.Models.EOS
 {
-    public class Narrative
+    public class EosRequest
     {
         public long Id { set; get; }
         public long ServiceId { set; get; }

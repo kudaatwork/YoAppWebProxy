@@ -22,7 +22,7 @@ namespace YoAppWebProxy
         bool success = false;
         #endregion
 
-        public YoAppResponse VendorBalanceEnquiry(ESolutionsRequest eSolutionsRequest)
+        public YoAppResponse VendorBalanceEnquiry(ESolutionsRequest eSolutionsRequest, string serviceProvider)
         {
             YoAppResponse yoAppResponse = new YoAppResponse();
 
@@ -91,9 +91,11 @@ namespace YoAppWebProxy
                 request.currencyCode = eSolutionsRequest.currencyCode;
             }
 
-            ESolutionsLog.Request(request);
+            Log.RequestsAndResponses("VBalance-Request",serviceProvider,request);
 
             var response = eSolutionsConnector.GetESolutionsResponse(request);
+
+            Log.RequestsAndResponses("VBalance-Response", serviceProvider, response);
 
             if (response.responseCode == "00" || response.responseCode == "09") // Transaction Successful or Request still in Progress
             {
@@ -104,11 +106,10 @@ namespace YoAppWebProxy
 
                     yoAppResponse.ResponseCode = "00000";
                     yoAppResponse.Note = "Success";
-                    yoAppResponse.Description = response.narrative;
-                    yoAppResponse.CustomerData = response.customerData;
-                    yoAppResponse.CustomerAccount = response.utilityAccount;
+                    yoAppResponse.Description = response.narrative;                    
+                    yoAppResponse.Narrative = response.vendorBalance;
 
-                    ESolutionsLog.Response(response);
+                    return yoAppResponse;                    
                 }
                 if (response.responseCode == "09") // 
                 {
@@ -118,10 +119,9 @@ namespace YoAppWebProxy
                     yoAppResponse.ResponseCode = "00000";
                     yoAppResponse.Note = "Success";
                     yoAppResponse.Description = response.narrative;
-                    yoAppResponse.CustomerData = response.customerData;
-                    yoAppResponse.CustomerAccount = response.utilityAccount;
+                    yoAppResponse.Narrative = response.vendorBalance;
 
-                    ESolutionsLog.Response(response);
+                    return yoAppResponse;
                 }
             }
             else if (response.responseCode == "05")
@@ -131,11 +131,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "General Error. Check \"narrative\" in \"Narrative\" for error message";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+                yoAppResponse.Description = response.narrative;
 
-                ESolutionsLog.Response(response);
+                return yoAppResponse;
             }
             else if (response.responseCode == "12")
             {
@@ -144,11 +142,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Amount cannot cover debt due/Amount is below{above} the limit";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+                yoAppResponse.Description = message;
 
-                ESolutionsLog.Response(response);
+                return yoAppResponse;
             }
             else if (response.responseCode == "14")
             {
@@ -157,11 +153,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Invalid meter number/Meter is blocked";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+                yoAppResponse.Description = message;
 
-                ESolutionsLog.Response(response);
+                return yoAppResponse;
             }
             else if (response.responseCode == "51")
             {
@@ -170,11 +164,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Insufficient funds";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+                yoAppResponse.Description = message;
 
-                ESolutionsLog.Response(response);
+                return yoAppResponse;
             }
             else if (response.responseCode == "57")
             {
@@ -183,11 +175,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Customer account has reversal in progress";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+                yoAppResponse.Description = message;
 
-                ESolutionsLog.Response(response);
+                return yoAppResponse;
             }
             else if (response.responseCode == "63")
             {
@@ -196,11 +186,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Security violation";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+                yoAppResponse.Description = message;
 
-                ESolutionsLog.Response(response);
+                return yoAppResponse;
             }
             else if (response.responseCode == "68")
             {
@@ -209,11 +197,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Transaction timeout";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+                yoAppResponse.Description = message;
 
-                ESolutionsLog.Response(response);
+                return yoAppResponse;
             }
             else if (response.responseCode == "94")
             {
@@ -222,20 +208,22 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Duplicate transaction";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+                yoAppResponse.Description = message;
 
-                ESolutionsLog.Response(response);
+                return yoAppResponse;
             }
+            else
+            {
+                var serializedResponse = JsonConvert.SerializeObject(response, Formatting.Indented);
+                yoAppResponse.Narrative = serializedResponse;
 
-            var serializedResponse = JsonConvert.SerializeObject(response, Formatting.Indented);
-            yoAppResponse.Narrative = serializedResponse;
+                return yoAppResponse;
+            }
 
             return yoAppResponse;
         }
 
-        public YoAppResponse CustomerInformation(ESolutionsRequest eSolutionsRequest)
+        public YoAppResponse CustomerInformation(ESolutionsRequest eSolutionsRequest, string serviceProvider)
         {
             YoAppResponse yoAppResponse = new YoAppResponse();
 
@@ -304,9 +292,11 @@ namespace YoAppWebProxy
                 request.currencyCode = eSolutionsRequest.currencyCode;
             }
 
-            ESolutionsLog.Request(request);
+            Log.RequestsAndResponses("CustInfo-Request", serviceProvider, request);
 
             var response = eSolutionsConnector.GetESolutionsResponse(request);
+
+            Log.RequestsAndResponses("CustInfo-Response", serviceProvider, response);
 
             if (response.responseCode == "00" || response.responseCode == "09") // Transaction Successful or Request still in Progress
             {
@@ -318,10 +308,15 @@ namespace YoAppWebProxy
                     yoAppResponse.ResponseCode = "00000";
                     yoAppResponse.Note = "Success";
                     yoAppResponse.Description = response.narrative;
-                    yoAppResponse.CustomerData = response.customerData;
-                    yoAppResponse.CustomerAccount = response.utilityAccount;
 
-                    ESolutionsLog.Response(response);
+                    Vouchers vouchers = new Vouchers();
+                    vouchers.Miscellenious = response.customerData + "|" + response.cutomerAddress + "|"
+                        + response.utilityAccount;
+                    
+                    yoAppResponse.Narrative = JsonConvert.SerializeObject(vouchers); // One of the two to be romoved on test
+                    yoAppResponse.vouchers.Add(vouchers);
+
+                    return yoAppResponse;
                 }
                 if (response.responseCode == "09") // 
                 {
@@ -331,10 +326,15 @@ namespace YoAppWebProxy
                     yoAppResponse.ResponseCode = "00000";
                     yoAppResponse.Note = "Success";
                     yoAppResponse.Description = response.narrative;
-                    yoAppResponse.CustomerData = response.customerData;
-                    yoAppResponse.CustomerAccount = response.utilityAccount;
 
-                    ESolutionsLog.Response(response);
+                    Vouchers vouchers = new Vouchers();
+                    vouchers.Miscellenious = response.customerData + "|" + response.cutomerAddress + "|"
+                        + response.utilityAccount;
+
+                    yoAppResponse.Narrative = JsonConvert.SerializeObject(vouchers); // One of the two to be romoved on test
+                    yoAppResponse.vouchers.Add(vouchers);
+
+                    return yoAppResponse;
                 }
             }
             else if (response.responseCode == "05")
@@ -344,11 +344,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "General Error. Check \"narrative\" in \"Narrative\" for error message";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+                yoAppResponse.Description = message;               
 
-                ESolutionsLog.Response(response);
+                return yoAppResponse;
             }
             else if (response.responseCode == "12")
             {
@@ -357,11 +355,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Amount cannot cover debt due/Amount is below{above} the limit";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
-
-                ESolutionsLog.Response(response);
+                yoAppResponse.Description = message;
+                
+                return yoAppResponse;
             }
             else if (response.responseCode == "14")
             {
@@ -370,11 +366,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Invalid meter number/Meter is blocked";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+                yoAppResponse.Description = message;
 
-                ESolutionsLog.Response(response);
+                return yoAppResponse;
             }
             else if (response.responseCode == "51")
             {
@@ -383,11 +377,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Insufficient funds";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
-
-                ESolutionsLog.Response(response);
+                yoAppResponse.Description = message;
+                
+                return yoAppResponse;
             }
             else if (response.responseCode == "57")
             {
@@ -396,11 +388,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Customer account has reversal in progress";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
-
-                ESolutionsLog.Response(response);
+                yoAppResponse.Description = message;
+                
+                return yoAppResponse;
             }
             else if (response.responseCode == "63")
             {
@@ -409,11 +399,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Security violation";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
-
-                ESolutionsLog.Response(response);
+                yoAppResponse.Description = message;
+                
+                return yoAppResponse;
             }
             else if (response.responseCode == "68")
             {
@@ -422,11 +410,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Transaction timeout";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
-
-                ESolutionsLog.Response(response);
+                yoAppResponse.Description = message;
+                
+                return yoAppResponse;
             }
             else if (response.responseCode == "94")
             {
@@ -435,11 +421,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Duplicate transaction";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
-
-                ESolutionsLog.Response(response);
+                yoAppResponse.Description = message;
+                
+                return yoAppResponse;
             }
             
             var serializedResponse = JsonConvert.SerializeObject(response, Formatting.Indented);
@@ -448,7 +432,7 @@ namespace YoAppWebProxy
             return yoAppResponse;
         }
 
-        public YoAppResponse ServicePurchase(ESolutionsRequest eSolutionsRequest)
+        public YoAppResponse ServicePurchase(ESolutionsRequest eSolutionsRequest, string serviceProvider)
         {
             YoAppResponse yoAppResponse = new YoAppResponse();
 
@@ -526,9 +510,11 @@ namespace YoAppWebProxy
                 request.aggregator = eSolutionsRequest.aggregator;
             }
 
-            ESolutionsLog.Request(request); 
+            Log.RequestsAndResponses("TokenPurchase-Request", serviceProvider, request); 
 
             var response = eSolutionsConnector.GetESolutionsResponse(request);
+
+            Log.RequestsAndResponses("TokenPurchase-Response", serviceProvider, response);
 
             if (response.responseCode == "00" || response.responseCode == "09") // Transaction Successful or Request still in Progress
             {
@@ -540,11 +526,15 @@ namespace YoAppWebProxy
                     yoAppResponse.ResponseCode = "00000";
                     yoAppResponse.Note = "Success";
                     yoAppResponse.Description = response.narrative;
-                    yoAppResponse.CustomerData = response.customerData;
-                    yoAppResponse.CustomerAccount = response.utilityAccount;
 
-                    ESolutionsLog.Response(response);
+                    Vouchers vouchers = new Vouchers();
 
+                    vouchers.Miscellenious = response.miscellaneousData;
+                    vouchers.VoucherKey = response.token + "|" + response.fixedCharges;
+
+                    yoAppResponse.vouchers.Add(vouchers);
+
+                    return yoAppResponse;
                 }
                 if (response.responseCode == "09") // 
                 {
@@ -554,10 +544,15 @@ namespace YoAppWebProxy
                     yoAppResponse.ResponseCode = "00000";
                     yoAppResponse.Note = "Success";
                     yoAppResponse.Description = response.narrative;
-                    yoAppResponse.CustomerData = response.customerData;
-                    yoAppResponse.CustomerAccount = response.utilityAccount;
 
-                    ESolutionsLog.Response(response);
+                    Vouchers vouchers = new Vouchers();
+                    
+                    vouchers.Miscellenious = response.miscellaneousData;
+                    vouchers.VoucherKey = response.token + "|" + response.fixedCharges;                    
+
+                    yoAppResponse.vouchers.Add(vouchers);
+
+                    return yoAppResponse;
                 }
             }
             else if (response.responseCode == "05")
@@ -567,11 +562,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "General Error. Check \"narrative\" in \"Narrative\" for error message";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+                yoAppResponse.Description = response.narrative;
 
-                ESolutionsLog.Response(response);
+                return yoAppResponse;
             }
             else if (response.responseCode == "12")
             {
@@ -580,9 +573,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Amount cannot cover debt due/Amount is below{above} the limit";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+                yoAppResponse.Description = message;
+
+                return yoAppResponse;
             }
             else if (response.responseCode == "14")
             {
@@ -591,9 +584,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Invalid meter number/Meter is blocked";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+                yoAppResponse.Description = message;
+
+                return yoAppResponse;
             }
             else if (response.responseCode == "51")
             {
@@ -602,9 +595,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Insufficient funds";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+                yoAppResponse.Description = message;
+
+                return yoAppResponse;
             }
             else if (response.responseCode == "57")
             {
@@ -613,9 +606,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Customer account has reversal in progress";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+                yoAppResponse.Description = message;
+
+                return yoAppResponse;
             }
             else if (response.responseCode == "63")
             {
@@ -624,9 +617,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Security violation";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+                yoAppResponse.Description = message;
+
+                return yoAppResponse;
             }
             else if (response.responseCode == "68")
             {
@@ -635,9 +628,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Transaction timeout";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+                yoAppResponse.Description = message;
+
+                return yoAppResponse;
             }
             else if (response.responseCode == "94")
             {
@@ -646,9 +639,9 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "Duplicate transaction";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+                yoAppResponse.Description = message;
+
+                return yoAppResponse;
             }
 
             var serializedResponse = JsonConvert.SerializeObject(response, Formatting.Indented);
@@ -657,7 +650,7 @@ namespace YoAppWebProxy
             return yoAppResponse;
         }
 
-        public YoAppResponse DirectServicePurchase(ESolutionsRequest eSolutionsRequest)
+        public YoAppResponse DirectServicePurchase(ESolutionsRequest eSolutionsRequest, string serviceProvider)
         {
             YoAppResponse yoAppResponse = new YoAppResponse();
 
@@ -733,7 +726,7 @@ namespace YoAppWebProxy
             else
             {
                 request.aggregator = eSolutionsRequest.aggregator;
-            }
+            }            
 
             var response = eSolutionsConnector.GetESolutionsResponse(request);
 
@@ -747,9 +740,8 @@ namespace YoAppWebProxy
                     yoAppResponse.ResponseCode = "00000";
                     yoAppResponse.Note = "Success";
                     yoAppResponse.Description = response.narrative;
-                    yoAppResponse.CustomerData = response.customerData;
-                    yoAppResponse.CustomerAccount = response.utilityAccount;
 
+                    return yoAppResponse;
                 }
                 if (response.responseCode == "09") // 
                 {
@@ -782,8 +774,8 @@ namespace YoAppWebProxy
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
                 yoAppResponse.Description = "Amount cannot cover debt due/Amount is below{above} the limit";
-                yoAppResponse.CustomerData = response.customerData;
-                yoAppResponse.CustomerAccount = response.utilityAccount;
+
+                return yoAppResponse;
             }
             else if (response.responseCode == "14")
             {

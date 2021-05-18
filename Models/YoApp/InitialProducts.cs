@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace YoAppWebProxy.Models
+namespace YoAppWebProxy.Models.YoApp
 {
-    public class Products
+    public class InitialProducts
     {
         public Nullable<long> Id { get; set; }
         public Nullable<long> ActionId { get; set; }
@@ -45,6 +45,5 @@ namespace YoAppWebProxy.Models
         public string Files { get; set; }
         public bool DontDisplayRecipe { get; set; }
         public bool NotForSale { get; set; }
-        public decimal CostPrice { get; set; }
     }
 }
