@@ -793,7 +793,7 @@ namespace YoAppWebProxy.Controllers
                         tranCurrencyInfoVM.TransactionCurrency = currency.Trim();
                         tranCurrencyInfoVM.TransactionCurrencyRate = 1;
                         saleTransaction.TranCurrencyInfoVM = tranCurrencyInfoVM;
-                        saleTransaction.TransactionDate = deserializedResponse.DatelastAccess.ToString();
+                        saleTransaction.TransactionDate = deserializedResponse.DatelastAccess.ToLocalTime().ToString();
                         saleTransaction.TransactionName = AqusalesObjects.TransactionName.Trim();
                         saleTransaction.Cashier = deserializedResponse.Cashier.Trim();
                         saleTransaction.CustomerAccountType = AqusalesObjects.CustomerAccountType.Trim();
@@ -907,14 +907,52 @@ namespace YoAppWebProxy.Controllers
             }
             else
             {
+                EosConnector eosConnector = new EosConnector();
+
                 switch (redemptionResponse.ServiceId)
                 {
-                    case 1:
-                        EosRequest eosRequest = new EosRequest();
-                        EosConnector eosConnector = new EosConnector();
+                    case 1: // Redemption in Test
+                        EosRedemptionRequest eosRedemptionRequest = new EosRedemptionRequest();                      
 
                         var deserializedNarrative = JsonConvert.DeserializeObject<Narrative>(redemptionResponse.Narrative);
 
+                        eosRedemptionRequest.TransactionCode = deserializedNarrative.TransactionCode;
+                        eosRedemptionRequest.CustomerId = deserializedNarrative.CustomerId;
+                        eosRedemptionRequest.ReceiversName = deserializedNarrative.ReceiversName;
+                        eosRedemptionRequest.ReceiversSurname = deserializedNarrative.ReceiversSurname;
+                        eosRedemptionRequest.ReceiversIdentification = deserializedNarrative.ReceiversIdentification;
+                        eosRedemptionRequest.ServiceRegion = deserializedNarrative.ServiceRegion;
+                        eosRedemptionRequest.ServiceProvince = deserializedNarrative.ServiceProvince;
+                        eosRedemptionRequest.SupplierId = deserializedNarrative.SupplierId;
+                        eosRedemptionRequest.SupplierName = deserializedNarrative.SupplierName;
+                        eosRedemptionRequest.CustomerName = deserializedNarrative.CustomerName;
+                        eosRedemptionRequest.ResponseCode = "00555";
+                        eosRedemptionRequest.LocationCode = deserializedNarrative.LocationCode;
+
+                        List<EosRedemptionProducts> redemptionProducts = new List<EosRedemptionProducts>();
+
+                        foreach (var item in deserializedNarrative.Products)
+                        {
+                            if (item.Collected > 0)
+                            {
+                                redemptionProducts.Add(new EosRedemptionProducts
+                                {
+                                    Id = item.Id,
+                                    ActionId = item.ActionId,
+                                    ServiceId = item.ServiceId,
+                                    Name = item.Name,
+                                    Description = item.Description,
+                                    Collected = item.Collected,
+                                    CollectionAmount = item.CollectionAmount,
+                                    Currency = item.Currency
+                                });
+                            }
+                        }
+
+                        eosRedemptionRequest.Products = redemptionProducts;
+
+                        #region OldCode
+                        /*
                         eosRequest.Id = deserializedNarrative.Id;
                         eosRequest.ServiceId = deserializedNarrative.ServiceId;
                         eosRequest.TransactionType = deserializedNarrative.TransactionType;
@@ -966,33 +1004,675 @@ namespace YoAppWebProxy.Controllers
                             products.Add(item);
                         }
 
-                        eosRequest.Products = products;
+                        eosRequest.Products = products;*/
+                        #endregion                        
 
-                        Log.RequestsAndResponses("EOS-Request", serviceProvider, eosRequest);
+                        Log.RequestsAndResponses("EOS-Test-Redemption-Request", serviceProvider, eosRedemptionRequest);
 
-                        var eosResponse = eosConnector.PostRedemption(eosRequest, serviceProvider);
+                        var eosResponse = eosConnector.PostRedemption(eosRedemptionRequest, serviceProvider);
 
-                        Log.RequestsAndResponses("EOS-Response", serviceProvider, eosResponse);
+                        Log.RequestsAndResponses("EOS-Test-Redemption-Response", serviceProvider, eosResponse);
 
-                        if (eosResponse.ResponseCode.ToUpper() == "SUCCESS")
+                        var stringResponse = JsonConvert.SerializeObject(eosResponse);
+
+                        if (eosResponse.code == "200")
                         {
                             yoAppResponse.ResponseCode = "00000";
-                            yoAppResponse.Description = eosResponse.Description;
+                            yoAppResponse.Description = eosResponse.msg;
                             yoAppResponse.Note = "Success";
-                            yoAppResponse.Narrative = "Transaction/Redemption Posted successfully";
+                            yoAppResponse.Narrative = "Transaction/Redemption Posted successfully. Response Object:" + stringResponse;
 
-                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, eosResponse);
+                            Log.RequestsAndResponses("EOS-Test-Redemption-Response-YoApp", serviceProvider, eosResponse);
+
+                            return yoAppResponse;
+                        }                       
+                        else
+                        {
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Description = eosResponse.msg;
+                            yoAppResponse.Note = "Failed";
+                            yoAppResponse.Narrative = "Failed to process transaction: Response Object: " + stringResponse;
+
+                            Log.RequestsAndResponses("EOS-Test-Redemption-Response-YoApp", serviceProvider, eosResponse);
+
+                            return yoAppResponse;
+                        }
+
+                    case 2: // Reversal in Test
+                        EosReversalRequest eosReversalRequest = new EosReversalRequest();
+                       
+                        var narrative = JsonConvert.DeserializeObject<Narrative>(redemptionResponse.Narrative);
+
+                        eosReversalRequest.TransactionCode = narrative.TransactionCode;
+                        eosReversalRequest.CustomerId = narrative.CustomerId;
+                        eosReversalRequest.ReceiversName = narrative.ReceiversName;
+                        eosReversalRequest.ReceiversSurname = narrative.ReceiversSurname;
+                        eosReversalRequest.ReceiversIdentification = narrative.ReceiversIdentification;
+                        eosReversalRequest.ServiceRegion = narrative.ServiceRegion;
+                        eosReversalRequest.ServiceProvince = narrative.ServiceProvince;
+                        eosReversalRequest.SupplierId = narrative.SupplierId;
+                        eosReversalRequest.SupplierName = narrative.SupplierName;
+                        eosReversalRequest.CustomerName = narrative.CustomerName;
+                        eosReversalRequest.ResponseCode = "00777";
+                        eosReversalRequest.LocationCode = narrative.LocationCode;
+
+                        List<EosReversalProducts> eosProducts = new List<EosReversalProducts>();
+
+                        foreach (var item in narrative.Products)
+                        {
+                            if (item.Collected > 0)
+                            {
+                                eosProducts.Add(new EosReversalProducts
+                                {
+                                    Id = item.Id,
+                                    ActionId = item.ActionId,
+                                    ServiceId = item.ServiceId,
+                                    Name = item.Name,
+                                    Description = item.Description,
+                                    Collected = item.Collected,
+                                    CollectionAmount = item.CollectionAmount,
+                                    Currency = item.Currency
+                                });
+                            }
+
+                        }
+
+                        eosReversalRequest.Products = eosProducts;
+
+                        #region OldCode
+                        /*
+                        eosRequest.Id = deserializedNarrative.Id;
+                        eosRequest.ServiceId = deserializedNarrative.ServiceId;
+                        eosRequest.TransactionType = deserializedNarrative.TransactionType;
+                        eosRequest.TransactionCode = deserializedNarrative.TransactionCode;
+                        eosRequest.CustomerId = deserializedNarrative.CustomerId;
+                        eosRequest.ReceiversName = deserializedNarrative.ReceiversName;
+                        eosRequest.ReceiversSurname = deserializedNarrative.ReceiversSurname;
+                        eosRequest.ReceiversIdentification = deserializedNarrative.ReceiversIdentification;
+                        eosRequest.ReceiversGender = deserializedNarrative.ReceiversGender;
+                        eosRequest.ServiceRegion = deserializedNarrative.ServiceRegion;
+                        eosRequest.ServiceProvince = deserializedNarrative.ServiceProvince;
+                        eosRequest.ServiceCountry = deserializedNarrative.ServiceCountry;
+                        eosRequest.Status = deserializedNarrative.Status;
+                        eosRequest.Currency = deserializedNarrative.Currency;
+                        eosRequest.Balance = deserializedNarrative.Balance;
+                        eosRequest.ServiceName = deserializedNarrative.ServiceName;
+                        eosRequest.ServiceType = deserializedNarrative.ServiceType;
+                        eosRequest.Quantity = deserializedNarrative.Quantity;
+                        eosRequest.ProductDetails = deserializedNarrative.ProductDetails;
+                        eosRequest.ServiceProvider = deserializedNarrative.ServiceProvider;
+                        eosRequest.ProviderAccountNumber = deserializedNarrative.ProviderAccountNumber;
+                        eosRequest.SupplierId = deserializedNarrative.SupplierId;
+                        eosRequest.ServiceAgentId = deserializedNarrative.ServiceAgentId;
+                        eosRequest.SupplierName = deserializedNarrative.SupplierName;
+                        eosRequest.Description = deserializedNarrative.Description;
+                        eosRequest.CustomerName = deserializedNarrative.CustomerName;
+                        eosRequest.CustomerMobileNumber = deserializedNarrative.CustomerMobileNumber;
+                        eosRequest.CustomerCardNumber = deserializedNarrative.CustomerCardNumber;
+                        eosRequest.Information1 = deserializedNarrative.Information1;
+                        eosRequest.Information2 = deserializedNarrative.Information2;
+                        eosRequest.DateCreated = deserializedNarrative.DateCreated;
+                        eosRequest.DatelastAccess = deserializedNarrative.DatelastAccess;
+                        eosRequest.SubDue = deserializedNarrative.SubDue;
+                        eosRequest.BillingCycle = deserializedNarrative.BillingCycle;
+                        eosRequest.ReceiverMobile = deserializedNarrative.ReceiverMobile;
+                        eosRequest.ResponseCode = "00555";
+                        eosRequest.AllowPartPayment = deserializedNarrative.AllowPartPayment;
+                        eosRequest.DeactivateOnAuthorisation = deserializedNarrative.DeactivateOnAuthorisation;
+                        eosRequest.Cashier = deserializedNarrative.Cashier;
+                        eosRequest.Authoriser = deserializedNarrative.Authoriser;
+                        eosRequest.LocationCode = deserializedNarrative.LocationCode;
+                        eosRequest.JsonProducts = deserializedNarrative.JsonProducts;
+                        eosRequest.InitialProducts = deserializedNarrative.InitialProducts;
+
+                        List<Products> products = new List<Products>();
+
+                        foreach (var item in deserializedNarrative.Products)
+                        {
+                            products.Add(item);
+                        }
+
+                        eosRequest.Products = products;*/
+                        #endregion                        
+
+                        Log.RequestsAndResponses("EOS-Request", serviceProvider, eosReversalRequest);
+
+                        var response = eosConnector.PostReversal(eosReversalRequest, serviceProvider);
+
+                        Log.RequestsAndResponses("EOS-Response", serviceProvider, response);
+
+                        var strResponse = JsonConvert.SerializeObject(response);
+
+                        if (response.code == "200")
+                        {
+                            yoAppResponse.ResponseCode = "00000";
+                            yoAppResponse.Description = response.msg;
+                            yoAppResponse.Note = "Success";
+                            yoAppResponse.Narrative = "Transaction/Reversal Posted successfully. Response Object: " + strResponse;
+
+                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, response);
 
                             return yoAppResponse;
                         }
                         else
                         {
                             yoAppResponse.ResponseCode = "00008";
-                            yoAppResponse.Description = eosResponse.Description;
-                            yoAppResponse.Note = "Success";
-                            yoAppResponse.Narrative = "Transaction/Redemption Posted successfully";
+                            yoAppResponse.Description = response.msg;
+                            yoAppResponse.Note = "Failed";
+                            yoAppResponse.Narrative = "Failed to post reversal. Response Object: " + strResponse;
 
-                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, eosResponse);
+                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, response);
+
+                            return yoAppResponse;
+                        }
+
+                    case 3: // Topup in Test
+                        EosTopupRequest eosTopupRequest = new EosTopupRequest();
+                        
+                        var testTopupNarrative = JsonConvert.DeserializeObject<Narrative>(redemptionResponse.Narrative);
+
+                        eosTopupRequest.TransactionCode = testTopupNarrative.TransactionCode;
+                        eosTopupRequest.CustomerId = testTopupNarrative.CustomerId;
+                        eosTopupRequest.ReceiversName = testTopupNarrative.ReceiversName;
+                        eosTopupRequest.ReceiversSurname = testTopupNarrative.ReceiversSurname;
+                        eosTopupRequest.ReceiversIdentification = testTopupNarrative.ReceiversIdentification;
+                        eosTopupRequest.ServiceRegion = testTopupNarrative.ServiceRegion;
+                        eosTopupRequest.ServiceProvince = testTopupNarrative.ServiceProvince;
+                        eosTopupRequest.SupplierId = testTopupNarrative.SupplierId;
+                        eosTopupRequest.SupplierName = testTopupNarrative.SupplierName;
+                        eosTopupRequest.CustomerName = testTopupNarrative.CustomerName;
+                        eosTopupRequest.ResponseCode = "00888";
+                        eosTopupRequest.LocationCode = testTopupNarrative.LocationCode;
+
+                        List<EosTopupProducts> testTopupProducts = new List<EosTopupProducts>();
+
+                        foreach (var item in testTopupNarrative.Products)
+                        {
+                            if (item.Collected > 0)
+                            {
+                                testTopupProducts.Add(new EosTopupProducts
+                                {
+                                    Id = item.Id,
+                                    ActionId = item.ActionId,
+                                    ServiceId = item.ServiceId,
+                                    Name = item.Name,
+                                    Description = item.Description,
+                                    Collected = item.Collected,
+                                    CollectionAmount = item.CollectionAmount,
+                                    Currency = item.Currency
+                                });
+                            }
+
+                        }
+
+                        eosTopupRequest.Products = testTopupProducts;
+
+                        #region OldCode
+                        /*
+                        eosRequest.Id = deserializedNarrative.Id;
+                        eosRequest.ServiceId = deserializedNarrative.ServiceId;
+                        eosRequest.TransactionType = deserializedNarrative.TransactionType;
+                        eosRequest.TransactionCode = deserializedNarrative.TransactionCode;
+                        eosRequest.CustomerId = deserializedNarrative.CustomerId;
+                        eosRequest.ReceiversName = deserializedNarrative.ReceiversName;
+                        eosRequest.ReceiversSurname = deserializedNarrative.ReceiversSurname;
+                        eosRequest.ReceiversIdentification = deserializedNarrative.ReceiversIdentification;
+                        eosRequest.ReceiversGender = deserializedNarrative.ReceiversGender;
+                        eosRequest.ServiceRegion = deserializedNarrative.ServiceRegion;
+                        eosRequest.ServiceProvince = deserializedNarrative.ServiceProvince;
+                        eosRequest.ServiceCountry = deserializedNarrative.ServiceCountry;
+                        eosRequest.Status = deserializedNarrative.Status;
+                        eosRequest.Currency = deserializedNarrative.Currency;
+                        eosRequest.Balance = deserializedNarrative.Balance;
+                        eosRequest.ServiceName = deserializedNarrative.ServiceName;
+                        eosRequest.ServiceType = deserializedNarrative.ServiceType;
+                        eosRequest.Quantity = deserializedNarrative.Quantity;
+                        eosRequest.ProductDetails = deserializedNarrative.ProductDetails;
+                        eosRequest.ServiceProvider = deserializedNarrative.ServiceProvider;
+                        eosRequest.ProviderAccountNumber = deserializedNarrative.ProviderAccountNumber;
+                        eosRequest.SupplierId = deserializedNarrative.SupplierId;
+                        eosRequest.ServiceAgentId = deserializedNarrative.ServiceAgentId;
+                        eosRequest.SupplierName = deserializedNarrative.SupplierName;
+                        eosRequest.Description = deserializedNarrative.Description;
+                        eosRequest.CustomerName = deserializedNarrative.CustomerName;
+                        eosRequest.CustomerMobileNumber = deserializedNarrative.CustomerMobileNumber;
+                        eosRequest.CustomerCardNumber = deserializedNarrative.CustomerCardNumber;
+                        eosRequest.Information1 = deserializedNarrative.Information1;
+                        eosRequest.Information2 = deserializedNarrative.Information2;
+                        eosRequest.DateCreated = deserializedNarrative.DateCreated;
+                        eosRequest.DatelastAccess = deserializedNarrative.DatelastAccess;
+                        eosRequest.SubDue = deserializedNarrative.SubDue;
+                        eosRequest.BillingCycle = deserializedNarrative.BillingCycle;
+                        eosRequest.ReceiverMobile = deserializedNarrative.ReceiverMobile;
+                        eosRequest.ResponseCode = "00555";
+                        eosRequest.AllowPartPayment = deserializedNarrative.AllowPartPayment;
+                        eosRequest.DeactivateOnAuthorisation = deserializedNarrative.DeactivateOnAuthorisation;
+                        eosRequest.Cashier = deserializedNarrative.Cashier;
+                        eosRequest.Authoriser = deserializedNarrative.Authoriser;
+                        eosRequest.LocationCode = deserializedNarrative.LocationCode;
+                        eosRequest.JsonProducts = deserializedNarrative.JsonProducts;
+                        eosRequest.InitialProducts = deserializedNarrative.InitialProducts;
+
+                        List<Products> products = new List<Products>();
+
+                        foreach (var item in deserializedNarrative.Products)
+                        {
+                            products.Add(item);
+                        }
+
+                        eosRequest.Products = products;*/
+                        #endregion                        
+
+                        Log.RequestsAndResponses("EOS-Request", serviceProvider, eosTopupRequest);
+
+                        var testTopupResponse = eosConnector.PostTopup(eosTopupRequest, serviceProvider);
+
+                        Log.RequestsAndResponses("EOS-Response", serviceProvider, testTopupResponse);
+
+                        var strTopupTestResponse = JsonConvert.SerializeObject(testTopupResponse);
+
+                        if (testTopupResponse.code == "200")
+                        {
+                            yoAppResponse.ResponseCode = "00000";
+                            yoAppResponse.Description = testTopupResponse.msg;
+                            yoAppResponse.Note = "Success";
+                            yoAppResponse.Narrative = "Transaction/Reversal Posted successfully. Response Object: " + testTopupResponse;
+
+                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, testTopupResponse);
+
+                            return yoAppResponse;
+                        }
+                        else
+                        {
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Description = testTopupResponse.msg;
+                            yoAppResponse.Note = "Failed";
+                            yoAppResponse.Narrative = "Failed to post reversal. Response Object: " + testTopupResponse;
+
+                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, testTopupResponse);
+
+                            return yoAppResponse;
+                        }
+
+                    case 4: // Actual Redemption
+                        EosRedemptionRequest eosRedemption = new EosRedemptionRequest();
+
+                        var deserializedRedemptionNarrative = JsonConvert.DeserializeObject<Narrative>(redemptionResponse.Narrative);
+
+                        eosRedemption.TransactionCode = deserializedRedemptionNarrative.TransactionCode;
+                        eosRedemption.CustomerId = deserializedRedemptionNarrative.CustomerId;
+                        eosRedemption.ReceiversName = deserializedRedemptionNarrative.ReceiversName;
+                        eosRedemption.ReceiversSurname = deserializedRedemptionNarrative.ReceiversSurname;
+                        eosRedemption.ReceiversIdentification = deserializedRedemptionNarrative.ReceiversIdentification;
+                        eosRedemption.ServiceRegion = deserializedRedemptionNarrative.ServiceRegion;
+                        eosRedemption.ServiceProvince = deserializedRedemptionNarrative.ServiceProvince;
+                        eosRedemption.SupplierId = deserializedRedemptionNarrative.SupplierId;
+                        eosRedemption.SupplierName = deserializedRedemptionNarrative.SupplierName;
+                        eosRedemption.CustomerName = deserializedRedemptionNarrative.CustomerName;
+                        eosRedemption.ResponseCode = "00555";
+                        eosRedemption.LocationCode = deserializedRedemptionNarrative.LocationCode;
+
+                        List<EosRedemptionProducts> eosRedemptions = new List<EosRedemptionProducts>();
+
+                        foreach (var item in deserializedRedemptionNarrative.Products)
+                        {
+                            if (item.Collected > 0)
+                            {
+                                eosRedemptions.Add(new EosRedemptionProducts
+                                {
+                                    Id = item.Id,
+                                    ActionId = item.ActionId,
+                                    ServiceId = item.ServiceId,
+                                    Name = item.Name,
+                                    Description = item.Description,
+                                    Collected = item.Collected,
+                                    CollectionAmount = item.CollectionAmount,
+                                    Currency = item.Currency
+                                });
+                            }
+                        }
+
+                        eosRedemption.Products = eosRedemptions;
+
+                        #region OldCode
+                        /*
+                        eosRequest.Id = deserializedNarrative.Id;
+                        eosRequest.ServiceId = deserializedNarrative.ServiceId;
+                        eosRequest.TransactionType = deserializedNarrative.TransactionType;
+                        eosRequest.TransactionCode = deserializedNarrative.TransactionCode;
+                        eosRequest.CustomerId = deserializedNarrative.CustomerId;
+                        eosRequest.ReceiversName = deserializedNarrative.ReceiversName;
+                        eosRequest.ReceiversSurname = deserializedNarrative.ReceiversSurname;
+                        eosRequest.ReceiversIdentification = deserializedNarrative.ReceiversIdentification;
+                        eosRequest.ReceiversGender = deserializedNarrative.ReceiversGender;
+                        eosRequest.ServiceRegion = deserializedNarrative.ServiceRegion;
+                        eosRequest.ServiceProvince = deserializedNarrative.ServiceProvince;
+                        eosRequest.ServiceCountry = deserializedNarrative.ServiceCountry;
+                        eosRequest.Status = deserializedNarrative.Status;
+                        eosRequest.Currency = deserializedNarrative.Currency;
+                        eosRequest.Balance = deserializedNarrative.Balance;
+                        eosRequest.ServiceName = deserializedNarrative.ServiceName;
+                        eosRequest.ServiceType = deserializedNarrative.ServiceType;
+                        eosRequest.Quantity = deserializedNarrative.Quantity;
+                        eosRequest.ProductDetails = deserializedNarrative.ProductDetails;
+                        eosRequest.ServiceProvider = deserializedNarrative.ServiceProvider;
+                        eosRequest.ProviderAccountNumber = deserializedNarrative.ProviderAccountNumber;
+                        eosRequest.SupplierId = deserializedNarrative.SupplierId;
+                        eosRequest.ServiceAgentId = deserializedNarrative.ServiceAgentId;
+                        eosRequest.SupplierName = deserializedNarrative.SupplierName;
+                        eosRequest.Description = deserializedNarrative.Description;
+                        eosRequest.CustomerName = deserializedNarrative.CustomerName;
+                        eosRequest.CustomerMobileNumber = deserializedNarrative.CustomerMobileNumber;
+                        eosRequest.CustomerCardNumber = deserializedNarrative.CustomerCardNumber;
+                        eosRequest.Information1 = deserializedNarrative.Information1;
+                        eosRequest.Information2 = deserializedNarrative.Information2;
+                        eosRequest.DateCreated = deserializedNarrative.DateCreated;
+                        eosRequest.DatelastAccess = deserializedNarrative.DatelastAccess;
+                        eosRequest.SubDue = deserializedNarrative.SubDue;
+                        eosRequest.BillingCycle = deserializedNarrative.BillingCycle;
+                        eosRequest.ReceiverMobile = deserializedNarrative.ReceiverMobile;
+                        eosRequest.ResponseCode = "00555";
+                        eosRequest.AllowPartPayment = deserializedNarrative.AllowPartPayment;
+                        eosRequest.DeactivateOnAuthorisation = deserializedNarrative.DeactivateOnAuthorisation;
+                        eosRequest.Cashier = deserializedNarrative.Cashier;
+                        eosRequest.Authoriser = deserializedNarrative.Authoriser;
+                        eosRequest.LocationCode = deserializedNarrative.LocationCode;
+                        eosRequest.JsonProducts = deserializedNarrative.JsonProducts;
+                        eosRequest.InitialProducts = deserializedNarrative.InitialProducts;
+
+                        List<Products> products = new List<Products>();
+
+                        foreach (var item in deserializedNarrative.Products)
+                        {
+                            products.Add(item);
+                        }
+
+                        eosRequest.Products = products;*/
+                        #endregion                        
+
+                        Log.RequestsAndResponses("EOS-Request", serviceProvider, eosRedemption);
+
+                        var eosActualResponse = eosConnector.PostRedemption(eosRedemption, serviceProvider);
+
+                        Log.RequestsAndResponses("EOS-Response", serviceProvider, eosActualResponse);
+
+                        var stringActualResponse = JsonConvert.SerializeObject(eosActualResponse);
+
+                        if (eosActualResponse.code == "200")
+                        {
+                            yoAppResponse.ResponseCode = "00000";
+                            yoAppResponse.Description = eosActualResponse.msg;
+                            yoAppResponse.Note = "Success";
+                            yoAppResponse.Narrative = "Transaction/Redemption Posted successfully. Response Object:" + stringActualResponse;
+
+                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, eosActualResponse);
+
+                            return yoAppResponse;
+                        }
+                        else
+                        {
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Description = eosActualResponse.msg;
+                            yoAppResponse.Note = "Failed";
+                            yoAppResponse.Narrative = "Failed to process transaction: Response Object: " + stringActualResponse;
+
+                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, eosActualResponse);
+
+                            return yoAppResponse;
+                        }
+
+                    case 5: // Actual Reversal
+                        EosReversalRequest eosReversal = new EosReversalRequest();
+
+                        var narrative1 = JsonConvert.DeserializeObject<Narrative>(redemptionResponse.Narrative);
+
+                        eosReversal.TransactionCode = narrative1.TransactionCode;
+                        eosReversal.CustomerId = narrative1.CustomerId;
+                        eosReversal.ReceiversName = narrative1.ReceiversName;
+                        eosReversal.ReceiversSurname = narrative1.ReceiversSurname;
+                        eosReversal.ReceiversIdentification = narrative1.ReceiversIdentification;
+                        eosReversal.ServiceRegion = narrative1.ServiceRegion;
+                        eosReversal.ServiceProvince = narrative1.ServiceProvince;
+                        eosReversal.SupplierId = narrative1.SupplierId;
+                        eosReversal.SupplierName = narrative1.SupplierName;
+                        eosReversal.CustomerName = narrative1.CustomerName;
+                        eosReversal.ResponseCode = "00777";
+                        eosReversal.LocationCode = narrative1.LocationCode;
+                        
+                        List<EosReversalProducts> eosReversals = new List<EosReversalProducts>();
+
+                        foreach (var item in narrative1.Products)
+                        {
+                            if (item.Collected > 0)
+                            {
+                                eosReversals.Add(new EosReversalProducts
+                                {
+                                    Id = item.Id,
+                                    ActionId = item.ActionId,
+                                    ServiceId = item.ServiceId,
+                                    Name = item.Name,
+                                    Description = item.Description,
+                                    Collected = item.Collected,
+                                    CollectionAmount = item.CollectionAmount,
+                                    Currency = item.Currency
+                                });
+                            }
+
+                        }
+
+                        eosReversal.Products = eosReversals;
+
+                        #region OldCode
+                        /*
+                        eosRequest.Id = deserializedNarrative.Id;
+                        eosRequest.ServiceId = deserializedNarrative.ServiceId;
+                        eosRequest.TransactionType = deserializedNarrative.TransactionType;
+                        eosRequest.TransactionCode = deserializedNarrative.TransactionCode;
+                        eosRequest.CustomerId = deserializedNarrative.CustomerId;
+                        eosRequest.ReceiversName = deserializedNarrative.ReceiversName;
+                        eosRequest.ReceiversSurname = deserializedNarrative.ReceiversSurname;
+                        eosRequest.ReceiversIdentification = deserializedNarrative.ReceiversIdentification;
+                        eosRequest.ReceiversGender = deserializedNarrative.ReceiversGender;
+                        eosRequest.ServiceRegion = deserializedNarrative.ServiceRegion;
+                        eosRequest.ServiceProvince = deserializedNarrative.ServiceProvince;
+                        eosRequest.ServiceCountry = deserializedNarrative.ServiceCountry;
+                        eosRequest.Status = deserializedNarrative.Status;
+                        eosRequest.Currency = deserializedNarrative.Currency;
+                        eosRequest.Balance = deserializedNarrative.Balance;
+                        eosRequest.ServiceName = deserializedNarrative.ServiceName;
+                        eosRequest.ServiceType = deserializedNarrative.ServiceType;
+                        eosRequest.Quantity = deserializedNarrative.Quantity;
+                        eosRequest.ProductDetails = deserializedNarrative.ProductDetails;
+                        eosRequest.ServiceProvider = deserializedNarrative.ServiceProvider;
+                        eosRequest.ProviderAccountNumber = deserializedNarrative.ProviderAccountNumber;
+                        eosRequest.SupplierId = deserializedNarrative.SupplierId;
+                        eosRequest.ServiceAgentId = deserializedNarrative.ServiceAgentId;
+                        eosRequest.SupplierName = deserializedNarrative.SupplierName;
+                        eosRequest.Description = deserializedNarrative.Description;
+                        eosRequest.CustomerName = deserializedNarrative.CustomerName;
+                        eosRequest.CustomerMobileNumber = deserializedNarrative.CustomerMobileNumber;
+                        eosRequest.CustomerCardNumber = deserializedNarrative.CustomerCardNumber;
+                        eosRequest.Information1 = deserializedNarrative.Information1;
+                        eosRequest.Information2 = deserializedNarrative.Information2;
+                        eosRequest.DateCreated = deserializedNarrative.DateCreated;
+                        eosRequest.DatelastAccess = deserializedNarrative.DatelastAccess;
+                        eosRequest.SubDue = deserializedNarrative.SubDue;
+                        eosRequest.BillingCycle = deserializedNarrative.BillingCycle;
+                        eosRequest.ReceiverMobile = deserializedNarrative.ReceiverMobile;
+                        eosRequest.ResponseCode = "00555";
+                        eosRequest.AllowPartPayment = deserializedNarrative.AllowPartPayment;
+                        eosRequest.DeactivateOnAuthorisation = deserializedNarrative.DeactivateOnAuthorisation;
+                        eosRequest.Cashier = deserializedNarrative.Cashier;
+                        eosRequest.Authoriser = deserializedNarrative.Authoriser;
+                        eosRequest.LocationCode = deserializedNarrative.LocationCode;
+                        eosRequest.JsonProducts = deserializedNarrative.JsonProducts;
+                        eosRequest.InitialProducts = deserializedNarrative.InitialProducts;
+
+                        List<Products> products = new List<Products>();
+
+                        foreach (var item in deserializedNarrative.Products)
+                        {
+                            products.Add(item);
+                        }
+
+                        eosRequest.Products = products;*/
+                        #endregion                        
+
+                        Log.RequestsAndResponses("EOS-Request", serviceProvider, eosReversal);
+
+                        var eosReversalResponse = eosConnector.PostReversal(eosReversal, serviceProvider);
+
+                        Log.RequestsAndResponses("EOS-Response", serviceProvider, eosReversalResponse);
+
+                        var _strResponse = JsonConvert.SerializeObject(eosReversalResponse);
+
+                        if (eosReversalResponse.code == "200")
+                        {
+                            yoAppResponse.ResponseCode = "00000";
+                            yoAppResponse.Description = eosReversalResponse.msg;
+                            yoAppResponse.Note = "Success";
+                            yoAppResponse.Narrative = "Transaction/Reversal Posted successfully. Response Object: " + _strResponse;
+
+                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, eosReversalResponse);
+
+                            return yoAppResponse;
+                        }
+                        else
+                        {
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Description = eosReversalResponse.msg;
+                            yoAppResponse.Note = "Failed";
+                            yoAppResponse.Narrative = "Failed to post reversal. Response Object: " + _strResponse;
+
+                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, eosReversalResponse);
+
+                            return yoAppResponse;
+                        }
+
+                    case 6: // Actual Topup
+                        EosTopupRequest _eosTopupRequest = new EosTopupRequest();
+
+                        var topupNarrative = JsonConvert.DeserializeObject<Narrative>(redemptionResponse.Narrative);
+
+                       _eosTopupRequest.TransactionCode = topupNarrative.TransactionCode;
+                       _eosTopupRequest.CustomerId = topupNarrative.CustomerId;
+                       _eosTopupRequest.ReceiversName = topupNarrative.ReceiversName;
+                       _eosTopupRequest.ReceiversSurname = topupNarrative.ReceiversSurname;
+                       _eosTopupRequest.ReceiversIdentification = topupNarrative.ReceiversIdentification;
+                       _eosTopupRequest.ServiceRegion = topupNarrative.ServiceRegion;
+                       _eosTopupRequest.ServiceProvince = topupNarrative.ServiceProvince;
+                       _eosTopupRequest.SupplierId = topupNarrative.SupplierId;
+                       _eosTopupRequest.SupplierName = topupNarrative.SupplierName;
+                       _eosTopupRequest.CustomerName = topupNarrative.CustomerName;
+                       _eosTopupRequest.ResponseCode = "00888";
+                       _eosTopupRequest.LocationCode = topupNarrative.LocationCode;
+
+                        List<EosTopupProducts> topupProducts = new List<EosTopupProducts>();
+
+                        foreach (var item in topupNarrative.Products)
+                        {
+                            if (item.Collected > 0)
+                            {
+                                topupProducts.Add(new EosTopupProducts
+                                {
+                                    Id = item.Id,
+                                    ActionId = item.ActionId,
+                                    ServiceId = item.ServiceId,
+                                    Name = item.Name,
+                                    Description = item.Description,
+                                    Collected = item.Collected,
+                                    CollectionAmount = item.CollectionAmount,
+                                    Currency = item.Currency
+                                });
+                            }
+
+                        }
+
+                        _eosTopupRequest.Products = topupProducts;
+
+                        #region OldCode
+                        /*
+                        eosRequest.Id = deserializedNarrative.Id;
+                        eosRequest.ServiceId = deserializedNarrative.ServiceId;
+                        eosRequest.TransactionType = deserializedNarrative.TransactionType;
+                        eosRequest.TransactionCode = deserializedNarrative.TransactionCode;
+                        eosRequest.CustomerId = deserializedNarrative.CustomerId;
+                        eosRequest.ReceiversName = deserializedNarrative.ReceiversName;
+                        eosRequest.ReceiversSurname = deserializedNarrative.ReceiversSurname;
+                        eosRequest.ReceiversIdentification = deserializedNarrative.ReceiversIdentification;
+                        eosRequest.ReceiversGender = deserializedNarrative.ReceiversGender;
+                        eosRequest.ServiceRegion = deserializedNarrative.ServiceRegion;
+                        eosRequest.ServiceProvince = deserializedNarrative.ServiceProvince;
+                        eosRequest.ServiceCountry = deserializedNarrative.ServiceCountry;
+                        eosRequest.Status = deserializedNarrative.Status;
+                        eosRequest.Currency = deserializedNarrative.Currency;
+                        eosRequest.Balance = deserializedNarrative.Balance;
+                        eosRequest.ServiceName = deserializedNarrative.ServiceName;
+                        eosRequest.ServiceType = deserializedNarrative.ServiceType;
+                        eosRequest.Quantity = deserializedNarrative.Quantity;
+                        eosRequest.ProductDetails = deserializedNarrative.ProductDetails;
+                        eosRequest.ServiceProvider = deserializedNarrative.ServiceProvider;
+                        eosRequest.ProviderAccountNumber = deserializedNarrative.ProviderAccountNumber;
+                        eosRequest.SupplierId = deserializedNarrative.SupplierId;
+                        eosRequest.ServiceAgentId = deserializedNarrative.ServiceAgentId;
+                        eosRequest.SupplierName = deserializedNarrative.SupplierName;
+                        eosRequest.Description = deserializedNarrative.Description;
+                        eosRequest.CustomerName = deserializedNarrative.CustomerName;
+                        eosRequest.CustomerMobileNumber = deserializedNarrative.CustomerMobileNumber;
+                        eosRequest.CustomerCardNumber = deserializedNarrative.CustomerCardNumber;
+                        eosRequest.Information1 = deserializedNarrative.Information1;
+                        eosRequest.Information2 = deserializedNarrative.Information2;
+                        eosRequest.DateCreated = deserializedNarrative.DateCreated;
+                        eosRequest.DatelastAccess = deserializedNarrative.DatelastAccess;
+                        eosRequest.SubDue = deserializedNarrative.SubDue;
+                        eosRequest.BillingCycle = deserializedNarrative.BillingCycle;
+                        eosRequest.ReceiverMobile = deserializedNarrative.ReceiverMobile;
+                        eosRequest.ResponseCode = "00555";
+                        eosRequest.AllowPartPayment = deserializedNarrative.AllowPartPayment;
+                        eosRequest.DeactivateOnAuthorisation = deserializedNarrative.DeactivateOnAuthorisation;
+                        eosRequest.Cashier = deserializedNarrative.Cashier;
+                        eosRequest.Authoriser = deserializedNarrative.Authoriser;
+                        eosRequest.LocationCode = deserializedNarrative.LocationCode;
+                        eosRequest.JsonProducts = deserializedNarrative.JsonProducts;
+                        eosRequest.InitialProducts = deserializedNarrative.InitialProducts;
+
+                        List<Products> products = new List<Products>();
+
+                        foreach (var item in deserializedNarrative.Products)
+                        {
+                            products.Add(item);
+                        }
+
+                        eosRequest.Products = products;*/
+                        #endregion                        
+
+                        Log.RequestsAndResponses("EOS-Request", serviceProvider, _eosTopupRequest);
+
+                        var topupResponse = eosConnector.PostTopup(_eosTopupRequest, serviceProvider);
+
+                        Log.RequestsAndResponses("EOS-Response", serviceProvider, topupResponse);
+
+                        var _strTopupTestResponse = JsonConvert.SerializeObject(topupResponse);
+
+                        if (topupResponse.code == "200")
+                        {
+                            yoAppResponse.ResponseCode = "00000";
+                            yoAppResponse.Description = topupResponse.msg;
+                            yoAppResponse.Note = "Success";
+                            yoAppResponse.Narrative = "Transaction/Reversal Posted successfully. Response Object: " + _strTopupTestResponse;
+
+                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, topupResponse);
+
+                            return yoAppResponse;
+                        }
+                        else
+                        {
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Description = topupResponse.msg;
+                            yoAppResponse.Note = "Failed";
+                            yoAppResponse.Narrative = "Failed to post reversal. Response Object: " + _strTopupTestResponse;
+
+                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, topupResponse);
 
                             return yoAppResponse;
                         }

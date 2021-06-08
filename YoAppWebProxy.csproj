@@ -204,8 +204,15 @@
     <Compile Include="Models\Aqusales\TranCurrencyInfoVM.cs" />
     <Compile Include="Models\Aqusales\TranData.cs" />
     <Compile Include="Models\Aqusales\TranSourceDetails.cs" />
-    <Compile Include="Models\EOS\EosRequest.cs" />
-    <Compile Include="Models\EOS\EosResponse.cs" />
+    <Compile Include="Models\EOS\EosRedemptionProducts.cs" />
+    <Compile Include="Models\EOS\EosRedemptionRequest.cs" />
+    <Compile Include="Models\EOS\EosRedemptionResponse.cs" />
+    <Compile Include="Models\EOS\EosReversalProducts.cs" />
+    <Compile Include="Models\EOS\EosReversalRequest.cs" />
+    <Compile Include="Models\EOS\EosReversalResponse.cs" />
+    <Compile Include="Models\EOS\EosTopupProducts.cs" />
+    <Compile Include="Models\EOS\EosTopupRequest.cs" />
+    <Compile Include="Models\EOS\EosTopupResponse.cs" />
     <Compile Include="Models\Trek\CardBalance.cs" />
     <Compile Include="Models\Trek\CardTransactions.cs" />
     <Compile Include="Models\Trek\CardTransactionsByDate.cs" />

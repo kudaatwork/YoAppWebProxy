@@ -5,9 +5,9 @@ using System.Web;
 
 namespace YoAppWebProxy.Models.EOS
 {
-    public class EosResponse
+    public class EosRedemptionResponse
     {
-        public string ResponseCode { get; set; }
-        public string Description { get; set; }
+        public string code { get; set; }
+        public string msg { get; set; }
     }
 }
