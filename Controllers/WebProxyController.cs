@@ -776,14 +776,14 @@ namespace YoAppWebProxy.Controllers
 
                         saleTransaction.Amount = totalAmout;
 
-                        var costPrice = 0.0m;                        
+                        var costPrice = 0.0m;
 
                         foreach (var item in deserializedResponse.Products)
                         {
                             if (item.Collected > 0)
                             {
                                 costPrice = item.CostPrice * item.Collected;
-                            }                            
+                            }
                         }
 
                         saleTransaction.CostOfSales = costPrice;
@@ -829,7 +829,7 @@ namespace YoAppWebProxy.Controllers
 
                     case 2: // Post GRV
 
-                        GRVTransaction grvTransaction = new GRVTransaction();                       
+                        GRVTransaction grvTransaction = new GRVTransaction();
                         AquSalesConnector connector = new AquSalesConnector();
 
                         var aquResponse = JsonConvert.DeserializeObject<YoAppGrvResponse>(redemptionResponse.Narrative);
@@ -840,7 +840,7 @@ namespace YoAppWebProxy.Controllers
                         grvTransaction.TransactionName = AqusalesObjects.TransactionName;
                         grvTransaction.TransactionReference = aquResponse.OrderNumber.Trim();
                         grvTransaction.Company = "CBZ AGROYIELD"; //aquResponse.BranchName;
-                        grvTransaction.DebtorOrCreditor = aquResponse.BranchName?.Trim() + "("+ aquResponse.BranchId?.Trim() +")";
+                        grvTransaction.DebtorOrCreditor = aquResponse.BranchName?.Trim() + "(" + aquResponse.BranchId?.Trim() + ")";
                         grvTransaction.Amount = (decimal)aquResponse.StockedValue;
                         grvTransaction.Vat = 0.0m;
 
@@ -879,7 +879,7 @@ namespace YoAppWebProxy.Controllers
                             Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, response);
 
                             return yoAppResponse;
-                        }                       
+                        }
                 }
             }
 
@@ -888,14 +888,14 @@ namespace YoAppWebProxy.Controllers
 
         [Route("api/eos-yoapp/cbz-services")]
         [HttpPost]
-        public YoAppResponse EosYoAppCbzProxy(YoAppResponse redemptionResponse)
+        public YoAppResponse EosYoAppCbzProxy(YoAppResponse apiYoAppResponse)
         {
             #region Declared Objects
             var serviceProvider = "CBZ-EOS";
             YoAppResponse yoAppResponse = new YoAppResponse();
             #endregion
 
-            if (redemptionResponse == null)
+            if (apiYoAppResponse == null)
             {
                 string message = "Received Nothing. Your request object is null";
 
@@ -909,12 +909,12 @@ namespace YoAppWebProxy.Controllers
             {
                 EosConnector eosConnector = new EosConnector();
 
-                switch (redemptionResponse.ServiceId)
+                switch (apiYoAppResponse.ServiceId)
                 {
                     case 1: // Redemption in Test
-                        EosRedemptionRequest eosRedemptionRequest = new EosRedemptionRequest();                      
+                        EosRedemptionRequest eosRedemptionRequest = new EosRedemptionRequest();
 
-                        var deserializedNarrative = JsonConvert.DeserializeObject<Narrative>(redemptionResponse.Narrative);
+                        var deserializedNarrative = JsonConvert.DeserializeObject<Narrative>(apiYoAppResponse.Narrative);
 
                         eosRedemptionRequest.TransactionCode = deserializedNarrative.TransactionCode;
                         eosRedemptionRequest.CustomerId = deserializedNarrative.CustomerId;
@@ -1025,7 +1025,7 @@ namespace YoAppWebProxy.Controllers
                             Log.RequestsAndResponses("EOS-Test-Redemption-Response-YoApp", serviceProvider, eosResponse);
 
                             return yoAppResponse;
-                        }                       
+                        }
                         else
                         {
                             yoAppResponse.ResponseCode = "00008";
@@ -1040,8 +1040,8 @@ namespace YoAppWebProxy.Controllers
 
                     case 2: // Reversal in Test
                         EosReversalRequest eosReversalRequest = new EosReversalRequest();
-                       
-                        var narrative = JsonConvert.DeserializeObject<Narrative>(redemptionResponse.Narrative);
+
+                        var narrative = JsonConvert.DeserializeObject<Narrative>(apiYoAppResponse.Narrative);
 
                         eosReversalRequest.TransactionCode = narrative.TransactionCode;
                         eosReversalRequest.CustomerId = narrative.CustomerId;
@@ -1135,11 +1135,11 @@ namespace YoAppWebProxy.Controllers
                         eosRequest.Products = products;*/
                         #endregion                        
 
-                        Log.RequestsAndResponses("EOS-Request", serviceProvider, eosReversalRequest);
+                        Log.RequestsAndResponses("EOS-Test-Reversal-Request", serviceProvider, eosReversalRequest);
 
                         var response = eosConnector.PostReversal(eosReversalRequest, serviceProvider);
 
-                        Log.RequestsAndResponses("EOS-Response", serviceProvider, response);
+                        Log.RequestsAndResponses("EOS-Test-Reversal-Response", serviceProvider, response);
 
                         var strResponse = JsonConvert.SerializeObject(response);
 
@@ -1150,7 +1150,7 @@ namespace YoAppWebProxy.Controllers
                             yoAppResponse.Note = "Success";
                             yoAppResponse.Narrative = "Transaction/Reversal Posted successfully. Response Object: " + strResponse;
 
-                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, response);
+                            Log.RequestsAndResponses("EOS-Test-Reversal-Response-YoApp", serviceProvider, response);
 
                             return yoAppResponse;
                         }
@@ -1161,15 +1161,17 @@ namespace YoAppWebProxy.Controllers
                             yoAppResponse.Note = "Failed";
                             yoAppResponse.Narrative = "Failed to post reversal. Response Object: " + strResponse;
 
-                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, response);
+                            Log.RequestsAndResponses("EOS-Test-Reversal-Response-YoApp", serviceProvider, response);
 
                             return yoAppResponse;
                         }
 
                     case 3: // Topup in Test
                         EosTopupRequest eosTopupRequest = new EosTopupRequest();
-                        
-                        var testTopupNarrative = JsonConvert.DeserializeObject<Narrative>(redemptionResponse.Narrative);
+
+                        var testString = JsonConvert.SerializeObject(apiYoAppResponse.Narrative);
+
+                        var testTopupNarrative = JsonConvert.DeserializeObject<Narrative>(apiYoAppResponse.Narrative);
 
                         eosTopupRequest.TransactionCode = testTopupNarrative.TransactionCode;
                         eosTopupRequest.CustomerId = testTopupNarrative.CustomerId;
@@ -1199,10 +1201,10 @@ namespace YoAppWebProxy.Controllers
                                     Description = item.Description,
                                     Collected = item.Collected,
                                     CollectionAmount = item.CollectionAmount,
-                                    Currency = item.Currency
+                                    Currency = item.Currency,
+                                    Quantity = item.Quantity
                                 });
                             }
-
                         }
 
                         eosTopupRequest.Products = testTopupProducts;
@@ -1263,11 +1265,11 @@ namespace YoAppWebProxy.Controllers
                         eosRequest.Products = products;*/
                         #endregion                        
 
-                        Log.RequestsAndResponses("EOS-Request", serviceProvider, eosTopupRequest);
+                        Log.RequestsAndResponses("EOS-Test-Topup-Request", serviceProvider, eosTopupRequest);
 
                         var testTopupResponse = eosConnector.PostTopup(eosTopupRequest, serviceProvider);
 
-                        Log.RequestsAndResponses("EOS-Response", serviceProvider, testTopupResponse);
+                        Log.RequestsAndResponses("EOS-Test-Topup-Response", serviceProvider, testTopupResponse);
 
                         var strTopupTestResponse = JsonConvert.SerializeObject(testTopupResponse);
 
@@ -1278,7 +1280,7 @@ namespace YoAppWebProxy.Controllers
                             yoAppResponse.Note = "Success";
                             yoAppResponse.Narrative = "Transaction/Reversal Posted successfully. Response Object: " + testTopupResponse;
 
-                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, testTopupResponse);
+                            Log.RequestsAndResponses("EOS-Test-Topup-Response-YoApp", serviceProvider, testTopupResponse);
 
                             return yoAppResponse;
                         }
@@ -1289,7 +1291,7 @@ namespace YoAppWebProxy.Controllers
                             yoAppResponse.Note = "Failed";
                             yoAppResponse.Narrative = "Failed to post reversal. Response Object: " + testTopupResponse;
 
-                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, testTopupResponse);
+                            Log.RequestsAndResponses("EOS-Test-Topup-Response-YoApp", serviceProvider, testTopupResponse);
 
                             return yoAppResponse;
                         }
@@ -1297,7 +1299,7 @@ namespace YoAppWebProxy.Controllers
                     case 4: // Actual Redemption
                         EosRedemptionRequest eosRedemption = new EosRedemptionRequest();
 
-                        var deserializedRedemptionNarrative = JsonConvert.DeserializeObject<Narrative>(redemptionResponse.Narrative);
+                        var deserializedRedemptionNarrative = JsonConvert.DeserializeObject<Narrative>(apiYoAppResponse.Narrative);
 
                         eosRedemption.TransactionCode = deserializedRedemptionNarrative.TransactionCode;
                         eosRedemption.CustomerId = deserializedRedemptionNarrative.CustomerId;
@@ -1390,11 +1392,11 @@ namespace YoAppWebProxy.Controllers
                         eosRequest.Products = products;*/
                         #endregion                        
 
-                        Log.RequestsAndResponses("EOS-Request", serviceProvider, eosRedemption);
+                        Log.RequestsAndResponses("EOS-Redemption-Request", serviceProvider, eosRedemption);
 
                         var eosActualResponse = eosConnector.PostRedemption(eosRedemption, serviceProvider);
 
-                        Log.RequestsAndResponses("EOS-Response", serviceProvider, eosActualResponse);
+                        Log.RequestsAndResponses("EOS-Redemption-Response", serviceProvider, eosActualResponse);
 
                         var stringActualResponse = JsonConvert.SerializeObject(eosActualResponse);
 
@@ -1405,7 +1407,7 @@ namespace YoAppWebProxy.Controllers
                             yoAppResponse.Note = "Success";
                             yoAppResponse.Narrative = "Transaction/Redemption Posted successfully. Response Object:" + stringActualResponse;
 
-                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, eosActualResponse);
+                            Log.RequestsAndResponses("EOS-Redemption-Response-YoApp", serviceProvider, eosActualResponse);
 
                             return yoAppResponse;
                         }
@@ -1416,7 +1418,7 @@ namespace YoAppWebProxy.Controllers
                             yoAppResponse.Note = "Failed";
                             yoAppResponse.Narrative = "Failed to process transaction: Response Object: " + stringActualResponse;
 
-                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, eosActualResponse);
+                            Log.RequestsAndResponses("EOS-Redemption-Response-YoApp", serviceProvider, eosActualResponse);
 
                             return yoAppResponse;
                         }
@@ -1424,7 +1426,7 @@ namespace YoAppWebProxy.Controllers
                     case 5: // Actual Reversal
                         EosReversalRequest eosReversal = new EosReversalRequest();
 
-                        var narrative1 = JsonConvert.DeserializeObject<Narrative>(redemptionResponse.Narrative);
+                        var narrative1 = JsonConvert.DeserializeObject<Narrative>(apiYoAppResponse.Narrative);
 
                         eosReversal.TransactionCode = narrative1.TransactionCode;
                         eosReversal.CustomerId = narrative1.CustomerId;
@@ -1438,7 +1440,7 @@ namespace YoAppWebProxy.Controllers
                         eosReversal.CustomerName = narrative1.CustomerName;
                         eosReversal.ResponseCode = "00777";
                         eosReversal.LocationCode = narrative1.LocationCode;
-                        
+
                         List<EosReversalProducts> eosReversals = new List<EosReversalProducts>();
 
                         foreach (var item in narrative1.Products)
@@ -1518,11 +1520,11 @@ namespace YoAppWebProxy.Controllers
                         eosRequest.Products = products;*/
                         #endregion                        
 
-                        Log.RequestsAndResponses("EOS-Request", serviceProvider, eosReversal);
+                        Log.RequestsAndResponses("EOS-Reversal-Request", serviceProvider, eosReversal);
 
                         var eosReversalResponse = eosConnector.PostReversal(eosReversal, serviceProvider);
 
-                        Log.RequestsAndResponses("EOS-Response", serviceProvider, eosReversalResponse);
+                        Log.RequestsAndResponses("EOS-Reversal-Response", serviceProvider, eosReversalResponse);
 
                         var _strResponse = JsonConvert.SerializeObject(eosReversalResponse);
 
@@ -1533,7 +1535,7 @@ namespace YoAppWebProxy.Controllers
                             yoAppResponse.Note = "Success";
                             yoAppResponse.Narrative = "Transaction/Reversal Posted successfully. Response Object: " + _strResponse;
 
-                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, eosReversalResponse);
+                            Log.RequestsAndResponses("EOS-Reversal-Response-YoApp", serviceProvider, eosReversalResponse);
 
                             return yoAppResponse;
                         }
@@ -1544,7 +1546,7 @@ namespace YoAppWebProxy.Controllers
                             yoAppResponse.Note = "Failed";
                             yoAppResponse.Narrative = "Failed to post reversal. Response Object: " + _strResponse;
 
-                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, eosReversalResponse);
+                            Log.RequestsAndResponses("EOS-Reversal-Response-YoApp", serviceProvider, eosReversalResponse);
 
                             return yoAppResponse;
                         }
@@ -1552,20 +1554,20 @@ namespace YoAppWebProxy.Controllers
                     case 6: // Actual Topup
                         EosTopupRequest _eosTopupRequest = new EosTopupRequest();
 
-                        var topupNarrative = JsonConvert.DeserializeObject<Narrative>(redemptionResponse.Narrative);
+                        var topupNarrative = JsonConvert.DeserializeObject<Narrative>(apiYoAppResponse.Narrative);
 
-                       _eosTopupRequest.TransactionCode = topupNarrative.TransactionCode;
-                       _eosTopupRequest.CustomerId = topupNarrative.CustomerId;
-                       _eosTopupRequest.ReceiversName = topupNarrative.ReceiversName;
-                       _eosTopupRequest.ReceiversSurname = topupNarrative.ReceiversSurname;
-                       _eosTopupRequest.ReceiversIdentification = topupNarrative.ReceiversIdentification;
-                       _eosTopupRequest.ServiceRegion = topupNarrative.ServiceRegion;
-                       _eosTopupRequest.ServiceProvince = topupNarrative.ServiceProvince;
-                       _eosTopupRequest.SupplierId = topupNarrative.SupplierId;
-                       _eosTopupRequest.SupplierName = topupNarrative.SupplierName;
-                       _eosTopupRequest.CustomerName = topupNarrative.CustomerName;
-                       _eosTopupRequest.ResponseCode = "00888";
-                       _eosTopupRequest.LocationCode = topupNarrative.LocationCode;
+                        _eosTopupRequest.TransactionCode = topupNarrative.TransactionCode;
+                        _eosTopupRequest.CustomerId = topupNarrative.CustomerId;
+                        _eosTopupRequest.ReceiversName = topupNarrative.ReceiversName;
+                        _eosTopupRequest.ReceiversSurname = topupNarrative.ReceiversSurname;
+                        _eosTopupRequest.ReceiversIdentification = topupNarrative.ReceiversIdentification;
+                        _eosTopupRequest.ServiceRegion = topupNarrative.ServiceRegion;
+                        _eosTopupRequest.ServiceProvince = topupNarrative.ServiceProvince;
+                        _eosTopupRequest.SupplierId = topupNarrative.SupplierId;
+                        _eosTopupRequest.SupplierName = topupNarrative.SupplierName;
+                        _eosTopupRequest.CustomerName = topupNarrative.CustomerName;
+                        _eosTopupRequest.ResponseCode = "00888";
+                        _eosTopupRequest.LocationCode = topupNarrative.LocationCode;
 
                         List<EosTopupProducts> topupProducts = new List<EosTopupProducts>();
 
@@ -1580,8 +1582,8 @@ namespace YoAppWebProxy.Controllers
                                     ServiceId = item.ServiceId,
                                     Name = item.Name,
                                     Description = item.Description,
-                                    Collected = item.Collected,
-                                    CollectionAmount = item.CollectionAmount,
+                                    Quantity = item.Quantity,
+                                    Price = item.Price,
                                     Currency = item.Currency
                                 });
                             }
@@ -1646,11 +1648,11 @@ namespace YoAppWebProxy.Controllers
                         eosRequest.Products = products;*/
                         #endregion                        
 
-                        Log.RequestsAndResponses("EOS-Request", serviceProvider, _eosTopupRequest);
+                        Log.RequestsAndResponses("EOS-Topup-Request", serviceProvider, _eosTopupRequest);
 
                         var topupResponse = eosConnector.PostTopup(_eosTopupRequest, serviceProvider);
 
-                        Log.RequestsAndResponses("EOS-Response", serviceProvider, topupResponse);
+                        Log.RequestsAndResponses("EOS-Topup-Response", serviceProvider, topupResponse);
 
                         var _strTopupTestResponse = JsonConvert.SerializeObject(topupResponse);
 
@@ -1661,7 +1663,7 @@ namespace YoAppWebProxy.Controllers
                             yoAppResponse.Note = "Success";
                             yoAppResponse.Narrative = "Transaction/Reversal Posted successfully. Response Object: " + _strTopupTestResponse;
 
-                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, topupResponse);
+                            Log.RequestsAndResponses("EOS-Topup-Response-YoApp", serviceProvider, topupResponse);
 
                             return yoAppResponse;
                         }
@@ -1672,7 +1674,7 @@ namespace YoAppWebProxy.Controllers
                             yoAppResponse.Note = "Failed";
                             yoAppResponse.Narrative = "Failed to post reversal. Response Object: " + _strTopupTestResponse;
 
-                            Log.RequestsAndResponses("EOS-Response-YoApp", serviceProvider, topupResponse);
+                            Log.RequestsAndResponses("EOS-Topup-Response-YoApp", serviceProvider, topupResponse);
 
                             return yoAppResponse;
                         }
@@ -1680,6 +1682,13 @@ namespace YoAppWebProxy.Controllers
             }
 
             return yoAppResponse;
+        }
+
+        [Route("api/eos-yoapp/cbz-services")]
+        [HttpPost]
+        public YoAppResponse BulkPayments(YoAppResponse apiYoAppResponse)
+        {
+            return null;
         }
     }
 }

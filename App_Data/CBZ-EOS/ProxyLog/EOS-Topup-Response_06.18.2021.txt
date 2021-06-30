@@ -1,0 +1,4 @@
+DateTime Logged: 06/18/2021/ 15:33:00, ServiceProvider: CBZ-EOS, Request Object: {"code":"214","msg":"Vendor Not registered with System"}
+=============================================
+DateTime Logged: 06/18/2021/ 17:46:15, ServiceProvider: CBZ-EOS, Request Object: {"code":"214","msg":"Vendor Not registered with System"}
+=============================================

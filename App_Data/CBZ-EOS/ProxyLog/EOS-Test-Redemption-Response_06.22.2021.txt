@@ -1,0 +1,4 @@
+DateTime Logged: 06/22/2021/ 13:11:58, ServiceProvider: CBZ-EOS, Request Object: {"code":"212","msg":"ReceiversIdentification do not contains the LocationCode"}
+=============================================
+DateTime Logged: 06/22/2021/ 13:11:59, ServiceProvider: CBZ-EOS, Request Object: {"code":"212","msg":"ReceiversIdentification do not contains the LocationCode"}
+=============================================

@@ -12,8 +12,10 @@ namespace YoAppWebProxy.Models.EOS
         public Nullable<long> ServiceId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public decimal CollectionAmount { get; set; }
-        public string Currency { get; set; }
         public decimal Collected { get; set; }
+        public decimal CollectionAmount { get; set; }
+        public decimal Price { get; set; }
+        public string Currency { get; set; }
+        public decimal Quantity { get; set; }
     }
 }
