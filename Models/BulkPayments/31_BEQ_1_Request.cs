@@ -9,6 +9,6 @@ namespace YoAppWebProxy.Models.BulkPayments
     {
         public string InstitutionID { get; set; }
         public string ExtReferenceNo { get; set; }
-        public Response Request { get; set; }
+        public BEQRequest Request { get; set; }
     }
 }

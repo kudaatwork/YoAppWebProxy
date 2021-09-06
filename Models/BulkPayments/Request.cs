@@ -17,6 +17,6 @@ namespace YoAppWebProxy.Models.BulkPayments
         public string CCY { get; set; }
         public string Narrative { get; set; }
         public string DrCr { get; set; }
-        public Contra Contra { get; set; }
+        public List<Contra> Contra { get; set; }
     }
 }

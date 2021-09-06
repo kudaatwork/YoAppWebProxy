@@ -22,5 +22,6 @@ namespace YoAppWebProxy.Models.Aqusales
         public DateTime? TransactionDate { get; set; }
         public string TransactionName { get; set; }
         public string Cashier { get; set; }
+        public List<PurchaseLine> PurchaseLines { get; set; }
     }
 }

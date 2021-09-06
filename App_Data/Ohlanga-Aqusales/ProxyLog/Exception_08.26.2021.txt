@@ -1,0 +1,10 @@
+DateTime Logged: 08/26/2021 08:02:42, ServiceProvider: Ohlanga-Aqusales, Request Object: "Error converting value \"Id\" to type 'YoAppWebProxy.Models.YoApp.YoAppGrvResponse'. Path '', line 1, position 4."
+=============================================
+DateTime Logged: 08/26/2021 08:07:32, ServiceProvider: Ohlanga-Aqusales, Request Object: "After parsing a value an unexpected character was encountered: I. Path 'Files', line 30, position 13."
+=============================================
+DateTime Logged: 08/26/2021 08:10:58, ServiceProvider: Ohlanga-Aqusales, Request Object: "After parsing a value an unexpected character was encountered: I. Path 'Files', line 30, position 13."
+=============================================
+DateTime Logged: 08/26/2021 08:23:14, ServiceProvider: Ohlanga-Aqusales, Request Object: "After parsing a value an unexpected character was encountered: I. Path 'Files', line 30, position 13."
+=============================================
+DateTime Logged: 08/26/2021 08:33:34, ServiceProvider: Ohlanga-Aqusales, Request Object: "After parsing a value an unexpected character was encountered: I. Path 'Files', line 30, position 13."
+=============================================

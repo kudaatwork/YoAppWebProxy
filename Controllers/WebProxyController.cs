@@ -20,6 +20,8 @@ using YoAppWebProxy.Models.Aqusales;
 using YoAppWebProxy.Helpful_Objects;
 using YoAppWebProxy.Models.EOS;
 using YoAppWebProxy.Models.YoApp;
+using YoAppWebProxy.Models.BulkPayments;
+using System.Threading.Tasks;
 
 namespace YoAppWebProxy.Controllers
 {
@@ -591,7 +593,7 @@ namespace YoAppWebProxy.Controllers
             ESolutionsRequest eSolutionsRequest = new ESolutionsRequest();
             ESolutionsApiObjects eSolutionsApiObjects = new ESolutionsApiObjects();
             ESolutionsMethods eSolutionsMethods = new ESolutionsMethods();
-            #endregion
+            #endregion          
 
             if (yoAppRequest == null)
             {
@@ -734,6 +736,8 @@ namespace YoAppWebProxy.Controllers
             YoAppResponse yoAppResponse = new YoAppResponse();
             #endregion
 
+            Log.RequestsAndResponses("Check1", serviceProvider, redemptionResponse);
+
             if (redemptionResponse == null)
             {
                 string message = "Received Nothing. Your request object is null";
@@ -750,136 +754,449 @@ namespace YoAppWebProxy.Controllers
                 {
                     case 1: // Post Redemptions
 
-                        SaleTransaction saleTransaction = new SaleTransaction();
-                        AqusalesCredentials aqusalesCredentials = new AqusalesCredentials();
-                        AquSalesConnector aquSalesConnector = new AquSalesConnector();
-
-                        var deserializedResponse = JsonConvert.DeserializeObject<Narrative>(redemptionResponse.Narrative);
-
-                        var currency = deserializedResponse.Products.Where(x => x.Currency.Trim() != null || x.Currency.Trim() != "").Select(x => x.Currency).FirstOrDefault();
-
-                        saleTransaction.Username = AqusalesCredentials.Username;
-                        saleTransaction.Password = AqusalesCredentials.Password;
-                        saleTransaction.IsCreditSale = true;
-                        saleTransaction.TransactionReference = redemptionResponse.TransactionRef;
-                        saleTransaction.Company = "CBZ AGROYIELD";//deserializedResponse.CustomerName;
-                        saleTransaction.Customer = deserializedResponse.ReceiversName.Trim() + " " + deserializedResponse.ReceiversSurname.Trim() + "~" +
-                            deserializedResponse.ReceiversIdentification.Trim() + "~(" + currency.Trim() + ")";
-                        saleTransaction.CustomerMSISDN = deserializedResponse.ReceiverMobile.Trim();
-
-                        var totalAmout = 0.0m;
-
-                        foreach (var item in deserializedResponse.Products)
+                        try
                         {
-                            totalAmout = item.Price * item.Quantity;
-                        }
+                            SaleTransaction saleTransaction = new SaleTransaction();
+                            AqusalesCredentials aqusalesCredentials = new AqusalesCredentials();
+                            AquSalesConnector aquSalesConnector = new AquSalesConnector();
 
-                        saleTransaction.Amount = totalAmout;
+                            var deserializedResponse = JsonConvert.DeserializeObject<Narrative>(redemptionResponse.Narrative);
 
-                        var costPrice = 0.0m;
+                            var currency = deserializedResponse.Products.Where(x => x.Currency.Trim() != null || x.Currency.Trim() != "").Select(x => x.Currency).FirstOrDefault();
 
-                        foreach (var item in deserializedResponse.Products)
-                        {
-                            if (item.Collected > 0)
+                            saleTransaction.Username = AqusalesCredentials.Username;
+                            saleTransaction.Password = AqusalesCredentials.Password;
+                            saleTransaction.IsCreditSale = true;
+                            saleTransaction.TransactionReference = redemptionResponse.TransactionRef;
+                            saleTransaction.Company = "CBZ AGROYIELD";//deserializedResponse.CustomerName;
+                            saleTransaction.Customer = deserializedResponse.ReceiversName.Trim() + " " + deserializedResponse.ReceiversSurname.Trim() + "~" +
+                                deserializedResponse.ReceiversIdentification.Trim() + "~(" + currency.Trim() + ")";
+                            saleTransaction.CustomerMSISDN = deserializedResponse.ReceiverMobile.Trim();
+
+                            var totalAmout = 0.0m;
+
+                            foreach (var item in deserializedResponse.Products)
                             {
-                                costPrice = item.CostPrice * item.Collected;
+                                if (item.Collected > 0)
+                                {
+                                    totalAmout = item.Price * item.Collected;
+                                }
+                            }
+
+                            saleTransaction.Amount = totalAmout;
+
+                            var costPrice = 0.0m;
+
+                            foreach (var item in deserializedResponse.Products)
+                            {
+                                if (item.Collected > 0)
+                                {
+                                    costPrice = item.CostPrice * item.Collected;
+                                }
+                            }
+
+                            saleTransaction.CostOfSales = costPrice;
+                            saleTransaction.Vat = 0.0m;
+                            TranCurrencyInfoVM tranCurrencyInfoVM = new TranCurrencyInfoVM();
+
+                            tranCurrencyInfoVM.TransactionCurrency = currency.Trim();
+                            tranCurrencyInfoVM.TransactionCurrencyRate = 1;
+                            saleTransaction.TranCurrencyInfoVM = tranCurrencyInfoVM;
+                            saleTransaction.TransactionDate = deserializedResponse.DatelastAccess.ToLocalTime().ToString();
+                            saleTransaction.TransactionName = AqusalesObjects.TransactionName.Trim();
+                            saleTransaction.Cashier = deserializedResponse.Cashier.Trim();
+                            saleTransaction.CustomerAccountType = AqusalesObjects.CustomerAccountType.Trim();
+
+                            Log.RequestsAndResponses("Aqu-Request", serviceProvider, saleTransaction);
+
+                            var aqusalesResponse = aquSalesConnector.PostCBZRedemption(saleTransaction, serviceProvider);
+
+                            Log.RequestsAndResponses("Aqu-Response", serviceProvider, aqusalesResponse);
+
+                            if (aqusalesResponse.Status.ToUpper() == "SUCCESS")
+                            {
+                                yoAppResponse.ResponseCode = "00000";
+                                yoAppResponse.Description = aqusalesResponse.Description;
+                                yoAppResponse.Note = "Success";
+                                yoAppResponse.Narrative = "Transaction/Redemption Posted successfully";
+
+                                Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, aqusalesResponse);
+
+                                return yoAppResponse;
+                            }
+                            else
+                            {
+                                yoAppResponse.ResponseCode = "00008";
+                                yoAppResponse.Description = aqusalesResponse.Description;
+                                yoAppResponse.Note = "Transaction Failed";
+                                yoAppResponse.Narrative = "Transaction Failed";
+
+                                Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, aqusalesResponse);
+
+                                return yoAppResponse;
                             }
                         }
-
-                        saleTransaction.CostOfSales = costPrice;
-                        saleTransaction.Vat = 0.0m;
-                        TranCurrencyInfoVM tranCurrencyInfoVM = new TranCurrencyInfoVM();
-
-                        tranCurrencyInfoVM.TransactionCurrency = currency.Trim();
-                        tranCurrencyInfoVM.TransactionCurrencyRate = 1;
-                        saleTransaction.TranCurrencyInfoVM = tranCurrencyInfoVM;
-                        saleTransaction.TransactionDate = deserializedResponse.DatelastAccess.ToLocalTime().ToString();
-                        saleTransaction.TransactionName = AqusalesObjects.TransactionName.Trim();
-                        saleTransaction.Cashier = deserializedResponse.Cashier.Trim();
-                        saleTransaction.CustomerAccountType = AqusalesObjects.CustomerAccountType.Trim();
-
-                        Log.RequestsAndResponses("Aqu-Request", serviceProvider, saleTransaction);
-
-                        var aqusalesResponse = aquSalesConnector.PostRedemption(saleTransaction, serviceProvider);
-
-                        Log.RequestsAndResponses("Aqu-Response", serviceProvider, aqusalesResponse);
-
-                        if (aqusalesResponse.Status.ToUpper() == "SUCCESS")
+                        catch (Exception ex)
                         {
-                            yoAppResponse.ResponseCode = "00000";
-                            yoAppResponse.Description = aqusalesResponse.Description;
-                            yoAppResponse.Note = "Success";
-                            yoAppResponse.Narrative = "Transaction/Redemption Posted successfully";
-
-                            Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, aqusalesResponse);
-
-                            return yoAppResponse;
-                        }
-                        else
-                        {
-                            yoAppResponse.ResponseCode = "00008";
-                            yoAppResponse.Description = aqusalesResponse.Description;
-                            yoAppResponse.Note = "Transaction Failed";
-                            yoAppResponse.Narrative = "Transaction Failed";
-
-                            Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, aqusalesResponse);
-
-                            return yoAppResponse;
+                            Log.RequestsAndResponses("Exception", serviceProvider, ex.Message);
+                            break;
                         }
 
                     case 2: // Post GRV
 
-                        GRVTransaction grvTransaction = new GRVTransaction();
-                        AquSalesConnector connector = new AquSalesConnector();
-
-                        var aquResponse = JsonConvert.DeserializeObject<YoAppGrvResponse>(redemptionResponse.Narrative);
-
-                        grvTransaction.Username = AqusalesCredentials.Username;
-                        grvTransaction.Password = AqusalesCredentials.Password;
-                        grvTransaction.SupplierAccountType = AqusalesObjects.SupplierAccountType;
-                        grvTransaction.TransactionName = AqusalesObjects.TransactionName;
-                        grvTransaction.TransactionReference = aquResponse.OrderNumber.Trim();
-                        grvTransaction.Company = "CBZ AGROYIELD"; //aquResponse.BranchName;
-                        grvTransaction.DebtorOrCreditor = aquResponse.BranchName?.Trim() + "(" + aquResponse.BranchId?.Trim() + ")";
-                        grvTransaction.Amount = (decimal)aquResponse.StockedValue;
-                        grvTransaction.Vat = 0.0m;
-
-                        TranCurrencyInfoVM tranCurrencyInfo = new TranCurrencyInfoVM();
-                        tranCurrencyInfo.TransactionCurrency = "USD";//aquResponse.Currency;
-                        tranCurrencyInfo.TransactionCurrencyRate = 1;
-                        grvTransaction.TranCurrencyInfoVM = tranCurrencyInfo;
-                        grvTransaction.TransactionDate = aquResponse.AuthorisationDate;
-                        grvTransaction.TransactionName = aquResponse.OrderType?.Trim();
-                        grvTransaction.Cashier = aquResponse.Cashier?.Trim();
-
-                        Log.RequestsAndResponses("AquGrv-Request", serviceProvider, grvTransaction);
-
-                        var response = connector.PostGRV(grvTransaction, serviceProvider);
-
-                        Log.RequestsAndResponses("AquGrv-Response", serviceProvider, grvTransaction);
-
-                        if (response.Status.ToUpper() == "SUCCESS")
+                        try
                         {
-                            yoAppResponse.ResponseCode = "00000";
-                            yoAppResponse.Description = response.Description;
-                            yoAppResponse.Note = "Success";
-                            yoAppResponse.Narrative = "Transaction/Redemption Posted successfully";
+                            GRVTransaction grvTransaction = new GRVTransaction();
+                            AquSalesConnector connector = new AquSalesConnector();
+                            List<PurchaseLine> purchaseLines = new List<PurchaseLine>();
 
-                            Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, response);
+                            var aquResponse = JsonConvert.DeserializeObject<YoAppGrvResponse>(redemptionResponse.Narrative);
 
-                            return yoAppResponse;
+                            var desirilizedFiles = JsonConvert.DeserializeObject<List<GRVProducts>>(aquResponse.Files);
+
+                            foreach (var item in desirilizedFiles)
+                            {
+                                PurchaseLine purchaseLine = new PurchaseLine();
+
+                                purchaseLine.item = item.Name;
+                                purchaseLine.ItemCode = item.ItemCode;
+                                purchaseLine.quantity = item.Quantity;
+                                purchaseLine.price = item.UnitPrice;
+                                purchaseLine.Reciept = item.Unit;
+
+                                purchaseLines.Add(purchaseLine);
+                            }
+
+                            grvTransaction.Username = AqusalesCredentials.Username;
+                            grvTransaction.Password = AqusalesCredentials.Password;
+                            grvTransaction.SupplierAccountType = AqusalesObjects.SupplierAccountType;
+                            grvTransaction.TransactionName = AqusalesObjects.TransactionName;
+                            grvTransaction.TransactionReference = aquResponse.OrderNumber.Trim();
+                            grvTransaction.Company = "CBZ AGROYIELD"; //aquResponse.BranchName;
+                            grvTransaction.DebtorOrCreditor = aquResponse.BranchName?.Trim() + "(" + aquResponse.BranchId?.Trim() + ")";
+                            grvTransaction.Amount = (decimal)aquResponse.StockedValue;
+                            grvTransaction.Vat = 0.0m;
+                            grvTransaction.PurchaseLines = purchaseLines;
+
+                            TranCurrencyInfoVM tranCurrencyInfo = new TranCurrencyInfoVM();
+                            tranCurrencyInfo.TransactionCurrency = "USD";//aquResponse.Currency;
+                            tranCurrencyInfo.TransactionCurrencyRate = 1;
+                            grvTransaction.TranCurrencyInfoVM = tranCurrencyInfo;
+                            grvTransaction.TransactionDate = aquResponse.AuthorisationDate;
+                            grvTransaction.TransactionName = aquResponse.OrderType?.Trim();
+                            grvTransaction.Cashier = aquResponse.Cashier?.Trim();
+
+                            Log.RequestsAndResponses("AquGrv-Request", serviceProvider, grvTransaction);
+
+                            var response = connector.PostCBZGRV(grvTransaction, serviceProvider);
+
+                            Log.RequestsAndResponses("AquGrv-Response", serviceProvider, response);
+
+                            if (response.Status.ToUpper() == "SUCCESS")
+                            {
+                                yoAppResponse.ResponseCode = "00000";
+                                yoAppResponse.Description = response.Description;
+                                yoAppResponse.Note = "Success";
+                                yoAppResponse.Narrative = "Transaction/Redemption Posted successfully";
+
+                                Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, response);
+
+                                return yoAppResponse;
+                            }
+                            else
+                            {
+                                yoAppResponse.ResponseCode = "00008";
+                                yoAppResponse.Description = response.Description;
+                                yoAppResponse.Note = "Transaction Failed";
+                                yoAppResponse.Narrative = "Transaction Failed";
+
+                                Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, response);
+
+                                return yoAppResponse;
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            yoAppResponse.ResponseCode = "00008";
-                            yoAppResponse.Description = response.Description;
-                            yoAppResponse.Note = "Transaction Failed";
-                            yoAppResponse.Narrative = "Transaction Failed";
-
-                            Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, response);
-
-                            return yoAppResponse;
+                            Log.RequestsAndResponses("Exception", serviceProvider, ex.Message);
+                            break;
                         }
+                }
+            }
+
+            return yoAppResponse;
+        }
+
+        [Route("api/aqusales-yoapp/ohlanga")]
+        [HttpPost]
+        public YoAppResponse AqusalesYoAppOhlangaProxy(YoAppResponse redemptionResponse)
+        {
+            #region Declared Objects
+            var serviceProvider = "Ohlanga-Aqusales";
+            YoAppResponse yoAppResponse = new YoAppResponse();
+            #endregion
+
+            Log.RequestsAndResponses("Check1", serviceProvider, redemptionResponse);
+
+            if (redemptionResponse == null)
+            {
+                string message = "Received Nothing. Your request object is null";
+
+                yoAppResponse.ResponseCode = "00008";
+                yoAppResponse.Note = "Failed";
+                yoAppResponse.Description = message;
+
+                return yoAppResponse;
+            }
+            else
+            {
+                switch (redemptionResponse.ServiceId)
+                {
+                    case 1: // Post Redemptions
+
+                        try
+                        {
+                            SaleTransaction saleTransaction = new SaleTransaction();
+                            AqusalesCredentials aqusalesCredentials = new AqusalesCredentials();
+                            AquSalesConnector aquSalesConnector = new AquSalesConnector();
+
+                            var deserializedResponse = JsonConvert.DeserializeObject<Narrative>(redemptionResponse.Narrative);
+
+                            var currency = deserializedResponse.Products.Where(x => x.Currency.Trim() != null || x.Currency.Trim() != "").Select(x => x.Currency).FirstOrDefault();
+
+                            saleTransaction.Username = AqusalesCredentials.Username;
+                            saleTransaction.Password = AqusalesCredentials.Password;
+                            saleTransaction.IsCreditSale = true;
+                            saleTransaction.TransactionReference = redemptionResponse.TransactionRef;
+                            saleTransaction.Company = "OHLANGA JV";//deserializedResponse.CustomerName;
+                            saleTransaction.Customer = deserializedResponse.ReceiversName.Trim() + " " + deserializedResponse.ReceiversSurname.Trim() + "~" +
+                                deserializedResponse.ReceiversIdentification.Trim() + "~(" + currency.Trim() + ")";
+                            saleTransaction.CustomerMSISDN = deserializedResponse.ReceiverMobile.Trim();
+
+                            var totalAmout = 0.0m;
+
+                            foreach (var item in deserializedResponse.Products)
+                            {
+                                if (item.Collected > 0)
+                                {
+                                    totalAmout = item.Price * item.Collected;
+                                }
+                            }
+
+                            saleTransaction.Amount = totalAmout;
+
+                            var costPrice = 0.0m;
+
+                            foreach (var item in deserializedResponse.Products)
+                            {
+                                if (item.Collected > 0)
+                                {
+                                    costPrice = item.CostPrice * item.Collected;
+                                }
+                            }
+
+                            saleTransaction.CostOfSales = costPrice;
+                            saleTransaction.Vat = 0.0m;
+                            TranCurrencyInfoVM tranCurrencyInfoVM = new TranCurrencyInfoVM();
+
+                            tranCurrencyInfoVM.TransactionCurrency = currency.Trim();
+                            tranCurrencyInfoVM.TransactionCurrencyRate = 1;
+                            saleTransaction.TranCurrencyInfoVM = tranCurrencyInfoVM;
+                            saleTransaction.TransactionDate = deserializedResponse.DatelastAccess.ToLocalTime().ToString();
+                            saleTransaction.TransactionName = AqusalesObjects.TransactionName.Trim();
+                            saleTransaction.Cashier = deserializedResponse.Cashier.Trim();
+                            saleTransaction.CustomerAccountType = AqusalesObjects.CustomerAccountType.Trim();
+
+                            Log.RequestsAndResponses("Aqu-Request", serviceProvider, saleTransaction);
+
+                            var aqusalesResponse = aquSalesConnector.PostOhlangaRedemption(saleTransaction, serviceProvider);
+
+                            Log.RequestsAndResponses("Aqu-Response", serviceProvider, aqusalesResponse);
+
+                            if (aqusalesResponse.Status.ToUpper() == "SUCCESS")
+                            {
+                                yoAppResponse.ResponseCode = "00000";
+                                yoAppResponse.Description = aqusalesResponse.Description;
+                                yoAppResponse.Note = "Success";
+                                yoAppResponse.Narrative = "Transaction/Redemption Posted successfully";
+
+                                Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, aqusalesResponse);
+
+                                return yoAppResponse;
+                            }
+                            else
+                            {
+                                yoAppResponse.ResponseCode = "00008";
+                                yoAppResponse.Description = aqusalesResponse.Description;
+                                yoAppResponse.Note = "Transaction Failed";
+                                yoAppResponse.Narrative = "Transaction Failed";
+
+                                Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, aqusalesResponse);
+
+                                return yoAppResponse;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.RequestsAndResponses("Exception", serviceProvider, ex.Message);
+                            break;
+                        }
+
+                    case 2: // Post GRV
+
+                       // Log.RequestsAndResponses("Check2", serviceProvider, "2nd Entry Point");
+
+                        try
+                        {
+                            GRVTransaction grvTransaction = new GRVTransaction();
+                            AquSalesConnector connector = new AquSalesConnector();
+                            List<PurchaseLine> purchaseLines = new List<PurchaseLine>();
+
+                            var aquResponse = JsonConvert.DeserializeObject<YoAppGrvResponse>(redemptionResponse.Narrative);
+
+                            var desirilizedFiles = JsonConvert.DeserializeObject<List<GRVProducts>>(aquResponse.Files);
+
+                            foreach (var item in desirilizedFiles)
+                            {
+                                PurchaseLine purchaseLine = new PurchaseLine();
+
+                                purchaseLine.item = item.Name;
+                                purchaseLine.ItemCode = item.ItemCode;
+                                purchaseLine.quantity = item.Quantity;
+                                purchaseLine.price = item.UnitPrice;
+                                purchaseLine.Reciept = item.Unit;
+
+                                purchaseLines.Add(purchaseLine);
+                            }
+
+                            grvTransaction.Username = AqusalesCredentials.Username;
+                            grvTransaction.Password = AqusalesCredentials.Password;
+                            grvTransaction.SupplierAccountType = AqusalesObjects.SupplierAccountType;
+                            grvTransaction.TransactionName = AqusalesObjects.TransactionName;
+                            grvTransaction.TransactionReference = aquResponse.OrderNumber.Trim();
+                            grvTransaction.Company = "OHLANGA JV"; //aquResponse.BranchName;
+                            grvTransaction.DebtorOrCreditor = aquResponse.BranchName?.Trim() + "(" + aquResponse.BranchId?.Trim() + ")";
+                            grvTransaction.Amount = (decimal)aquResponse.StockedValue;
+                            grvTransaction.Vat = 0.0m;
+                            grvTransaction.PurchaseLines = purchaseLines;
+                            
+
+                            TranCurrencyInfoVM tranCurrencyInfo = new TranCurrencyInfoVM();
+                            tranCurrencyInfo.TransactionCurrency = "ZAR";//aquResponse.Currency;
+                            tranCurrencyInfo.TransactionCurrencyRate = 1;
+                            grvTransaction.TranCurrencyInfoVM = tranCurrencyInfo;
+                            grvTransaction.TransactionDate = aquResponse.AuthorisationDate;
+                            grvTransaction.TransactionName = aquResponse.OrderType?.Trim();
+                            grvTransaction.Cashier = aquResponse.Cashier?.Trim();
+
+                            Log.RequestsAndResponses("AquGrv-Request", serviceProvider, grvTransaction);
+
+                            var response = connector.PostOhlangaGRV(grvTransaction, serviceProvider);
+
+                            Log.RequestsAndResponses("AquGrv-Response", serviceProvider, response);
+
+                            if (response.Status.ToUpper() == "SUCCESS")
+                            {
+                                yoAppResponse.ResponseCode = "00000";
+                                yoAppResponse.Description = response.Description;
+                                yoAppResponse.Note = "Success";
+                                yoAppResponse.Narrative = "Transaction/Redemption Posted successfully";
+
+                                Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, response);
+
+                                return yoAppResponse;
+                            }
+                            else
+                            {
+                                yoAppResponse.ResponseCode = "00008";
+                                yoAppResponse.Description = response.Description;
+                                yoAppResponse.Note = "Transaction Failed";
+                                yoAppResponse.Narrative = "Transaction Failed";
+
+                                Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, response);
+
+                                return yoAppResponse;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.RequestsAndResponses("Exception", serviceProvider, ex.Message);
+                            break;
+                        }
+
+                    case 3: // Supplier Payment
+                            // Log.RequestsAndResponses("Check2", serviceProvider, "2nd Entry Point");
+                        try
+                        {
+                            GRVTransaction grvTransaction = new GRVTransaction();
+                            AquSalesConnector connector = new AquSalesConnector();
+                            List<PurchaseLine> purchaseLines = new List<PurchaseLine>();
+
+                            var aquResponse = JsonConvert.DeserializeObject<YoAppGrvResponse>(redemptionResponse.Narrative);
+
+                            grvTransaction.Username = AqusalesCredentials.Username;
+                            grvTransaction.Password = AqusalesCredentials.Password;
+                            grvTransaction.SupplierAccountType = AqusalesObjects.OhlangaSupplierAccountType;
+                            grvTransaction.TransactionName = AqusalesObjects.TransactionName;
+                            grvTransaction.TransactionReference = aquResponse.OrderNumber.Trim();
+                            grvTransaction.Company = "OHLANGA JV"; //aquResponse.BranchName;
+                            grvTransaction.DebtorOrCreditor = aquResponse.BranchName?.Trim() + "(" + aquResponse.BranchId?.Trim() + ")";
+                            grvTransaction.Amount = (decimal)aquResponse.StockedValue;
+                            grvTransaction.Vat = 0.0m;
+                          
+                            TranCurrencyInfoVM tranCurrencyInfo = new TranCurrencyInfoVM();
+                            tranCurrencyInfo.TransactionCurrency = "ZAR";//aquResponse.Currency;
+                            tranCurrencyInfo.TransactionCurrencyRate = 1;
+                            grvTransaction.TranCurrencyInfoVM = tranCurrencyInfo;
+                            grvTransaction.TransactionDate = aquResponse.AuthorisationDate;
+                            grvTransaction.TransactionName = aquResponse.OrderType?.Trim();
+                            grvTransaction.Cashier = aquResponse.Cashier?.Trim();
+
+                            Log.RequestsAndResponses("AquPayment-Request", serviceProvider, grvTransaction);
+
+                            var response = connector.PostOhlangaPayment(grvTransaction, serviceProvider);
+
+                            Log.RequestsAndResponses("AquPayment-Response", serviceProvider, response);
+
+                            if (response.Status.ToUpper() == "SUCCESS")
+                            {
+                                yoAppResponse.ResponseCode = "00000";
+                                yoAppResponse.Description = response.Description;
+                                yoAppResponse.Note = "Success";
+                                yoAppResponse.Narrative = "Transaction/Redemption Posted successfully";
+
+                                Log.RequestsAndResponses("AquPayment-Response-YoApp", serviceProvider, response);
+
+                                return yoAppResponse;
+                            }
+                            else
+                            {
+                                yoAppResponse.ResponseCode = "00008";
+                                yoAppResponse.Description = response.Description;
+                                yoAppResponse.Note = "Transaction Failed";
+                                yoAppResponse.Narrative = "Transaction Failed";
+
+                                Log.RequestsAndResponses("AquPayment-Response-YoApp", serviceProvider, response);
+
+                                return yoAppResponse;
+                            }
+
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.RequestsAndResponses("Exception", serviceProvider, ex.Message);
+                            break;
+                        }                       
+                    case 4: // Supplier Creation
+                        try
+                        {
+
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.RequestsAndResponses("Exception", serviceProvider, ex.Message);
+                            break;
+                        }
+                        break;
                 }
             }
 
@@ -1684,11 +2001,423 @@ namespace YoAppWebProxy.Controllers
             return yoAppResponse;
         }
 
-        [Route("api/eos-yoapp/cbz-services")]
+        [Route("api/files/upload")]
+        [HttpPost]
+        public async Task<string> Post()
+        {
+            YoAppResponse response = new YoAppResponse();
+
+            try
+            {
+                var httpRequest = System.Web.HttpContext.Current.Request;
+
+                if (httpRequest.Files.Count > 0)
+                {
+                    foreach (string file in httpRequest.Files)
+                    {
+                        var postedFile = httpRequest.Files[file];
+
+                        var fileName = postedFile.FileName.Split('\\').LastOrDefault().Split('/').LastOrDefault();
+
+                        var filePath = System.Web.HttpContext.Current.Server.MapPath("~/Uploads/" + fileName);
+
+                        postedFile.SaveAs(filePath);
+                    }
+
+                    response.ResponseCode = "00000";
+                    response.Description = "Image Saved Successfully!";
+                    return JsonConvert.SerializeObject(response);
+                }
+                else
+                {
+                    response.ResponseCode = "Error";
+                    response.Description = "Image not saved!";
+                    return JsonConvert.SerializeObject(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
+
+        [Route("api/bulk-payments/cbz-services")]
         [HttpPost]
         public YoAppResponse BulkPayments(YoAppResponse apiYoAppResponse)
         {
-            return null;
+            #region Declared Objects
+            var serviceProvider = "CBZ-BulkPayments";
+            YoAppResponse yoAppResponse = new YoAppResponse();
+            #endregion
+
+            if (apiYoAppResponse == null)
+            {
+                string message = "Received Nothing. Your request object is null";
+
+                yoAppResponse.ResponseCode = "00008";
+                yoAppResponse.Note = "Failed";
+                yoAppResponse.Description = message;
+
+                return yoAppResponse;
+            }
+            else
+            {
+                BulkPaymentsConnector bulkPaymentsConnector = new BulkPaymentsConnector();
+                BulkPaymentsMethods bulkPayments = new BulkPaymentsMethods();
+
+                var referenceNumber = bulkPayments.ReferenceNumber(serviceProvider);
+                var yoAppDesiarilizedNarrative = JsonConvert.DeserializeObject<Narrative>(apiYoAppResponse.Narrative);
+
+                switch (apiYoAppResponse.ServiceId)
+                {
+                    case 1: // AAT Batch Request                       
+                        AATBatchRequest batchRequest = new AATBatchRequest();
+                        batchRequest.InstitutionID = yoAppDesiarilizedNarrative.CustomerId;
+                        batchRequest.ExtReferenceNo = referenceNumber;
+
+                        // Get actual YoApp request to construct 'Request' object.
+
+                        Log.RequestsAndResponses("AAT-Batch-Request", serviceProvider, batchRequest);
+
+                        var aatBulkPaymentsResponse = bulkPaymentsConnector.PostAATBatch(batchRequest, serviceProvider);
+
+                        Log.RequestsAndResponses("AAT-Batch-Response", serviceProvider, aatBulkPaymentsResponse);
+
+                        if (aatBulkPaymentsResponse.Response.Status.ToUpper() == "SUCCESS")
+                        {
+                            yoAppResponse.ResponseCode = "00000";
+                            yoAppResponse.Description = aatBulkPaymentsResponse.Status;
+                            yoAppResponse.Note = "Success";
+                            yoAppResponse.Narrative = "Batch Posted successfully. Response Object: " + aatBulkPaymentsResponse;
+
+                            Log.RequestsAndResponses("AATBatch-Response-YoApp", serviceProvider, aatBulkPaymentsResponse);
+
+                            return yoAppResponse;
+                        }
+                        else if (aatBulkPaymentsResponse.Response.Status.ToUpper() == "FAILURE")
+                        {
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Description = aatBulkPaymentsResponse.Status;
+                            yoAppResponse.Note = "Failed";
+                            yoAppResponse.Narrative = "Batch Post Failed. Response Object: " + aatBulkPaymentsResponse;
+
+                            Log.RequestsAndResponses("AATBatch-Response-YoApp", serviceProvider, aatBulkPaymentsResponse);
+
+                            return yoAppResponse;
+                        }
+                        else
+                        {
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Description = aatBulkPaymentsResponse.Status;
+                            yoAppResponse.Note = "Failed";
+                            yoAppResponse.Narrative = "Batch Post Failed. Response Object: " + aatBulkPaymentsResponse;
+
+                            Log.RequestsAndResponses("AATBatch-Response-YoApp", serviceProvider, aatBulkPaymentsResponse);
+
+                            return yoAppResponse;
+                        }
+
+                    case 2: // AAT Batch Status Request                       
+
+                        AATBatchStatusCheckRequest batchStatusCheckRequest = new AATBatchStatusCheckRequest();
+
+                        batchStatusCheckRequest.InstitutionID = yoAppDesiarilizedNarrative.CustomerId;
+                        batchStatusCheckRequest.ExtReferenceNo = referenceNumber;
+
+                        // Get actual YoApp request to construct the 'Request' object.
+
+                        Log.RequestsAndResponses("AAT-Status-Request", serviceProvider, batchStatusCheckRequest);
+
+                        var aatBulkPaymentsStatusResponse = bulkPaymentsConnector.BatchStatusCheck(batchStatusCheckRequest, serviceProvider);
+
+                        Log.RequestsAndResponses("AAT-Status-Response", serviceProvider, aatBulkPaymentsStatusResponse);
+
+                        if (aatBulkPaymentsStatusResponse.Status.ToUpper() == "INCOMING")
+                        {
+                            yoAppResponse.ResponseCode = "00000";
+                            yoAppResponse.Description = aatBulkPaymentsStatusResponse.Status;
+                            yoAppResponse.Note = "INCOMING";
+                            yoAppResponse.Narrative = "Batch Status is 'INCOMING'. Response Object: " + aatBulkPaymentsStatusResponse;
+
+                            Log.RequestsAndResponses("AATStatus-Response-YoApp", serviceProvider, aatBulkPaymentsStatusResponse);
+
+                            return yoAppResponse;
+                        }
+                        else if (aatBulkPaymentsStatusResponse.Status.ToUpper() == "PENDING")
+                        {
+                            yoAppResponse.ResponseCode = "00000";
+                            yoAppResponse.Description = aatBulkPaymentsStatusResponse.Status;
+                            yoAppResponse.Note = "PENDING";
+                            yoAppResponse.Narrative = "Batch Status is 'PENDING'. Response Object: " + aatBulkPaymentsStatusResponse;
+
+                            Log.RequestsAndResponses("AATStatus-Response-YoApp", serviceProvider, aatBulkPaymentsStatusResponse);
+
+                            return yoAppResponse;
+                        }
+                        else if (aatBulkPaymentsStatusResponse.Status.ToUpper() == "PROCESSING_FLEX")
+                        {
+                            yoAppResponse.ResponseCode = "00000";
+                            yoAppResponse.Description = aatBulkPaymentsStatusResponse.Status;
+                            yoAppResponse.Note = "PROCESSING_FLEX";
+                            yoAppResponse.Narrative = "Batch Status is 'PROCESSING_FLEX'. Response Object: " + aatBulkPaymentsStatusResponse;
+
+                            Log.RequestsAndResponses("AATStatus-Response-YoApp", serviceProvider, aatBulkPaymentsStatusResponse);
+
+                            return yoAppResponse;
+                        }
+                        else if (aatBulkPaymentsStatusResponse.Status.ToUpper() == "PROCESSING_MFS")
+                        {
+                            yoAppResponse.ResponseCode = "00000";
+                            yoAppResponse.Description = aatBulkPaymentsStatusResponse.Status;
+                            yoAppResponse.Note = "PROCESSING_MFS";
+                            yoAppResponse.Narrative = "Batch Status is 'PROCESSING_MFS'. Response Object: " + aatBulkPaymentsStatusResponse;
+
+                            Log.RequestsAndResponses("AATStatus-Response-YoApp", serviceProvider, aatBulkPaymentsStatusResponse);
+
+                            return yoAppResponse;
+                        }
+                        else
+                        {
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Description = aatBulkPaymentsStatusResponse.Status;
+                            yoAppResponse.Note = "Invalid Reference Number";
+                            yoAppResponse.Narrative = "Invalid reference number. Response Object: " + aatBulkPaymentsStatusResponse;
+
+                            Log.RequestsAndResponses("AATStatus-Response-YoApp", serviceProvider, aatBulkPaymentsStatusResponse);
+
+                            return yoAppResponse;
+                        }
+
+                    case 3: // IBT Request
+
+                        IBTRequest iBTRequest = new IBTRequest();
+
+                        iBTRequest.InstitutionID = yoAppDesiarilizedNarrative.CustomerId;
+                        iBTRequest.ExtReferenceNo = referenceNumber;
+
+                        // Get actual YoApp request to construct the 'Request' object.
+
+                        Log.RequestsAndResponses("IBT-Request", serviceProvider, iBTRequest);
+
+                        var ibtBulkPaymentsResponse = bulkPaymentsConnector.IBTBulkPayment(iBTRequest, serviceProvider);
+
+                        Log.RequestsAndResponses("IBT-Response", serviceProvider, ibtBulkPaymentsResponse);
+
+                        if (ibtBulkPaymentsResponse.Contra.Response.Status == "SUCCESS")
+                        {
+                            yoAppResponse.ResponseCode = "00000";
+                            yoAppResponse.Note = "SUCCESS";
+                            yoAppResponse.Description = ibtBulkPaymentsResponse.Narrative;
+                            yoAppResponse.Narrative = "Response Object: " + ibtBulkPaymentsResponse;
+
+                            Log.RequestsAndResponses("IBTPayment-Response-YoApp", serviceProvider, ibtBulkPaymentsResponse);
+
+                            return yoAppResponse;
+                        }
+                        else if (ibtBulkPaymentsResponse.Contra.Response.Status == "FAILURE")
+                        {
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Description = ibtBulkPaymentsResponse.Narrative;
+                            yoAppResponse.Note = "FAILURE";
+                            yoAppResponse.Narrative = "Response Object: " + ibtBulkPaymentsResponse;
+
+                            Log.RequestsAndResponses("IBTPayment-Response-YoApp", serviceProvider, ibtBulkPaymentsResponse);
+
+                            return yoAppResponse;
+                        }
+                        else
+                        {
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Note = "FAILURE";
+                            yoAppResponse.Description = ibtBulkPaymentsResponse.Narrative;
+                            yoAppResponse.Narrative = "Response Object: " + ibtBulkPaymentsResponse;
+
+                            Log.RequestsAndResponses("IBTPayment-Response-YoApp", serviceProvider, ibtBulkPaymentsResponse);
+
+                            return yoAppResponse;
+                        }
+
+                    case 4: // 31_BEQ_1 Request
+
+                        _31_BEQ_1_Request _31_BEQ_1_Request = new _31_BEQ_1_Request();
+
+                        _31_BEQ_1_Request.InstitutionID = deserializedYoAppNarrative.CustomerId;
+                        _31_BEQ_1_Request.ExtReferenceNo = referenceNumber;
+
+                        // Get actual YoApp request to construct the 'Request' object.
+
+                        Log.RequestsAndResponses("31_BEQ_1-Request", serviceProvider, _31_BEQ_1_Request);
+
+                        var _31_BEQ_1_BulkPaymentsResponse = bulkPaymentsConnector.BEQPayment(_31_BEQ_1_Request, serviceProvider);
+
+                        Log.RequestsAndResponses("31_BEQ_1-Response", serviceProvider, _31_BEQ_1_BulkPaymentsResponse);
+
+                        if (_31_BEQ_1_BulkPaymentsResponse.Response.message == "SUCCESS")
+                        {
+                            yoAppResponse.ResponseCode = "00000";
+                            yoAppResponse.Note = "SUCCESS";
+                            yoAppResponse.Description = _31_BEQ_1_BulkPaymentsResponse.Response.message;
+                            yoAppResponse.Narrative = "Response Object: " + _31_BEQ_1_BulkPaymentsResponse;
+
+                            Log.RequestsAndResponses("BEQ-Response-YoApp", serviceProvider, _31_BEQ_1_BulkPaymentsResponse);
+
+                            return yoAppResponse;
+                        }
+                        else if (_31_BEQ_1_BulkPaymentsResponse.Response.message == "FAILURE")
+                        {
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Note = "FAILURE";
+                            yoAppResponse.Description = _31_BEQ_1_BulkPaymentsResponse.Response.message;
+                            yoAppResponse.Narrative = "Response Object: " + _31_BEQ_1_BulkPaymentsResponse;
+
+                            Log.RequestsAndResponses("BEQ-Response-YoApp", serviceProvider, _31_BEQ_1_BulkPaymentsResponse);
+
+                            return yoAppResponse;
+                        }
+                        else
+                        {
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Note = "FAILURE";
+                            yoAppResponse.Description = _31_BEQ_1_BulkPaymentsResponse.Response.message;
+                            yoAppResponse.Narrative = "Response Object: " + _31_BEQ_1_BulkPaymentsResponse;
+
+                            Log.RequestsAndResponses("BEQ-Response-YoApp", serviceProvider, _31_BEQ_1_BulkPaymentsResponse);
+
+                            return yoAppResponse;
+                        }
+
+                    case 5: // 38_MST_1 Request
+
+                        _38_MST_1_Request _38_MST_1_Request = new _38_MST_1_Request();
+
+                        _38_MST_1_Request.InstitutionID = deserializedYoAppNarrative.CustomerId;
+                        _38_MST_1_Request.ExtReferenceNo = referenceNumber;
+
+                        // Get actual YoApp request to construct the 'Request' object.
+
+                        Log.RequestsAndResponses("MST-Request", serviceProvider, _38_MST_1_Request);
+
+                        bulkPaymentsConnector.MSTPayment(_38_MST_1_Request, serviceProvider); // Created a Void Method because no RepsonseCode
+
+                        Log.RequestsAndResponses("MST-Response", serviceProvider, _38_MST_1_Request);
+
+                        yoAppResponse.ResponseCode = "00000";
+                        yoAppResponse.Description = "check email to see if it was a success";
+                        yoAppResponse.Narrative = "Response Object: ";
+
+                        return yoAppResponse;
+
+                    case 6: // 107_ABV_1 Request
+
+                        _107_ABV_1_Request _Request = new _107_ABV_1_Request();
+
+                        _Request.InstitutionID = deserializedYoAppNarrative.CustomerId;
+                        _Request.ExtReferenceNo = referenceNumber;
+
+                        // Get actual YoApp request to construct the 'Request' object.
+
+                        Log.RequestsAndResponses("ABV-Request", serviceProvider, _Request);
+
+                        var _PossibleResponses = bulkPaymentsConnector.ABVPayment(_Request, serviceProvider);
+
+                        Log.RequestsAndResponses("ABV-Response", serviceProvider, _PossibleResponses);
+
+                        if (_PossibleResponses.Response.message.ToUpper() == "Y")
+                        {
+                            yoAppResponse.ResponseCode = "00000";
+                            yoAppResponse.Note = "SUCCESS";
+                            yoAppResponse.Description = _PossibleResponses.Response.description;
+                            yoAppResponse.Narrative = "Response Object: " + _PossibleResponses;
+
+                            Log.RequestsAndResponses("ABV-Response-YoApp", serviceProvider, _PossibleResponses);
+
+                            return yoAppResponse;
+                        }
+                        else if (_PossibleResponses.Response.message.ToUpper() == "E")
+                        {
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Note = "FAILURE";
+                            yoAppResponse.Description = _PossibleResponses.Response.description;
+                            yoAppResponse.Narrative = "Response Object: " + _PossibleResponses;
+
+                            Log.RequestsAndResponses("ABV-Response-YoApp", serviceProvider, _PossibleResponses);
+
+                            return yoAppResponse;
+                        }
+                        else
+                        {
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Note = "FAILURE";
+                            yoAppResponse.Description = _PossibleResponses.Response.description;
+                            yoAppResponse.Narrative = "Response Object: " + _PossibleResponses;
+
+                            Log.RequestsAndResponses("ABV-Response-YoApp", serviceProvider, _PossibleResponses);
+
+                            return yoAppResponse;
+                        }
+
+                    case 7: // MST 6
+
+                        _38_MST_6_Request _6_Request = new _38_MST_6_Request();
+
+                        _6_Request.InstitutionID = deserializedYoAppNarrative.CustomerId;
+                        _6_Request.ExtReferenceNo = referenceNumber;
+
+                        // Get actual YoApp request to construct the 'Request' object.
+
+                        Log.RequestsAndResponses("MST6-Request", serviceProvider, _6_Request);
+
+                        var response = bulkPaymentsConnector.MST6Payment(_6_Request, serviceProvider);
+
+                        Log.RequestsAndResponses("MST6-Response", serviceProvider, response);
+
+                        if (response.Response.message == "SUCCESS")
+                        {
+                            yoAppResponse.ResponseCode = "00000";
+                            yoAppResponse.Note = "SUCCESS";
+                            yoAppResponse.Description = response.Response.description;
+                            yoAppResponse.Narrative = "Response Object: " + response;
+
+                            Log.RequestsAndResponses("MST6-Response-YoApp", serviceProvider, response);
+
+                            return yoAppResponse;
+                        }
+                        else if (response.Response.message == "FAILURE")
+                        {
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Note = "FAILURE";
+                            yoAppResponse.Description = response.Response.description;
+                            yoAppResponse.Narrative = "Response Object: " + response;
+
+                            Log.RequestsAndResponses("MST6-Response-YoApp", serviceProvider, response);
+
+                            return yoAppResponse;
+                        }
+                        else
+                        {
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Note = "FAILURE";
+                            yoAppResponse.Description = response.Response.description;
+                            yoAppResponse.Narrative = "Response Object: " + response;
+
+                            Log.RequestsAndResponses("MST6-Response-YoApp", serviceProvider, response);
+
+                            return yoAppResponse;
+                        }
+
+                    default:
+
+                        yoAppResponse.ResponseCode = "00008";
+                        yoAppResponse.Note = "FAILURE";
+                        yoAppResponse.Description = "";
+                        yoAppResponse.Narrative = "Response Object: ";
+
+                        Log.RequestsAndResponses("MST6-Response-YoApp", serviceProvider, "");
+
+                        return yoAppResponse;
+
+                }
+            }
         }
     }
 }

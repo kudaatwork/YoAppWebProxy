@@ -136,6 +136,7 @@
   <ItemGroup>
     <Compile Include="Api_Credentials\AgribankCredentials.cs" />
     <Compile Include="Api_Credentials\AqusalesCredentials.cs" />
+    <Compile Include="Api_Credentials\BulkPaymentsCredentials.cs" />
     <Compile Include="Api_Credentials\EosCredentials.cs" />
     <Compile Include="Connectors\AgribankBearerConnector.cs" />
     <Compile Include="Connectors\AquSalesConnector.cs" />
@@ -143,6 +144,7 @@
     <Compile Include="Connectors\EosConnector.cs" />
     <Compile Include="Connectors\TrekGetConnector.cs" />
     <Compile Include="Connectors\TrekPostConnector.cs" />
+    <Compile Include="Helpful_Functions\BulkPaymentsMethods.cs" />
     <Compile Include="Helpful_Functions\ExternalFieldMethods.cs" />
     <Compile Include="Helpful_Objects\AgribankObjects.cs" />
     <Compile Include="Connectors\AgribankPostConnector.cs" />
@@ -194,7 +196,13 @@
     <Compile Include="Logs\IpLog.cs" />
     <Compile Include="Logs\Log.cs" />
     <Compile Include="Logs\TrekLog.cs" />
-    <Compile Include="Models\ABVResponse.cs" />
+    <Compile Include="Models\Aqusales\PurchaseLine.cs" />
+    <Compile Include="Models\BulkPayments\107_ABV_1_RequestToServer.cs" />
+    <Compile Include="Models\BulkPayments\31_BEQ_1_RequestToServer.cs" />
+    <Compile Include="Models\BulkPayments\38_MST_1_RequestToServer.cs" />
+    <Compile Include="Models\BulkPayments\38_MST_6_RequestToServer.cs" />
+    <Compile Include="Models\BulkPayments\AATBatchRequestToServer.cs" />
+    <Compile Include="Models\BulkPayments\ABVResponse.cs" />
     <Compile Include="Models\AgriBank\AgribankPaymentRequest.cs" />
     <Compile Include="Models\AgriBank\AgribankPaymentResponse.cs" />
     <Compile Include="Models\AgriBank\AgribankTokenResponse.cs" />
@@ -209,8 +217,7 @@
     <Compile Include="Models\BulkPayments\107_ABV_1_PossibleResponses.cs" />
     <Compile Include="Models\BulkPayments\107_ABV_1_Request.cs" />
     <Compile Include="Models\BulkPayments\31_BEQ_1_Request.cs" />
-    <Compile Include="Models\BulkPayments\31_BEQ_1_FailedResponse.cs" />
-    <Compile Include="Models\BulkPayments\31_BEQ_1_SuccessResponse.cs" />
+    <Compile Include="Models\BulkPayments\31_BEQ_1_Response.cs" />
     <Compile Include="Models\BulkPayments\38_MST_1 Response.cs" />
     <Compile Include="Models\BulkPayments\38_MST_1_Request.cs" />
     <Compile Include="Models\BulkPayments\38_MST_6_data.cs" />
@@ -219,24 +226,17 @@
     <Compile Include="Models\BulkPayments\38_MST_6_Request.cs" />
     <Compile Include="Models\BulkPayments\38_MST_6_Response.cs" />
     <Compile Include="Models\BulkPayments\38_MST_6_SuccessResponse.cs" />
-    <Compile Include="Models\BulkPayments\AATBatchProgressFailure.cs" />
-    <Compile Include="Models\BulkPayments\AATBatchProgressIncoming.cs" />
-    <Compile Include="Models\BulkPayments\AATBatchProgressInvalidReference.cs" />
-    <Compile Include="Models\BulkPayments\AATBatchProgressPending.cs" />
-    <Compile Include="Models\BulkPayments\AATBatchProgressProcessingFlex.cs" />
-    <Compile Include="Models\BulkPayments\AATBatchProgressProcessingMfs.cs" />
-    <Compile Include="Models\BulkPayments\AATBatchProgressSuccess.cs" />
+    <Compile Include="Models\BulkPayments\AATBatchProgressResponse.cs" />
     <Compile Include="Models\BulkPayments\AATBatchReceiptAcknowledgemet.cs" />
     <Compile Include="Models\BulkPayments\AATBatchRequest.cs" />
     <Compile Include="Models\BulkPayments\AATBatchStatusCheckRequest.cs" />
-    <Compile Include="Models\BulkPayments\AATFailedBatchReceiptAcknowledgement.cs" />
     <Compile Include="Models\BulkPayments\ABVRequest.cs" />
     <Compile Include="Models\BulkPayments\BEQRequest.cs" />
     <Compile Include="Models\BulkPayments\BEQResponse.cs" />
     <Compile Include="Models\BulkPayments\Contra.cs" />
+    <Compile Include="Models\BulkPayments\IBTRequestToServer.cs" />
     <Compile Include="Models\BulkPayments\IBTRequest.cs" />
-    <Compile Include="Models\BulkPayments\IBTResponsesFailure .cs" />
-    <Compile Include="Models\BulkPayments\IBTResponsesSuccess.cs" />
+    <Compile Include="Models\BulkPayments\IBTResponse.cs" />
     <Compile Include="Models\BulkPayments\MSTRequest.cs" />
     <Compile Include="Models\BulkPayments\MST_6_Request.cs" />
     <Compile Include="Models\BulkPayments\Request.cs" />
@@ -261,6 +261,7 @@
     <Compile Include="Models\Token.cs" />
     <Compile Include="Models\CBZ\CbzVoucherPaymentDetails.cs" />
     <Compile Include="Models\CBZ\CbzPaymentResponse.cs" />
+    <Compile Include="Models\YoApp\GRVProducts.cs" />
     <Compile Include="Models\YoApp\YoAppGrvResponse.cs" />
     <Compile Include="Models\YoApp\InitialProducts.cs" />
     <Compile Include="Models\YoApp\ListResponse.cs" />
@@ -384,6 +385,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Uploads\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff2" />

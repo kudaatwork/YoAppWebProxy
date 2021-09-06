@@ -5,7 +5,7 @@ using System.Web;
 
 namespace YoAppWebProxy.Models.BulkPayments
 {
-    public class AATBatchProgressFailure
+    public class AATBatchProgressResponse
     {
         public string InstitutionID { get; set; }
         public string ExtReferenceNo { get; set; }
@@ -19,8 +19,8 @@ namespace YoAppWebProxy.Models.BulkPayments
         public string CCY { get; set; }
         public string Narrative { get; set; }
         public string DrCr { get; set; }
+        public string Status { get; set; }
         public Response Response { get; set; }
         public Contra Contra { get; set; }
-
     }
 }

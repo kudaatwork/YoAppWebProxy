@@ -37,6 +37,16 @@ namespace YoAppWebProxy.Helpful_Objects
             }
         }
 
+        private static string ohlangaSupplierAccountType = "9-01-0002";
+
+        public static string OhlangaSupplierAccountType
+        {
+            get
+            {
+                return ohlangaSupplierAccountType;
+            }
+        }
+
         private static string stockTranName = "TRADE DEBTORS USD";
 
         public static string StockTranName

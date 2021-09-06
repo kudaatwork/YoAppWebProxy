@@ -5,7 +5,7 @@ using System.Web;
 
 namespace YoAppWebProxy.Models.BulkPayments
 {
-    public class IBTResponsesSuccess
+    public class IBTResponse
     {
         public string InstitutionID { get; set; }
         public string ExtReferenceNo { get; set; }

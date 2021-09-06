@@ -5,10 +5,10 @@ using System.Web;
 
 namespace YoAppWebProxy.Models.BulkPayments
 {
-    public class AATFailedBatchReceiptAcknowledgement
+    public class _38_MST_6_RequestToServer
     {
         public string InstitutionID { get; set; }
         public string ExtReferenceNo { get; set; }
-        public Response Response { get; set; }       
+        public string Request { get; set; }
     }
 }
