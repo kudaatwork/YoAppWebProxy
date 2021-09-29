@@ -22,6 +22,8 @@ using YoAppWebProxy.Models.EOS;
 using YoAppWebProxy.Models.YoApp;
 using YoAppWebProxy.Models.BulkPayments;
 using System.Threading.Tasks;
+using YoAppWebProxy.Models.Wafaya;
+using System.Reflection;
 
 namespace YoAppWebProxy.Controllers
 {
@@ -92,11 +94,11 @@ namespace YoAppWebProxy.Controllers
 
                         voucherPaymentDetails.CropType = cbzMethods.GetCropType(deserializedYoAppNarrative.ProductDetails);
 
-                        voucherPaymentDetails.Summary = new List<Product>();
+                        voucherPaymentDetails.Summary = new List<Models.Product>();
 
                         foreach (var item in deserializedYoAppNarrative.Products)
                         {
-                            voucherPaymentDetails.Summary.Add(new Product { ProductRedeemed = item.Name, QuantityRedeemed = item.Collected, PricePerUnit = item.Price });
+                            voucherPaymentDetails.Summary.Add(new Models.Product { ProductRedeemed = item.Name, QuantityRedeemed = item.Collected, PricePerUnit = item.Price });
                         }
 
                         Log.RequestsAndResponses("VPayments-Request", serviceProvider, voucherPaymentDetails);
@@ -1128,28 +1130,25 @@ namespace YoAppWebProxy.Controllers
                         try
                         {
                             GRVTransaction grvTransaction = new GRVTransaction();
-                            AquSalesConnector connector = new AquSalesConnector();
-                            List<PurchaseLine> purchaseLines = new List<PurchaseLine>();
+                            AquSalesConnector connector = new AquSalesConnector();                          
 
-                            var aquResponse = JsonConvert.DeserializeObject<YoAppGrvResponse>(redemptionResponse.Narrative);
+                            var aquResponse = JsonConvert.DeserializeObject<PaymentResponse>(redemptionResponse.Narrative);
 
                             grvTransaction.Username = AqusalesCredentials.Username;
                             grvTransaction.Password = AqusalesCredentials.Password;
                             grvTransaction.SupplierAccountType = AqusalesObjects.OhlangaSupplierAccountType;
-                            grvTransaction.TransactionName = AqusalesObjects.TransactionName;
-                            grvTransaction.TransactionReference = aquResponse.OrderNumber.Trim();
+                            grvTransaction.TransactionReference = aquResponse.PaymentType.Trim();
                             grvTransaction.Company = "OHLANGA JV"; //aquResponse.BranchName;
-                            grvTransaction.DebtorOrCreditor = aquResponse.BranchName?.Trim() + "(" + aquResponse.BranchId?.Trim() + ")";
-                            grvTransaction.Amount = (decimal)aquResponse.StockedValue;
+                            grvTransaction.DebtorOrCreditor = aquResponse.merchantCode?.Trim();
+                            grvTransaction.Amount = Convert.ToDecimal(aquResponse.transactionAmount);
                             grvTransaction.Vat = 0.0m;
                           
                             TranCurrencyInfoVM tranCurrencyInfo = new TranCurrencyInfoVM();
                             tranCurrencyInfo.TransactionCurrency = "ZAR";//aquResponse.Currency;
                             tranCurrencyInfo.TransactionCurrencyRate = 1;
                             grvTransaction.TranCurrencyInfoVM = tranCurrencyInfo;
-                            grvTransaction.TransactionDate = aquResponse.AuthorisationDate;
-                            grvTransaction.TransactionName = aquResponse.OrderType?.Trim();
-                            grvTransaction.Cashier = aquResponse.Cashier?.Trim();
+                            grvTransaction.TransactionDate = DateTime.Now;
+                            grvTransaction.Cashier = aquResponse.custmerEmail.Trim() + aquResponse.custmerPhone.Trim();
 
                             Log.RequestsAndResponses("AquPayment-Request", serviceProvider, grvTransaction);
 
@@ -1162,7 +1161,7 @@ namespace YoAppWebProxy.Controllers
                                 yoAppResponse.ResponseCode = "00000";
                                 yoAppResponse.Description = response.Description;
                                 yoAppResponse.Note = "Success";
-                                yoAppResponse.Narrative = "Transaction/Redemption Posted successfully";
+                                yoAppResponse.Narrative = "Transaction/Payment Posted successfully";
 
                                 Log.RequestsAndResponses("AquPayment-Response-YoApp", serviceProvider, response);
 
@@ -2418,6 +2417,398 @@ namespace YoAppWebProxy.Controllers
 
                 }
             }
+        }
+
+
+        [Route("api/vouchers/wafaya")]
+        [HttpPost]
+        public YoAppResponse Vouchers(YoAppResponse response)
+        {
+            #region Declared Objects
+            var serviceProvider = "Wafaya";
+            YoAppResponse yoAppResponse = new YoAppResponse();
+            #endregion
+
+            #region First Log
+            Log.RequestsAndResponses("YoAppResponse", serviceProvider, response);
+            #endregion
+
+            if (response == null)
+            {
+                string message = "Received Nothing. Your request object is null";
+
+                yoAppResponse.ResponseCode = "00008";
+                yoAppResponse.Note = "Failed";
+                yoAppResponse.Description = message;
+
+                return yoAppResponse;
+            }
+            else
+            {
+                WafayaCredentials wafayaCredentials = new WafayaCredentials();
+                WafayaCodeRequest codeRequest = new WafayaCodeRequest();
+                WafayaTokenRequest tokenRequest = new WafayaTokenRequest();
+                WafayaResourceOwnerRequest resourceOwnerRequest = new WafayaResourceOwnerRequest();
+               
+                WafayaConnector connector = new WafayaConnector();
+                bool isTokenValid = false;
+                var fileName = "tokens";
+                
+                switch (response.ServiceId)
+                {
+
+                    case 1: // Request Token using Authorization Flow
+
+                        try
+                        {
+                            codeRequest.client_id = wafayaCredentials.AuthorisationClientId;
+                            codeRequest.redirect_uri = wafayaCredentials.ClientUrl;
+                            codeRequest.response_type = "code";
+                            codeRequest.scope = "";
+
+                            Log.RequestsAndResponses("Wafaya-TokenRequest", serviceProvider, codeRequest);
+
+                            var codeResponse = connector.GetCode(codeRequest, serviceProvider);
+
+                            Log.RequestsAndResponses("Wafaya-TokenResponse", serviceProvider, codeRequest);
+
+                            if (!String.IsNullOrEmpty(codeResponse.code)) // Token Request
+                            {
+                                tokenRequest.grant_type = "authorization_code";
+                                tokenRequest.client_id = wafayaCredentials.AuthorisationClientId;
+                                tokenRequest.client_secret = wafayaCredentials.AuthorizationSecret;
+                                tokenRequest.redirect_uri = wafayaCredentials.ClientUrl;
+                                tokenRequest.code = codeResponse.code;
+
+                                Log.RequestsAndResponses("Wafaya-TokenResponse", serviceProvider, codeResponse.code);
+
+                                var tokenResponse = connector.GetAuthorizationToken(tokenRequest, serviceProvider);
+
+                                if (tokenResponse.token_type == "Bearer")
+                                {
+                                    yoAppResponse.ResponseCode = "00000";
+                                    yoAppResponse.Description = "Token generated successfully";
+                                    yoAppResponse.Note = "Transaction Successful";
+
+                                    var token = JsonConvert.SerializeObject(tokenResponse);
+
+                                    yoAppResponse.Narrative = token;
+
+                                    Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, tokenResponse);
+
+                                    return yoAppResponse;
+                                }
+                                else
+                                {
+                                    yoAppResponse.ResponseCode = "00008";
+                                    yoAppResponse.Description = "Token could not be generated";
+                                    yoAppResponse.Note = "Transaction Failed";
+
+                                    var token = JsonConvert.SerializeObject(tokenResponse);
+
+                                    yoAppResponse.Narrative = token;
+
+                                    Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, tokenResponse);
+
+                                    return yoAppResponse;
+                                }
+                            }
+                            else
+                            {
+                                yoAppResponse.ResponseCode = "00008";
+                                yoAppResponse.Description = "Code could not be generated";
+                                yoAppResponse.Note = "Transaction Failed";
+
+                                Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, codeResponse);
+
+                                return yoAppResponse;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.RequestsAndResponses("Exception", serviceProvider, ex.Message);
+                            break;
+                        }
+                        
+
+                    case 2: // Resource Owner Credentials
+
+                        string filePath = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
+
+                        var refresherTokenFile = LoadJson(filePath);
+
+                        if (refresherTokenFile != null) // We have generated the Token Already
+                        {
+                            var expiryDateString = refresherTokenFile.expires_in;
+
+                            var expiryDate = DateTime.ParseExact(expiryDateString, "dd/MM/yyyy-HH:mm:ss", null);
+
+                            var currentDateTime = DateTime.Now;
+
+                            if (expiryDate > currentDateTime) // Token is still valid
+                            {
+                                yoAppResponse.ResponseCode = "00000";
+                                yoAppResponse.Description = "Token is still valid and in use";
+                                yoAppResponse.Note = "Request Successful";
+
+                                Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, "");
+
+                                isTokenValid = true;
+
+                                return yoAppResponse;
+                            }
+                            else // Token is no longer valid
+                            {
+                                RefreshToken();
+                                isTokenValid = true;
+                                return null;
+                            }                            
+                        }
+                        else // Generate a new Token
+                        {
+                            resourceOwnerRequest.grant_type = "password";
+                            resourceOwnerRequest.client_id = wafayaCredentials.PasswordClientId;
+                            resourceOwnerRequest.client_secret = wafayaCredentials.PasswordSecret;
+                            resourceOwnerRequest.scope = "";
+                            resourceOwnerRequest.username = wafayaCredentials.Username;
+                            resourceOwnerRequest.password = wafayaCredentials.Password;
+
+                            Log.RequestsAndResponses("Wafaya-TokenRequest", serviceProvider, resourceOwnerRequest);
+
+                            var resourceOwnerResponse = connector.GetPasswordToken(resourceOwnerRequest, serviceProvider);
+
+                            if (resourceOwnerResponse.token_type.ToLower() == "bearer")
+                            {
+                                yoAppResponse.ResponseCode = "00000";
+                                yoAppResponse.Description = "Token generated successfully";
+                                yoAppResponse.Note = "Transaction Successful";
+
+                                var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(resourceOwnerResponse.expires_in));
+
+                                resourceOwnerResponse.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
+
+                                var token = JsonConvert.SerializeObject(resourceOwnerResponse);
+
+                                yoAppResponse.Narrative = token;
+
+                                Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, resourceOwnerResponse);
+                                Log.StoreData("tokens", serviceProvider, resourceOwnerResponse);
+
+                                return yoAppResponse;
+                            }
+                            else
+                            {
+                                yoAppResponse.ResponseCode = "00008";
+                                yoAppResponse.Description = "Code could not be generated";
+                                yoAppResponse.Note = "Transaction Failed";
+
+                                Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, resourceOwnerResponse);
+
+                                return yoAppResponse;
+                            }
+                        }
+
+                    case 3: // Retriving a single voucher
+
+                        WafayaVoucherRequest voucherRequest = new WafayaVoucherRequest();
+
+                        string file = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
+                        var tokenFile = LoadJson(file);
+
+                        if (tokenFile != null) // We have generated the Token Already
+                        {
+                            var expiryDateString = tokenFile.expires_in;
+
+                            var expiryDate = DateTime.ParseExact(expiryDateString, "dd/MM/yyyy-HH:mm:ss", null);
+
+                            var currentDateTime = DateTime.Now;
+
+                            if (expiryDate > currentDateTime) // Token is still valid
+                            {
+                                isTokenValid = true;
+                            }
+                            else // Token is no longer valid
+                            {
+                                RefreshToken();
+                                isTokenValid = true;
+                                return null;
+                            }
+                        }
+                        else // Generate a new Token
+                        {
+                            resourceOwnerRequest.grant_type = "password";
+                            resourceOwnerRequest.client_id = wafayaCredentials.PasswordClientId;
+                            resourceOwnerRequest.client_secret = wafayaCredentials.PasswordSecret;
+                            resourceOwnerRequest.scope = "";
+                            resourceOwnerRequest.username = wafayaCredentials.Username;
+                            resourceOwnerRequest.password = wafayaCredentials.Password;
+
+                            Log.RequestsAndResponses("Wafaya-TokenRequest", serviceProvider, resourceOwnerRequest);
+
+                            var resourceOwnerResponse = connector.GetPasswordToken(resourceOwnerRequest, serviceProvider);
+
+                            if (resourceOwnerResponse.token_type.ToLower() == "bearer")
+                            {
+                                isTokenValid = true;
+                                yoAppResponse.ResponseCode = "00000";
+                                yoAppResponse.Description = "Token generated successfully";
+                                yoAppResponse.Note = "Transaction Successful";
+
+                                var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(resourceOwnerResponse.expires_in));
+
+                                resourceOwnerResponse.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
+
+                                var token = JsonConvert.SerializeObject(resourceOwnerResponse);
+
+                                yoAppResponse.Narrative = token;
+
+                                Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, resourceOwnerResponse);
+                                Log.StoreData("tokens", serviceProvider, resourceOwnerResponse);
+
+                                return yoAppResponse;
+                            }
+                            else
+                            {
+                                yoAppResponse.ResponseCode = "00008";
+                                yoAppResponse.Description = "Code could not be generated";
+                                yoAppResponse.Note = "Transaction Failed";
+
+                                Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, resourceOwnerResponse);
+
+                                return yoAppResponse;
+                            }
+                        }
+
+                        if (isTokenValid)
+                        {
+                            voucherRequest.Voucher = response.CustomerAccount;
+                            voucherRequest.Token = tokenFile.access_token;
+
+                            Log.RequestsAndResponses("Wafaya-GetVoucherRequest", serviceProvider, "");
+
+                            var wafayaVoucherResponse = connector.GetVoucherDetails(voucherRequest, serviceProvider);
+
+                            Log.RequestsAndResponses("Wafaya-GetVoucherResponse", serviceProvider, wafayaVoucherResponse);
+
+                            if (wafayaVoucherResponse.voucher_code != null)
+                            {
+                                yoAppResponse.ResponseCode = "00000";
+                                yoAppResponse.Description = "Token Retrived successfully";
+                                yoAppResponse.Note = "Request Successful";
+
+                                Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, wafayaVoucherResponse);
+
+                                var voucherResponse = JsonConvert.SerializeObject(wafayaVoucherResponse);
+
+                                yoAppResponse.Narrative = voucherResponse;
+
+                                isTokenValid = true;
+
+                                return yoAppResponse;
+                            }
+                            else
+                            {
+                                yoAppResponse.ResponseCode = "00008";
+                                yoAppResponse.Description = "Could not retrieve voucher";
+                                yoAppResponse.Note = "Request Failed";
+
+                                Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, wafayaVoucherResponse);
+
+                                return yoAppResponse;
+                            }
+                        }
+                        else
+                        {
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Description = "Token is not Valid";
+                            yoAppResponse.Note = "Request Failed";
+
+                            Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, "");
+
+                            return yoAppResponse;
+                        }
+                       
+
+                    case 4: // Initializing a voucher redemption
+
+
+
+                        break;
+
+                    case 5: // Finalizing a voucher redemption
+
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+
+            return response;
+        }
+
+        [NonAction]
+        public WafayaRefresherTokenResponse RefreshToken()
+        {
+            WafayaRefresherTokenRequest tokenRequest = new WafayaRefresherTokenRequest();
+            WafayaConnector wafayaConnector = new WafayaConnector();
+            WafayaCredentials wafayaCredentials = new WafayaCredentials();
+            YoAppResponse yoAppResponse = new YoAppResponse();
+            var serviceProvider = "Wafaya";
+
+            try
+            {               
+                tokenRequest.grant_type = "refresh_token";
+                tokenRequest.client_id = wafayaCredentials.PasswordClientId;
+                tokenRequest.client_secret = wafayaCredentials.PasswordSecret;
+                tokenRequest.scope = "";
+                tokenRequest.refresh_token = wafayaCredentials.Username;
+
+                Log.RequestsAndResponses("Wafaya-RefresherTokenRequest", serviceProvider, tokenRequest);
+
+                var refresherTokenResponse = wafayaConnector.GetNewToken(tokenRequest, serviceProvider);
+
+                if (refresherTokenResponse.token_type.ToLower() == "bearer")
+                {
+                    Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, refresherTokenResponse);
+                    Log.StoreData("tokens", serviceProvider, refresherTokenResponse);
+
+                    return refresherTokenResponse;
+                }
+                else
+                {
+                    Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, refresherTokenResponse);
+
+                    return refresherTokenResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.RequestsAndResponses("Exception", serviceProvider, ex.Message);
+                return null;
+            }            
+        }
+                
+        [NonAction]
+        public WafayaRefresherTokenResponse LoadJson(string file)
+        {
+            try
+            {
+                using (FileStream fileStream = new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+
+                using (StreamReader sr = new StreamReader(fileStream))
+                {                   
+                    string json = sr.ReadToEnd();
+                    var tokenResponse = JsonConvert.DeserializeObject<WafayaRefresherTokenResponse>(json);
+
+                    return tokenResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null;
+            }            
         }
     }
 }

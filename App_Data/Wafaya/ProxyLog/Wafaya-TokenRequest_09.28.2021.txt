@@ -1,0 +1,10 @@
+DateTime Logged: 09/28/2021 13:00:44, ServiceProvider: Wafaya, Request Object: {"client_id":"94730d4c-b6bc-4a1a-9ac9-07b5b9c139fd","client_secret":"RfPGn92XOcKgEi4zo08pNinb6M6T4VtdyAijlpZI","username":"yoapp@wa-faya.com","password":"12345678","scope":"","grant_type":"password"}
+=============================================
+DateTime Logged: 09/28/2021 16:35:30, ServiceProvider: Wafaya, Request Object: {"client_id":"94730d4c-b6bc-4a1a-9ac9-07b5b9c139fd","client_secret":"RfPGn92XOcKgEi4zo08pNinb6M6T4VtdyAijlpZI","username":"yoapp@wa-faya.com","password":"12345678","scope":"","grant_type":"password"}
+=============================================
+DateTime Logged: 09/28/2021 16:39:01, ServiceProvider: Wafaya, Request Object: {"client_id":"94730d4c-b6bc-4a1a-9ac9-07b5b9c139fd","client_secret":"RfPGn92XOcKgEi4zo08pNinb6M6T4VtdyAijlpZI","username":"yoapp@wa-faya.com","password":"12345678","scope":"","grant_type":"password"}
+=============================================
+DateTime Logged: 09/28/2021 16:46:31, ServiceProvider: Wafaya, Request Object: {"client_id":"94730d4c-b6bc-4a1a-9ac9-07b5b9c139fd","client_secret":"RfPGn92XOcKgEi4zo08pNinb6M6T4VtdyAijlpZI","username":"yoapp@wa-faya.com","password":"12345678","scope":"","grant_type":"password"}
+=============================================
+DateTime Logged: 09/28/2021 17:02:55, ServiceProvider: Wafaya, Request Object: {"client_id":"94730d4c-b6bc-4a1a-9ac9-07b5b9c139fd","client_secret":"RfPGn92XOcKgEi4zo08pNinb6M6T4VtdyAijlpZI","username":"yoapp@wa-faya.com","password":"12345678","scope":"","grant_type":"password"}
+=============================================

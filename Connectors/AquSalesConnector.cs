@@ -216,7 +216,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("http://102.130.120.163:8091/Yomoney/GRVTransaction");
+                string url = String.Format("http://102.130.120.163:8091/Yomoney/InvoicePayment");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.PreAuthenticate = true;
                 httpWebRequest.Timeout = 120000;
@@ -253,7 +253,7 @@ namespace YoAppWebProxy.Connectors
             return transactionResponse;
         }
 
-        public APITransactionResponse PostOhlangaSupplier(GRVTransaction grvTransaction, string serviceProvider)
+        public APITransactionResponse PostOhlangaSupplierCreation(GRVTransaction grvTransaction, string serviceProvider)
         {
             APITransactionResponse transactionResponse = new APITransactionResponse();
 
@@ -264,7 +264,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("http://102.130.120.163:8091/Yomoney/GRVTransaction");
+                string url = String.Format("http://102.130.120.163:8091/Yomoney/SupplierCreation");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.PreAuthenticate = true;
                 httpWebRequest.Timeout = 120000;
