@@ -2951,7 +2951,7 @@ namespace YoAppWebProxy.Controllers
                             {
                                 yoAppResponse.ResponseCode = "00008";
                                 yoAppResponse.Description = "Could not finalize voucher";
-                                yoAppResponse.Note = "Request Failed";
+                                yoAppResponse.Note = "Request to the server Failed";
 
                                 Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, wafayaVoucherResponse);
 
