@@ -263,12 +263,15 @@
     <Compile Include="Models\Token.cs" />
     <Compile Include="Models\CBZ\CbzVoucherPaymentDetails.cs" />
     <Compile Include="Models\CBZ\CbzPaymentResponse.cs" />
+    <Compile Include="Models\Wafaya\Payload.cs" />
     <Compile Include="Models\Wafaya\Product.cs" />
     <Compile Include="Models\Wafaya\ProductRedemptionLimit.cs" />
     <Compile Include="Models\Wafaya\RedemptionLimits.cs" />
     <Compile Include="Models\Wafaya\Voucher.cs" />
     <Compile Include="Models\Wafaya\WafayaCodeRequest.cs" />
     <Compile Include="Models\Wafaya\WafayaCodeResponse.cs" />
+    <Compile Include="Models\Wafaya\WafayaFinalizeVoucherRequest.cs" />
+    <Compile Include="Models\Wafaya\WafayaFinalizeVoucherResponse.cs" />
     <Compile Include="Models\Wafaya\WafayaInitializeRedemptionRequest.cs" />
     <Compile Include="Models\Wafaya\WafayaInitializeRedemptionResponse.cs" />
     <Compile Include="Models\Wafaya\WafayaRefresherTokenRequest.cs" />

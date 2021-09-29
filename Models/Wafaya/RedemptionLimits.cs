@@ -8,7 +8,7 @@ namespace YoAppWebProxy.Models.Wafaya
     public class RedemptionLimits
     {
         public string period { get; set; }
-        public int amount { get; set; }
-        public DateTime created_at { get; set; }
+        public decimal amount { get; set; }
+        public string created_at { get; set; }
     }
 }

@@ -5,9 +5,9 @@ using System.Web;
 
 namespace YoAppWebProxy.Models.Wafaya
 {
-    public class WafayaInitializeRedemptionRequest
+    public class WafayaFinalizeVoucherRequest
     {
-        public decimal amount { get; set; }
+        public string confirmation_otp { get; set; }
         public string voucher { get; set; }
         public string token { get; set; }
     }

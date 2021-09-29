@@ -7,7 +7,7 @@ namespace YoAppWebProxy.Models.Wafaya
 {
     public class Voucher
     {
-        public DateTime created_at { get; set; }
+        public string created_at { get; set; }
         public string voucher_code { get; set; }
         public string description { get; set; }
         public string redeemer_phone { get; set; }
@@ -15,10 +15,10 @@ namespace YoAppWebProxy.Models.Wafaya
         public bool active { get; set; }
         public string expiry_date { get; set; }
         public bool is_expired { get; set; }
-        public int voucher_value { get; set; }
+        public decimal voucher_value { get; set; }
         public string voucher_currency { get; set; }
-        public int voucher_balance { get; set; }
-        public RedemptionLimits redemption_limits { get; set; }
+        public decimal voucher_balance { get; set; }
+        public List<RedemptionLimits> redemption_limits { get; set; }
         public ProductRedemptionLimit product_redemption_limit { get; set; }
     }
 }

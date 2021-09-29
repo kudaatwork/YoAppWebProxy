@@ -69,7 +69,7 @@ namespace YoAppWebProxy.Connectors
 
                 string queryRequest = wafayaVoucherRequest.Voucher;                   
 
-                string url = String.Format("https://dev.wa-faya.com/voucher/" + queryRequest);
+                string url = String.Format("https://dev.wa-faya.com/api/voucher/" + queryRequest);
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.PreAuthenticate = true;
                 httpWebRequest.Timeout = 120000;
@@ -138,6 +138,96 @@ namespace YoAppWebProxy.Connectors
             }
 
             return tokenResponse;
+        }
+
+        public WafayaInitializeRedemptionResponse InitializeVoucher(WafayaInitializeRedemptionRequest wafayaInitializeRedemptionRequest, string serviceProvider)
+        {
+            WafayaInitializeRedemptionResponse initializeRedemptionResponse = new WafayaInitializeRedemptionResponse();
+
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback
+                (
+                    delegate { return true; }
+                );
+
+                string url = String.Format("https://dev.wa-faya.com/api/voucher/" + wafayaInitializeRedemptionRequest.voucher + "/initialize-redemption");
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                httpWebRequest.PreAuthenticate = true;
+                httpWebRequest.Timeout = 120000;
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + wafayaInitializeRedemptionRequest.token);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "POST";
+                httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
+
+                string json = JsonConvert.SerializeObject(wafayaInitializeRedemptionRequest);
+
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    streamWriter.Write(json);
+                    streamWriter.Flush();
+                    streamWriter.Close();
+
+                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+                    using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                    {
+                        var result = streamReader.ReadToEnd();
+                        initializeRedemptionResponse = JsonConvert.DeserializeObject<WafayaInitializeRedemptionResponse>(result);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.HttpError("Wafaya-HttpError", serviceProvider, ex.Message);
+            }
+
+            return initializeRedemptionResponse;
+        }
+
+        public WafayaFinalizeVoucherResponse FinalizeVoucher(WafayaFinalizeVoucherRequest wafayaFinalizeVoucherRequest, string serviceProvider)
+        {
+            WafayaFinalizeVoucherResponse finalizeVoucherResponse = new WafayaFinalizeVoucherResponse();
+
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback
+                (
+                    delegate { return true; }
+                );
+
+                string url = String.Format("https://dev.wa-faya.com/api/voucher/" + wafayaFinalizeVoucherRequest.voucher + "/finalize-redemption");
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                httpWebRequest.PreAuthenticate = true;
+                httpWebRequest.Timeout = 120000;
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + wafayaFinalizeVoucherRequest.token);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "POST";
+                httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
+
+                string json = JsonConvert.SerializeObject(wafayaFinalizeVoucherRequest);
+
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    streamWriter.Write(json);
+                    streamWriter.Flush();
+                    streamWriter.Close();
+
+                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+                    using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                    {
+                        var result = streamReader.ReadToEnd();
+                        finalizeVoucherResponse = JsonConvert.DeserializeObject<WafayaFinalizeVoucherResponse>(result);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.HttpError("Wafaya-HttpError", serviceProvider, ex.Message);
+            }
+
+            return finalizeVoucherResponse;
         }
 
         public WafayaResourceOwnerResponse GetPasswordToken(WafayaResourceOwnerRequest wafayaResourceOwnerRequest, string serviceProvider)
