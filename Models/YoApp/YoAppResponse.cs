@@ -22,6 +22,9 @@ namespace YoAppWebProxy.Models
         public decimal MinSale { get; set; }
         public string TransactionBranch { get; set; }
         public string CustomerMSISDN { get; set; }
+        public bool IsActive { get; set; }
+        public bool HasProducts { get; set; }
+        public string Currency { get; set; }
         public long ServiceId { get; set; }
         public string MTI { get; set; } //Message type indicator
         public string TerminalId { get; set; }

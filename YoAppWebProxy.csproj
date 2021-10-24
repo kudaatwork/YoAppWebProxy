@@ -148,6 +148,7 @@
     <Compile Include="Connectors\WafayaConnector.cs" />
     <Compile Include="Helpful_Functions\BulkPaymentsMethods.cs" />
     <Compile Include="Helpful_Functions\ExternalFieldMethods.cs" />
+    <Compile Include="Helpful_Functions\WafayaMethods.cs" />
     <Compile Include="Helpful_Objects\AgribankObjects.cs" />
     <Compile Include="Connectors\AgribankPostConnector.cs" />
     <Compile Include="Api_Credentials\TrekCredentials.cs" />
