@@ -980,7 +980,7 @@ namespace YoAppWebProxy.Controllers
 
                             Log.RequestsAndResponses("Aqu-Request", serviceProvider, sale);
 
-                            var response = connector.PostCBZRedemption(sale, serviceProvider);
+                            var response = connector.PostCBZReversal(sale, serviceProvider);
 
                             Log.RequestsAndResponses("Aqu-Response", serviceProvider, response);
 
@@ -1011,7 +1011,266 @@ namespace YoAppWebProxy.Controllers
                         {
                             Log.RequestsAndResponses("Exception", serviceProvider, ex.Message);
                             break;
-                        }                       
+                        }
+
+                    case 4: // Post Soya Redemptions
+
+                        try
+                        {
+                            SaleTransaction saleTransaction = new SaleTransaction();
+                            AqusalesCredentials aqusalesCredentials = new AqusalesCredentials();
+                            AquSalesConnector aquSalesConnector = new AquSalesConnector();
+
+                            var deserializedResponse = JsonConvert.DeserializeObject<Narrative>(redemptionResponse.Narrative);
+
+                            var currency = deserializedResponse.Products.Where(x => x.Currency.Trim() != null || x.Currency.Trim() != "").Select(x => x.Currency).FirstOrDefault();
+
+                            saleTransaction.Username = AqusalesCredentials.Username;
+                            saleTransaction.Password = AqusalesCredentials.Password;
+                            saleTransaction.IsCreditSale = true;
+                            saleTransaction.TransactionReference = redemptionResponse.TransactionRef;
+                            saleTransaction.Company = "CBZ AGROYIELD";//deserializedResponse.CustomerName;
+                            saleTransaction.Customer = deserializedResponse.ReceiversName.Trim() + " " + deserializedResponse.ReceiversSurname.Trim() + "~" +
+                                deserializedResponse.ReceiversIdentification.Trim() + "~(" + currency.Trim() + ")";
+                            saleTransaction.CustomerMSISDN = deserializedResponse.ReceiverMobile.Trim();
+
+                            var totalAmout = 0.0m;
+
+                            foreach (var item in deserializedResponse.Products)
+                            {
+                                if (item.Collected > 0)
+                                {
+                                    totalAmout = item.Price * item.Collected;
+                                }
+                            }
+
+                            saleTransaction.Amount = totalAmout;
+
+                            var costPrice = 0.0m;
+
+                            foreach (var item in deserializedResponse.Products)
+                            {
+                                if (item.Collected > 0)
+                                {
+                                    costPrice = item.CostPrice * item.Collected;
+                                }
+                            }
+
+                            saleTransaction.CostOfSales = costPrice;
+                            saleTransaction.Vat = 0.0m;
+                            TranCurrencyInfoVM tranCurrencyInfoVM = new TranCurrencyInfoVM();
+
+                            tranCurrencyInfoVM.TransactionCurrency = currency.Trim();
+                            tranCurrencyInfoVM.TransactionCurrencyRate = 1;
+                            saleTransaction.TranCurrencyInfoVM = tranCurrencyInfoVM;
+                            saleTransaction.TransactionDate = deserializedResponse.DatelastAccess.ToLocalTime().ToString();
+                            saleTransaction.TransactionName = AqusalesObjects.TransactionName.Trim();
+                            saleTransaction.Cashier = deserializedResponse.Cashier.Trim();
+                            saleTransaction.CustomerAccountType = AqusalesObjects.CustomerAccountType.Trim();
+
+                            Log.RequestsAndResponses("Aqu-Request", serviceProvider, saleTransaction);
+
+                            var aqusalesResponse = aquSalesConnector.PostCBZRedemption2(saleTransaction, serviceProvider);
+
+                            Log.RequestsAndResponses("Aqu-Response", serviceProvider, aqusalesResponse);
+
+                            if (aqusalesResponse.Status.ToUpper() == "SUCCESS")
+                            {
+                                yoAppResponse.ResponseCode = "00000";
+                                yoAppResponse.Description = aqusalesResponse.Description;
+                                yoAppResponse.Note = "Success";
+                                yoAppResponse.Narrative = "Transaction/Redemption Posted successfully";
+
+                                Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, aqusalesResponse);
+
+                                return yoAppResponse;
+                            }
+                            else
+                            {
+                                yoAppResponse.ResponseCode = "00008";
+                                yoAppResponse.Description = aqusalesResponse.Description;
+                                yoAppResponse.Note = "Transaction Failed";
+                                yoAppResponse.Narrative = "Transaction Failed";
+
+                                Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, aqusalesResponse);
+
+                                return yoAppResponse;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.RequestsAndResponses("Exception", serviceProvider, ex.Message);
+                            break;
+                        }
+
+                    case 5: // Post Soya GRV
+
+                        try
+                        {
+                            GRVTransaction grvTransaction = new GRVTransaction();
+                            AquSalesConnector connector = new AquSalesConnector();
+                            List<PurchaseLine> purchaseLines = new List<PurchaseLine>();
+
+                            var aquResponse = JsonConvert.DeserializeObject<YoAppGrvResponse>(redemptionResponse.Narrative);
+
+                            var desirilizedFiles = JsonConvert.DeserializeObject<List<GRVProducts>>(aquResponse.Files);
+
+                            foreach (var item in desirilizedFiles)
+                            {
+                                PurchaseLine purchaseLine = new PurchaseLine();
+
+                                purchaseLine.item = item.Name;
+                                purchaseLine.ItemCode = item.ItemCode;
+                                purchaseLine.quantity = item.Quantity;
+                                purchaseLine.price = item.UnitPrice;
+                                purchaseLine.Reciept = item.Unit;
+
+                                purchaseLines.Add(purchaseLine);
+                            }
+
+                            grvTransaction.Username = AqusalesCredentials.Username;
+                            grvTransaction.Password = AqusalesCredentials.Password;
+                            grvTransaction.SupplierAccountType = AqusalesObjects.SupplierAccountType;
+                            grvTransaction.TransactionName = AqusalesObjects.TransactionName;
+                            grvTransaction.TransactionReference = aquResponse.OrderNumber.Trim();
+                            grvTransaction.Company = "CBZ AGROYIELD"; //aquResponse.BranchName;
+                            grvTransaction.DebtorOrCreditor = aquResponse.BranchName?.Trim() + "(" + aquResponse.BranchId?.Trim() + ")";
+                            grvTransaction.Amount = (decimal)aquResponse.StockedValue;
+                            grvTransaction.Vat = 0.0m;
+                            grvTransaction.PurchaseLines = purchaseLines;
+
+                            TranCurrencyInfoVM tranCurrencyInfo = new TranCurrencyInfoVM();
+                            tranCurrencyInfo.TransactionCurrency = "ZWL"; //aquResponse.Currency;
+                            tranCurrencyInfo.TransactionCurrencyRate = 1;
+                            grvTransaction.TranCurrencyInfoVM = tranCurrencyInfo;
+                            grvTransaction.TransactionDate = aquResponse.AuthorisationDate;
+                            grvTransaction.TransactionName = aquResponse.OrderType?.Trim();
+                            grvTransaction.Cashier = aquResponse.Cashier?.Trim();
+
+                            Log.RequestsAndResponses("AquGrv-Request", serviceProvider, grvTransaction);
+
+                            var response = connector.PostCBZGRV2(grvTransaction, serviceProvider);
+
+                            Log.RequestsAndResponses("AquGrv-Response", serviceProvider, response);
+
+                            if (response.Status.ToUpper() == "SUCCESS")
+                            {
+                                yoAppResponse.ResponseCode = "00000";
+                                yoAppResponse.Description = response.Description;
+                                yoAppResponse.Note = "Success";
+                                yoAppResponse.Narrative = "Transaction/GRV Posted successfully";
+
+                                Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, response);
+
+                                return yoAppResponse;
+                            }
+                            else
+                            {
+                                yoAppResponse.ResponseCode = "00008";
+                                yoAppResponse.Description = response.Description;
+                                yoAppResponse.Note = "Transaction Failed";
+                                yoAppResponse.Narrative = "Transaction Failed";
+
+                                Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, response);
+
+                                return yoAppResponse;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.RequestsAndResponses("Exception", serviceProvider, ex.Message);
+                            break;
+                        }
+
+                    case 6: // Post Soya Reversals
+
+                        try
+                        {
+                            SaleTransaction sale = new SaleTransaction();
+                            AqusalesCredentials credentials = new AqusalesCredentials();
+                            AquSalesConnector connector = new AquSalesConnector();
+
+                            var deserializedResponse = JsonConvert.DeserializeObject<Narrative>(redemptionResponse.Narrative);
+
+                            var currency = deserializedResponse.Products.Where(x => x.Currency.Trim() != null || x.Currency.Trim() != "").Select(x => x.Currency).FirstOrDefault();
+
+                            sale.Username = AqusalesCredentials.Username;
+                            sale.Password = AqusalesCredentials.Password;
+                            sale.IsCreditSale = true;
+                            sale.TransactionReference = redemptionResponse.TransactionRef;
+                            sale.Company = "CBZ AGROYIELD";//deserializedResponse.CustomerName;
+                            sale.Customer = deserializedResponse.ReceiversName.Trim() + " " + deserializedResponse.ReceiversSurname.Trim() + "~" +
+                                deserializedResponse.ReceiversIdentification.Trim() + "~(" + currency.Trim() + ")";
+                            sale.CustomerMSISDN = deserializedResponse.ReceiverMobile.Trim();
+
+                            var totalAmout = 0.0m;
+
+                            foreach (var item in deserializedResponse.Products)
+                            {
+                                if (item.Collected > 0)
+                                {
+                                    totalAmout = item.Price * item.Collected * -1;
+                                }
+                            }
+
+                            sale.Amount = totalAmout;
+
+                            var costPrice = 0.0m;
+
+                            foreach (var item in deserializedResponse.Products)
+                            {
+                                if (item.Collected > 0)
+                                {
+                                    costPrice = item.CostPrice * item.Collected;
+                                }
+                            }
+
+                            sale.CostOfSales = costPrice;
+                            sale.Vat = 0.0m;
+                            TranCurrencyInfoVM tranCurrencyInfoVM = new TranCurrencyInfoVM();
+
+                            tranCurrencyInfoVM.TransactionCurrency = currency.Trim();
+                            tranCurrencyInfoVM.TransactionCurrencyRate = 1;
+                            sale.TranCurrencyInfoVM = tranCurrencyInfoVM;
+                            sale.TransactionDate = deserializedResponse.DatelastAccess.ToLocalTime().ToString();
+                            sale.TransactionName = AqusalesObjects.TransactionName.Trim();
+                            sale.Cashier = deserializedResponse.Cashier.Trim();
+                            sale.CustomerAccountType = AqusalesObjects.CustomerAccountType.Trim();
+
+                            Log.RequestsAndResponses("Aqu-Request", serviceProvider, sale);
+
+                            var response = connector.PostCBZReversal2(sale, serviceProvider);
+
+                            Log.RequestsAndResponses("Aqu-Response", serviceProvider, response);
+
+                            if (response.Status.ToUpper() == "SUCCESS")
+                            {
+                                yoAppResponse.ResponseCode = "00000";
+                                yoAppResponse.Description = response.Description;
+                                yoAppResponse.Note = "Success";
+                                yoAppResponse.Narrative = "Transaction/Reversal Posted successfully";
+
+                                Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, response);
+
+                                return yoAppResponse;
+                            }
+                            else
+                            {
+                                yoAppResponse.ResponseCode = "00008";
+                                yoAppResponse.Description = response.Description;
+                                yoAppResponse.Note = "Transaction Failed";
+                                yoAppResponse.Narrative = "Transaction Failed";
+
+                                Log.RequestsAndResponses("Aqu-Response-YoApp", serviceProvider, response);
+
+                                return yoAppResponse;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.RequestsAndResponses("Exception", serviceProvider, ex.Message);
+                            break;
+                        }
                 }
             }
 
@@ -2753,40 +3012,40 @@ namespace YoAppWebProxy.Controllers
 
                                     Log.RequestsAndResponses("Wafaya-InitilizeVoucherRequest", serviceProvider, wafayaInitializeRedemptionRequest);
 
-                                    var wafayaVoucherResponse = connector.InitializeVoucher(wafayaInitializeRedemptionRequest, serviceProvider);
+                                    //var wafayaVoucherResponse = connector.InitializeVoucher(wafayaInitializeRedemptionRequest, serviceProvider);
 
-                                    Log.RequestsAndResponses("Wafaya-InitilizeVoucherResponse", serviceProvider, wafayaVoucherResponse);
+                                    //Log.RequestsAndResponses("Wafaya-InitilizeVoucherResponse", serviceProvider, wafayaVoucherResponse);
 
-                                    if (wafayaVoucherResponse != null && wafayaVoucherResponse.success.Contains("initialized"))
-                                    {
+                                   // if (wafayaVoucherResponse != null && wafayaVoucherResponse.success.Contains("initialized"))
+                                   // {
                                         yoAppResponse.ResponseCode = "00000";
                                         yoAppResponse.Description = "Voucher Initialized Successfully";
 
-                                        foreach (var item in wafayaVoucherResponse.payload)
-                                        {
-                                            yoAppResponse.Note = item.voucher.redeemer_name;
-                                            yoAppResponse.CustomerAccount = item.voucher.voucher_code;
-                                            yoAppResponse.Amount = item.voucher.voucher_value;
-                                            yoAppResponse.Balance = Convert.ToString(item.voucher.voucher_balance);
-                                            yoAppResponse.CustomerMSISDN = item.voucher.redeemer_phone;
-                                            yoAppResponse.IsActive = item.voucher.active;
-                                            yoAppResponse.Currency = item.voucher.voucher_currency;
-                                        }                                      
+                                        //foreach (var item in wafayaVoucherResponse.payload)
+                                        //{
+                                        //    yoAppResponse.Note = item.voucher.redeemer_name;
+                                        //    yoAppResponse.CustomerAccount = item.voucher.voucher_code;
+                                        //    yoAppResponse.Amount = item.voucher.voucher_value;
+                                        //    yoAppResponse.Balance = Convert.ToString(item.voucher.voucher_balance);
+                                        //    yoAppResponse.CustomerMSISDN = item.voucher.redeemer_phone;
+                                        //    yoAppResponse.IsActive = item.voucher.active;
+                                        //    yoAppResponse.Currency = item.voucher.voucher_currency;
+                                        //}                                      
 
-                                        Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, wafayaVoucherResponse);
+                                        Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, "");
                                                                                 
                                         return yoAppResponse;
-                                    }
-                                    else
-                                    {
-                                        yoAppResponse.ResponseCode = "00008";
-                                        yoAppResponse.Description = "Could not initialize voucher";
-                                        yoAppResponse.Note = "Request Failed";
+                                    //}
+                                    //else
+                                    //{
+                                    //    yoAppResponse.ResponseCode = "00000";
+                                    //    yoAppResponse.Description = "Voucher Initialized Successfully";
+                                    //    yoAppResponse.Note = "Success";
 
-                                        Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, wafayaVoucherResponse);
+                                    //    Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, wafayaVoucherResponse);
 
-                                        return yoAppResponse;
-                                    }
+                                    //    return yoAppResponse;
+                                    //}
                                 }
                                 else
                                 {
@@ -2985,6 +3244,7 @@ namespace YoAppWebProxy.Controllers
                         }
 
                         break;
+
                     #region AuthorizationCode
                     //try
                     //{

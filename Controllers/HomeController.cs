@@ -19,5 +19,10 @@ namespace YoAppWebProxy.Controllers
         { 
             return View();
         }
+
+        public ActionResult LogIndex()
+        {
+            return View();
+        }
     }
 }
