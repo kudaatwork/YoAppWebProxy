@@ -586,18 +586,17 @@ namespace YoAppWebProxy.Controllers
         /// <returns></returns>
         [Route("api/esolutions/services")]
         [HttpPost]
-        public YoAppResponse ESolutionsServicesProxy(YoAppRequest yoAppRequest)
+        public YoAppResponse ESolutionsServicesProxy(YoAppResponse yoAppResponse)
         {
             #region Declared Objects
             var serviceProvider = "ESolutions";
 
-            YoAppResponse yoAppResponse = new YoAppResponse();
             ESolutionsRequest eSolutionsRequest = new ESolutionsRequest();
             ESolutionsApiObjects eSolutionsApiObjects = new ESolutionsApiObjects();
             ESolutionsMethods eSolutionsMethods = new ESolutionsMethods();
             #endregion          
 
-            if (yoAppRequest == null)
+            if (yoAppResponse == null)
             {
                 string message = "Received Nothing. Your request object is null";
 
@@ -609,7 +608,7 @@ namespace YoAppWebProxy.Controllers
             }
             else
             {
-                switch (yoAppRequest.ServiceId)
+                switch (yoAppResponse.ServiceId)
                 {
                     case 1: // Get Merchants
 
@@ -639,82 +638,263 @@ namespace YoAppWebProxy.Controllers
 
                         return yoAppResponse;
 
-                    case 2: // API Calls
+                    case 2: // API Calls - Econet Airtime
 
-                        if (String.IsNullOrEmpty(yoAppRequest.MTI)) // without mti and processingCode
-                        {
-                            string message = "Your request does not have an mti e.g. 0200. " +
-                                "Please put the correct mti and resend your request";
+                        eSolutionsRequest.merchantName = "ECONET";
+                        eSolutionsRequest.productName = "ECONET_AIRTIME";
+                        eSolutionsRequest.processingCode = "U50000";
+                        eSolutionsRequest.mti = "0200";
+                        eSolutionsRequest.sourceMobile = yoAppResponse.CustomerAccount;
+                        eSolutionsRequest.targetMobile = yoAppResponse.CustomerMSISDN;
+                        eSolutionsRequest.utilityAccount = yoAppResponse.CustomerAccount;
+                       // eSolutionsRequest.serviceId = yoAppResponse.ServiceId;
+                        eSolutionsRequest.transactionAmount = yoAppResponse.Amount.ToString();
+                        eSolutionsRequest.vendorReference = yoAppResponse.TransactionRef;
+                        eSolutionsRequest.currencyCode = yoAppResponse.Currency;
 
-                            yoAppResponse.ResponseCode = "00008";
-                            yoAppResponse.Note = "Failed";
-                            yoAppResponse.Description = message;
+                        yoAppResponse = eSolutionsMethods.DirectServicePurchase(eSolutionsRequest, serviceProvider);
 
-                            return yoAppResponse;
-                        }
-                        else // With mti and processingCode
-                        {
-                            eSolutionsRequest.mti = yoAppRequest.MTI;
-                            eSolutionsRequest.processingCode = yoAppRequest.ProcessingCode;
-                            eSolutionsRequest.vendorReference = yoAppRequest.TransactionRef;
-                            eSolutionsRequest.transactionAmount = (long)yoAppRequest.Amount;
+                        return yoAppResponse;
 
-                            switch (eSolutionsRequest.mti)
-                            {
-                                case "0200": // Transaction Request
+                    #region Commented Out Code
+                    //if (string.IsNullOrEmpty(yoAppRequest.MTI)) // without mti and processingCode
+                    //{
+                    //    string message = "Your request does not have an mti e.g. 0200. " +
+                    //        "Please put the correct mti and resend your request";
 
-                                    switch (eSolutionsRequest.processingCode)
-                                    {
-                                        case "300000": // Vendor Balance Enquiry
-                                            yoAppResponse = eSolutionsMethods.VendorBalanceEnquiry(eSolutionsRequest, serviceProvider);
-                                            break;
+                    //    yoAppResponse.ResponseCode = "00008";
+                    //    yoAppResponse.Note = "Failed";
+                    //    yoAppResponse.Description = message;
 
-                                        case "310000": // Customer Information
-                                            yoAppResponse = eSolutionsMethods.CustomerInformation(eSolutionsRequest, serviceProvider);
-                                            break;
+                    //    return yoAppResponse;
+                    //}
+                    //else // With mti and processingCode
+                    //{
+                    //    eSolutionsRequest.mti = yoAppRequest.MTI;
+                    //    eSolutionsRequest.processingCode = yoAppRequest.ProcessingCode;
+                    //    eSolutionsRequest.vendorReference = yoAppRequest.TransactionRef;
+                    //    eSolutionsRequest.transactionAmount = (long)yoAppRequest.Amount;
 
-                                        case "320000": // Last Customer Token
-                                            yoAppResponse = eSolutionsMethods.CustomerInformation(eSolutionsRequest, serviceProvider);
-                                            break;
+                    //    switch (eSolutionsRequest.mti)
+                    //    {
+                    //        case "0200": // Transaction Request
 
-                                        case "U50000": // Purchase Token e.g. ZETDC
-                                            yoAppResponse = eSolutionsMethods.ServicePurchase(eSolutionsRequest, serviceProvider);
-                                            break;
+                    //            switch (eSolutionsRequest.processingCode)
+                    //            {
+                    //                case "300000": // Vendor Balance Enquiry
+                    //                    yoAppResponse = eSolutionsMethods.VendorBalanceEnquiry(eSolutionsRequest, serviceProvider);
+                    //                    break;
 
-                                        case "520000": // Direct Payment for Service e.g. Airtime
-                                            yoAppResponse = eSolutionsMethods.DirectServicePurchase(eSolutionsRequest, serviceProvider);
-                                            break;
+                    //                case "310000": // Customer Information
+                    //                    yoAppResponse = eSolutionsMethods.CustomerInformation(eSolutionsRequest, serviceProvider);
+                    //                    break;
 
-                                        case "":
-                                            string message = "Your request does not have an processingCode e.g. 300000. " +
-                                                "Please put the correct processingCode and resend your request";
+                    //                case "320000": // Last Customer Token
+                    //                    yoAppResponse = eSolutionsMethods.CustomerInformation(eSolutionsRequest, serviceProvider);
+                    //                    break;
 
-                                            Request.CreateResponse(HttpStatusCode.OK, message);
+                    //                case "U50000": // Purchase Token e.g. ZETDC
+                    //                    yoAppResponse = eSolutionsMethods.ServicePurchase(eSolutionsRequest, serviceProvider);
+                    //                    break;
 
-                                            yoAppResponse.ResponseCode = "00008";
-                                            yoAppResponse.Note = "Failed";
-                                            yoAppResponse.Description = message;
+                    //                case "520000": // Direct Payment for Service e.g. Airtime
 
-                                            var serializedRequest = JsonConvert.SerializeObject(eSolutionsRequest);
+                    //                    eSolutionsRequest.merchantName = "ECONET";
+                    //                    eSolutionsRequest.productName = "ECONET_AIRTIME";
 
-                                            yoAppResponse.Narrative = serializedRequest;
+                    //                    yoAppResponse = eSolutionsMethods.DirectServicePurchase(eSolutionsRequest, serviceProvider);
+                    //                    break;
 
-                                            return yoAppResponse;
-                                    }
+                    //                case "":
+                    //                    string message = "Your request does not have an processingCode e.g. 300000. " +
+                    //                        "Please put the correct processingCode and resend your request";
 
-                                    break;
+                    //                    Request.CreateResponse(HttpStatusCode.OK, message);
 
-                                default:
+                    //                    yoAppResponse.ResponseCode = "00008";
+                    //                    yoAppResponse.Note = "Failed";
+                    //                    yoAppResponse.Description = message;
 
-                                    yoAppResponse.ResponseCode = "00008";
-                                    yoAppResponse.Note = "Failed";
-                                    yoAppResponse.Description = "Request did not follow proper channels";
+                    //                    var serializedRequest = JsonConvert.SerializeObject(eSolutionsRequest);
 
-                                    return yoAppResponse;
-                            }
-                        }
+                    //                    yoAppResponse.Narrative = serializedRequest;
 
-                        break;
+                    //                    return yoAppResponse;
+                    //            }
+
+                    //            break;
+
+                    //        default:
+
+                    //            yoAppResponse.ResponseCode = "00008";
+                    //            yoAppResponse.Note = "Failed";
+                    //            yoAppResponse.Description = "Request did not follow proper channels";
+
+                    //            return yoAppResponse;
+                    //    }
+                    //}
+
+                    //break;
+                    #endregion
+
+                    case 3: // Netone Airtime
+
+                        eSolutionsRequest.merchantName = "NETONE";
+                        eSolutionsRequest.productName = "NETONE_AIRTIME";
+                        eSolutionsRequest.processingCode = "U50000";
+                        eSolutionsRequest.mti = "0200";
+                        eSolutionsRequest.sourceMobile = yoAppResponse.CustomerAccount;
+                        eSolutionsRequest.targetMobile = yoAppResponse.CustomerMSISDN;
+                        eSolutionsRequest.utilityAccount = yoAppResponse.CustomerAccount;
+                        //eSolutionsRequest.serviceId = 2;
+                        eSolutionsRequest.transactionAmount = yoAppResponse.Amount.ToString();
+                        eSolutionsRequest.vendorReference = yoAppResponse.TransactionRef;
+                        eSolutionsRequest.currencyCode = yoAppResponse.Currency;
+
+                        yoAppResponse = eSolutionsMethods.DirectServicePurchase(eSolutionsRequest, serviceProvider);
+
+                        return yoAppResponse;
+
+                    #region Commented Out Code
+                    //if (string.IsNullOrEmpty(yoAppRequest.MTI)) // without mti and processingCode
+                    //{
+                    //    string message = "Your request does not have an mti e.g. 0200. " +
+                    //        "Please put the correct mti and resend your request";
+
+                    //    yoAppResponse.ResponseCode = "00008";
+                    //    yoAppResponse.Note = "Failed";
+                    //    yoAppResponse.Description = message;
+
+                    //    return yoAppResponse;
+                    //}
+                    //else // With mti and processingCode
+                    //{
+                    //    eSolutionsRequest.mti = yoAppRequest.MTI;
+                    //    eSolutionsRequest.processingCode = yoAppRequest.ProcessingCode;
+                    //    eSolutionsRequest.vendorReference = yoAppRequest.TransactionRef;
+                    //    eSolutionsRequest.transactionAmount = (long)yoAppRequest.Amount;
+
+                    //    switch (eSolutionsRequest.mti)
+                    //    {
+                    //        case "0200": // Transaction Request
+
+                    //            switch (eSolutionsRequest.processingCode)
+                    //            {
+                    //                case "520000": // Direct Payment for Service e.g. Airtime
+
+                    //                    eSolutionsRequest.merchantName = "NETONE";
+                    //                    eSolutionsRequest.productName = "NETONE_AIRTIME";
+
+                    //                    yoAppResponse = eSolutionsMethods.DirectServicePurchase(eSolutionsRequest, serviceProvider);
+                    //                    break;
+
+                    //                case "":
+                    //                    string message = "Your request does not have an processingCode e.g. 300000. " +
+                    //                        "Please put the correct processingCode and resend your request";
+
+                    //                    Request.CreateResponse(HttpStatusCode.OK, message);
+
+                    //                    yoAppResponse.ResponseCode = "00008";
+                    //                    yoAppResponse.Note = "Failed";
+                    //                    yoAppResponse.Description = message;
+
+                    //                    var serializedRequest = JsonConvert.SerializeObject(eSolutionsRequest);
+
+                    //                    yoAppResponse.Narrative = serializedRequest;
+
+                    //                    return yoAppResponse;
+                    //            }
+
+                    //            break;
+
+                    //        default:
+
+                    //            yoAppResponse.ResponseCode = "00008";
+                    //            yoAppResponse.Note = "Failed";
+                    //            yoAppResponse.Description = "Request did not follow proper channels";
+
+                    //            return yoAppResponse;
+                    //    }
+                    //}
+
+                    //break;
+                    #endregion
+
+                    case 4: // Telecel Airtime
+
+                        eSolutionsRequest.merchantName = "TELECEL";
+                        eSolutionsRequest.productName = "TELECEL_AIRTIME";
+                        eSolutionsRequest.processingCode = "U50000";
+                        eSolutionsRequest.mti = "0200";
+                        eSolutionsRequest.sourceMobile = yoAppResponse.CustomerAccount;
+                        eSolutionsRequest.targetMobile = yoAppResponse.CustomerMSISDN;
+                        eSolutionsRequest.utilityAccount = yoAppResponse.CustomerAccount;
+                       // eSolutionsRequest.serviceId = yoAppResponse.ServiceId;
+                        eSolutionsRequest.transactionAmount = yoAppResponse.Amount.ToString();
+                        eSolutionsRequest.vendorReference = yoAppResponse.TransactionRef;
+
+                        yoAppResponse = eSolutionsMethods.DirectServicePurchase(eSolutionsRequest, serviceProvider);
+
+                        return yoAppResponse;
+
+                    #region Commented Out Code
+                    //if (string.IsNullOrEmpty(yoAppRequest.MTI)) // without mti and processingCode
+                    //{
+                    //    string message = "Your request does not have an mti e.g. 0200. " +
+                    //        "Please put the correct mti and resend your request";
+
+                    //    yoAppResponse.ResponseCode = "00008";
+                    //    yoAppResponse.Note = "Failed";
+                    //    yoAppResponse.Description = message;
+
+                    //    return yoAppResponse;
+                    //}
+                    //else // With mti and processingCode
+                    //{
+                    //    eSolutionsRequest.mti = yoAppRequest.MTI;
+                    //    eSolutionsRequest.processingCode = yoAppRequest.ProcessingCode;
+                    //    eSolutionsRequest.vendorReference = yoAppRequest.TransactionRef;
+                    //    eSolutionsRequest.transactionAmount = (long)yoAppRequest.Amount;
+
+                    //    switch (eSolutionsRequest.mti)
+                    //    {
+                    //        case "0200": // Transaction Request
+
+                    //            switch (eSolutionsRequest.processingCode)
+                    //            {
+                    //                case "520000": // Direct Payment for Service e.g. Airtime
+
+                    //                    eSolutionsRequest.merchantName = "TELECEL";
+                    //                    eSolutionsRequest.productName = "TELECEL_AIRTIME";
+
+                    //                    yoAppResponse = eSolutionsMethods.DirectServicePurchase(eSolutionsRequest, serviceProvider);
+
+                    //                    return yoAppResponse;
+
+                    //                case "":
+
+                    //                    string message = "Your request does not have an processingCode e.g. 300000. " +
+                    //                        "Please put the correct processingCode and resend your request";
+
+                    //                    yoAppResponse.ResponseCode = "00008";
+                    //                    yoAppResponse.Note = "Failed";
+                    //                    yoAppResponse.Description = message;
+
+                    //                    return yoAppResponse;
+                    //            }
+
+                    //            return yoAppResponse;
+
+                    //        default:
+
+                    //            yoAppResponse.ResponseCode = "00008";
+                    //            yoAppResponse.Note = "Failed";
+                    //            yoAppResponse.Description = "Request did not follow proper channels";
+
+                    //            return yoAppResponse;
+                    //    }
+                    //}
+                    #endregion
 
                     default:
 
@@ -725,8 +905,6 @@ namespace YoAppWebProxy.Controllers
                         return yoAppResponse;
                 }
             }
-
-            return yoAppResponse;
         }
 
         [Route("api/aqusales-yoapp/cbz-services")]
@@ -2805,7 +2983,6 @@ namespace YoAppWebProxy.Controllers
 
                 switch (response.ServiceId)
                 {
-
                     case 1: // Request Token using Authorization Flow
 
                         switch (response.ProcessingCode)
@@ -2849,6 +3026,8 @@ namespace YoAppWebProxy.Controllers
                                     Log.RequestsAndResponses("Wafaya-TokenRequest", serviceProvider, resourceOwnerRequest);
 
                                     var resourceOwnerResponse = connector.GetPasswordToken(resourceOwnerRequest, serviceProvider);
+
+                                    Log.RequestsAndResponses("Wafaya-TokenResponse", serviceProvider, resourceOwnerResponse);
 
                                     if (resourceOwnerResponse.token_type.ToLower() == "bearer")
                                     {
@@ -2903,8 +3082,8 @@ namespace YoAppWebProxy.Controllers
                                         yoAppResponse.Balance = Convert.ToString(wafayaVoucherResponse.voucher_balance);
                                         yoAppResponse.CustomerMSISDN = wafayaVoucherResponse.redeemer_phone;
                                         yoAppResponse.IsActive = wafayaVoucherResponse.active;
-                                        yoAppResponse.Currency = wafayaVoucherResponse.voucher_currency;                                                              
-                                       
+                                        yoAppResponse.Currency = wafayaVoucherResponse.voucher_currency;
+
                                         Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, wafayaVoucherResponse);
 
                                         //var voucherResponse = JsonConvert.SerializeObject(wafayaVoucherResponse);                                                                            
@@ -2932,9 +3111,9 @@ namespace YoAppWebProxy.Controllers
 
                                     return yoAppResponse;
                                 }
-                                
+
                             case "330000": // Verification/Initializing
-                                WafayaInitializeRedemptionRequest wafayaInitializeRedemptionRequest = new WafayaInitializeRedemptionRequest();
+                                //WafayaInitializeRedemptionRequest wafayaInitializeRedemptionRequest = new WafayaInitializeRedemptionRequest();
 
                                 string file2 = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
                                 var tokenFile2 = LoadJson(file2);
@@ -2972,6 +3151,8 @@ namespace YoAppWebProxy.Controllers
 
                                     var resourceOwnerResponse = connector.GetPasswordToken(resourceOwnerRequest, serviceProvider);
 
+                                    Log.RequestsAndResponses("Wafaya-TokenResponse", serviceProvider, resourceOwnerResponse);
+
                                     if (resourceOwnerResponse != null && resourceOwnerResponse.token_type.ToLower() == "bearer")
                                     {
                                         isTokenValid = true;
@@ -3006,46 +3187,13 @@ namespace YoAppWebProxy.Controllers
 
                                 if (isTokenValid)
                                 {
-                                    wafayaInitializeRedemptionRequest.amount = response.Amount;
-                                    wafayaInitializeRedemptionRequest.voucher = response.CustomerAccount;
-                                    wafayaInitializeRedemptionRequest.token = tokenFile2.access_token;
+                                    yoAppResponse.ResponseCode = "00000";
+                                    yoAppResponse.Description = "Customer to submit their OTP";
+                                    yoAppResponse.Note = "Authorise";
 
-                                    Log.RequestsAndResponses("Wafaya-InitilizeVoucherRequest", serviceProvider, wafayaInitializeRedemptionRequest);
+                                    Log.RequestsAndResponses("Wafaya-OTPResponse-YoApp", serviceProvider, yoAppResponse);
 
-                                    //var wafayaVoucherResponse = connector.InitializeVoucher(wafayaInitializeRedemptionRequest, serviceProvider);
-
-                                    //Log.RequestsAndResponses("Wafaya-InitilizeVoucherResponse", serviceProvider, wafayaVoucherResponse);
-
-                                   // if (wafayaVoucherResponse != null && wafayaVoucherResponse.success.Contains("initialized"))
-                                   // {
-                                        yoAppResponse.ResponseCode = "00000";
-                                        yoAppResponse.Description = "Voucher Initialized Successfully";
-
-                                        //foreach (var item in wafayaVoucherResponse.payload)
-                                        //{
-                                        //    yoAppResponse.Note = item.voucher.redeemer_name;
-                                        //    yoAppResponse.CustomerAccount = item.voucher.voucher_code;
-                                        //    yoAppResponse.Amount = item.voucher.voucher_value;
-                                        //    yoAppResponse.Balance = Convert.ToString(item.voucher.voucher_balance);
-                                        //    yoAppResponse.CustomerMSISDN = item.voucher.redeemer_phone;
-                                        //    yoAppResponse.IsActive = item.voucher.active;
-                                        //    yoAppResponse.Currency = item.voucher.voucher_currency;
-                                        //}                                      
-
-                                        Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, "");
-                                                                                
-                                        return yoAppResponse;
-                                    //}
-                                    //else
-                                    //{
-                                    //    yoAppResponse.ResponseCode = "00000";
-                                    //    yoAppResponse.Description = "Voucher Initialized Successfully";
-                                    //    yoAppResponse.Note = "Success";
-
-                                    //    Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, wafayaVoucherResponse);
-
-                                    //    return yoAppResponse;
-                                    //}
+                                    return yoAppResponse;
                                 }
                                 else
                                 {
@@ -3056,7 +3204,7 @@ namespace YoAppWebProxy.Controllers
                                     Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, "");
 
                                     return yoAppResponse;
-                                }                               
+                                }
 
                             case "340000": // Authentication 
 
@@ -3071,6 +3219,8 @@ namespace YoAppWebProxy.Controllers
                                         yoAppResponse.ResponseCode = "00000";
                                         yoAppResponse.Description = "Mpin saved successfully";
 
+                                        Log.RequestsAndResponses("Wafaya-OTP-Submit-Response", serviceProvider, yoAppResponse);
+
                                         return yoAppResponse;
                                     }
                                     else if (response.Note != null)
@@ -3082,8 +3232,10 @@ namespace YoAppWebProxy.Controllers
                                         yoAppResponse.ResponseCode = "00000";
                                         yoAppResponse.Description = "Mpin saved successfully";
 
+                                        Log.RequestsAndResponses("Wafaya-OTP-Submit-Response", serviceProvider, yoAppResponse);
+
                                         return yoAppResponse;
-                                    }                                    
+                                    }
                                     else
                                     {
                                         yoAppResponse.ResponseCode = "00008";
@@ -3094,16 +3246,20 @@ namespace YoAppWebProxy.Controllers
                                 }
                                 catch (Exception ex)
                                 {
-                                    Log.HttpError("Exception", serviceProvider, ex.Message);
+                                    var exceptionMessage = "Message: " + ex.Message + ", InnerException: " + ex.InnerException + ", StackTrace: " + ex.StackTrace;
+
+                                    Log.HttpError("Exception", serviceProvider, exceptionMessage);
+
                                     return null;
-                                }                               
-                                
+                                }
+
                             case "320000":
 
                                 WafayaFinalizeVoucherRequest wafayaFinalizeVoucherRequest = new WafayaFinalizeVoucherRequest();
+                                WafayaInitializeRedemptionRequest wafayaInitializeRedemptionRequest = new WafayaInitializeRedemptionRequest();
 
                                 string file3 = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
-                                
+
                                 var tokenFile3 = LoadJson(file3);
 
                                 if (tokenFile3 != null) // We have generated the Token Already
@@ -3175,56 +3331,105 @@ namespace YoAppWebProxy.Controllers
                                 {
                                     string mPinFile = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + response.CustomerMSISDN + ".json");
 
-                                    var mpinFile = LoadMpin(mPinFile);
+                                    var mpinFile = LoadMpin(mPinFile, serviceProvider);
 
                                     if (mpinFile != null)
                                     {
-                                        wafayaFinalizeVoucherRequest.confirmation_otp = mpinFile.Mpin;
-                                        wafayaFinalizeVoucherRequest.voucher = response.CustomerAccount;
-                                        wafayaFinalizeVoucherRequest.token = tokenFile3.access_token;
+                                        //var userPhoneNumber = response.CustomerMSISDN;
 
-                                        Log.RequestsAndResponses("Wafaya-FinalizeVoucherRequest", serviceProvider, wafayaFinalizeVoucherRequest);
+                                        wafayaInitializeRedemptionRequest.amount = response.Amount;
+                                        wafayaInitializeRedemptionRequest.voucher = response.CustomerAccount;
+                                        wafayaInitializeRedemptionRequest.token = tokenFile3.access_token;
 
-                                        var wafayaVoucherResponse = connector.FinalizeVoucher(wafayaFinalizeVoucherRequest, serviceProvider);
+                                        Log.RequestsAndResponses("Wafaya-InitilizeVoucherRequest", serviceProvider, wafayaInitializeRedemptionRequest);
 
-                                        Log.RequestsAndResponses("Wafaya-FinalizeVoucherResponse", serviceProvider, wafayaVoucherResponse);
+                                        var wVoucherResponse = connector.InitializeVoucher(wafayaInitializeRedemptionRequest, serviceProvider);
 
-                                        if (wafayaVoucherResponse!= null && wafayaVoucherResponse.success.Contains("finalized"))
+                                        Log.RequestsAndResponses("Wafaya-InitilizeVoucherResponse", serviceProvider, wVoucherResponse);
+
+                                        //var wResponse = JsonConvert.SerializeObject(wVoucherResponse);
+
+                                        //Log.StoreVoucherInitializationResponse("i_" + userPhoneNumber, serviceProvider, wResponse);
+
+                                        if (wVoucherResponse != null && wVoucherResponse.success.Contains("initialized")) // Voucher was successfully Initialized
                                         {
-                                            yoAppResponse.ResponseCode = "00000";
-                                            yoAppResponse.Description = "Voucher Finalized Successfully";
+                                            wafayaFinalizeVoucherRequest.confirmation_otp = mpinFile.Mpin;
+                                            wafayaFinalizeVoucherRequest.voucher = response.CustomerAccount;
+                                            wafayaFinalizeVoucherRequest.token = tokenFile3.access_token;
 
-                                            foreach (var item in wafayaVoucherResponse.payload)
+                                            Log.RequestsAndResponses("Wafaya-FinalizeVoucherRequest", serviceProvider, wafayaFinalizeVoucherRequest);
+
+                                            var wafayaVoucherResponse = connector.FinalizeVoucher(wafayaFinalizeVoucherRequest, serviceProvider);
+
+                                            Log.RequestsAndResponses("Wafaya-FinalizeVoucherResponse", serviceProvider, wafayaVoucherResponse);
+
+                                            if (wafayaVoucherResponse != null && wafayaVoucherResponse.success.Contains("finalized"))
                                             {
-                                                yoAppResponse.Note = item.voucher.redeemer_name;
-                                                yoAppResponse.CustomerAccount = item.voucher.voucher_code;
-                                                yoAppResponse.Amount = item.voucher.voucher_value;
-                                                yoAppResponse.Balance = Convert.ToString(item.voucher.voucher_balance);
-                                                yoAppResponse.CustomerMSISDN = item.voucher.redeemer_phone;
-                                                yoAppResponse.IsActive = item.voucher.active;
-                                                yoAppResponse.Currency = item.voucher.voucher_currency;
+                                                yoAppResponse.ResponseCode = "00000";
+                                                yoAppResponse.Description = "Voucher Finalized Successfully";
+
+                                                foreach (var item in wafayaVoucherResponse.payload)
+                                                {
+                                                    yoAppResponse.Note = item.voucher.redeemer_name;
+                                                    yoAppResponse.CustomerAccount = item.voucher.voucher_code;
+                                                    yoAppResponse.Amount = item.voucher.voucher_value;
+                                                    yoAppResponse.Balance = Convert.ToString(item.voucher.voucher_balance);
+                                                    yoAppResponse.CustomerMSISDN = item.voucher.redeemer_phone;
+                                                    yoAppResponse.IsActive = item.voucher.active;
+                                                    yoAppResponse.Currency = item.voucher.voucher_currency;
+                                                }
+
+                                                Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, wafayaVoucherResponse);
+
+                                                return yoAppResponse;
+                                            }
+                                            else
+                                            {
+                                                yoAppResponse.ResponseCode = "00008";
+                                                yoAppResponse.Description = "Could not finalize voucher";
+                                                yoAppResponse.Note = "Request to the server Failed";
+
+                                                Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, wafayaVoucherResponse);
+
+                                                return yoAppResponse;
                                             }
 
-                                            Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, wafayaVoucherResponse);
+                                            #region Commented Out Code
+                                            //yoAppResponse.ResponseCode = "00000";
+                                            //yoAppResponse.Description = "Voucher Initialized Successfully";
 
-                                            return yoAppResponse;
+                                            //foreach (var item in wVoucherResponse.payload)
+                                            //{
+                                            //    yoAppResponse.Note = item.voucher.redeemer_name;
+                                            //    yoAppResponse.CustomerAccount = item.voucher.voucher_code;
+                                            //    yoAppResponse.Amount = item.voucher.voucher_value;
+                                            //    yoAppResponse.Balance = Convert.ToString(item.voucher.voucher_balance);
+                                            //    yoAppResponse.CustomerMSISDN = item.voucher.redeemer_phone;
+                                            //    yoAppResponse.IsActive = item.voucher.active;
+                                            //    yoAppResponse.Currency = item.voucher.voucher_currency;
+                                            //}
+
+                                            //Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, "");
+
+                                            //return yoAppResponse;
+                                            #endregion                                            
                                         }
                                         else
                                         {
-                                            yoAppResponse.ResponseCode = "00008";
-                                            yoAppResponse.Description = "Could not finalize voucher";
-                                            yoAppResponse.Note = "Request to the server Failed";
+                                            yoAppResponse.ResponseCode = "00000";
+                                            yoAppResponse.Description = "Voucher Initialized Successfully";
+                                            yoAppResponse.Note = "Success";
 
-                                            Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, wafayaVoucherResponse);
+                                            Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, wVoucherResponse);
 
                                             return yoAppResponse;
-                                        }
+                                        }                                       
                                     }
                                     else
                                     {
                                         yoAppResponse.ResponseCode = "00008";
                                         yoAppResponse.Description = "Could not find Mpin, Please start again the verification process";
-                                       
+
                                         return yoAppResponse;
                                     }
                                 }
@@ -3238,7 +3443,7 @@ namespace YoAppWebProxy.Controllers
 
                                     return yoAppResponse;
                                 }
-                                
+
                             default:
                                 break;
                         }
@@ -3799,7 +4004,7 @@ namespace YoAppWebProxy.Controllers
 
                     var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(refresherTokenResponse.expires_in));
 
-                    refresherTokenResponse.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");                   
+                    refresherTokenResponse.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
 
                     Log.StoreData("tokens", serviceProvider, refresherTokenResponse);
 
@@ -3842,7 +4047,7 @@ namespace YoAppWebProxy.Controllers
         }
 
         [NonAction]
-        public YoAppResponse LoadMpin(string file)
+        public YoAppResponse LoadMpin(string file, string serviceProvider)
         {
             try
             {
@@ -3859,6 +4064,40 @@ namespace YoAppWebProxy.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+
+                var exceptionMessage = "Message: " + ex.Message + ", Inner Exception: " + ex.InnerException + ", StackTrace: " + ex.StackTrace;
+
+                Log.HttpError("File-Exception", serviceProvider, exceptionMessage);
+
+                return null;
+            }
+        }
+
+        [NonAction]
+        public WafayaInitializeRedemptionResponse LoadInitFile(string file, string serviceProvider)
+        {
+            try
+            {
+                using (FileStream fileStream = new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+
+                using (StreamReader sr = new StreamReader(fileStream))
+                {
+                    string json = sr.ReadToEnd();
+
+                    var resp = JsonConvert.DeserializeObject<string>(json);
+                    var initFileResponse = JsonConvert.DeserializeObject<WafayaInitializeRedemptionResponse>(resp);
+
+                    return initFileResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+
+                var exceptionMessage = "Message: " + ex.Message + ", Inner Exception: " + ex.InnerException + ", StackTrace: " + ex.StackTrace;
+
+                Log.HttpError("File-Exception", serviceProvider, exceptionMessage);
+
                 return null;
             }
         }

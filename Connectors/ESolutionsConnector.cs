@@ -25,7 +25,7 @@ namespace YoAppWebProxy
                     delegate { return true; }
                 );
 
-                string url = String.Format("https://41.78.78.238:8083/billpayments/vend");
+                string url = String.Format("https://mobile.esolutions.co.zw:86/billpayments/vend");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);

@@ -4,6 +4,50 @@
         <name>YoAppWebProxy</name>
     </assembly>
     <members>
+        <member name="T:YoAppWebProxy.Controllers.WebProxyController">
+            <summary>
+            YoApp WebProxy Documentation 
+            </summary>
+        </member>
+        <member name="M:YoAppWebProxy.Controllers.WebProxyController.RealTimeVoucherPaymentsProxy(YoAppWebProxy.Models.YoAppRequest)">
+            <summary>
+            Receives YoApp Response, 
+            Structures response to match client's Request, 
+            Sends client's Request to the Client's URL endpoint,
+            Receives client's Response
+            Structures client's Response to match YoApp's Request
+            Sends Request to YoApp
+            </summary>
+            <param name="yoAppRequest">Request from YoApp</param>
+        </member>
+        <member name="M:YoAppWebProxy.Controllers.WebProxyController.TrekServicesProxy(YoAppWebProxy.Models.YoAppRequest)">
+            <summary>
+            CBZ API Requests and Responses
+            </summary>
+            <param name="yoAppRequest"></param>
+            <returns></returns>
+        </member>
+        <member name="M:YoAppWebProxy.Controllers.WebProxyController.PopulateFieldProxy(YoAppWebProxy.Models.YoAppRequest)">
+            <summary>
+            CBZ API Requests and Responses
+            </summary>
+            <param name="yoAppRequest"></param>
+            <returns></returns>
+        </member>
+        <member name="M:YoAppWebProxy.Controllers.WebProxyController.AgriBankBulkPaymentsProxy(YoAppWebProxy.Models.YoAppRequest)">
+            <summary>
+            CBZ API Requests and Responses
+            </summary>
+            <param name="yoAppRequest"></param>
+            <returns></returns>
+        </member>
+        <member name="M:YoAppWebProxy.Controllers.WebProxyController.ESolutionsServicesProxy(YoAppWebProxy.Models.YoAppResponse)">
+            <summary>
+            CBZ API Requests and Responses
+            </summary>
+            <param name="yoAppRequest"></param>
+            <returns></returns>
+        </member>
         <member name="M:YoAppWebProxy.Areas.HelpPage.ApiDescriptionExtensions.GetFriendlyId(System.Web.Http.Description.ApiDescription)">
             <summary>
             Generates an URI-friendly ID for the <see cref="T:System.Web.Http.Description.ApiDescription"/>. E.g. "Get-Values-id_name" instead of "GetValues/{id}?name={name}"
@@ -495,50 +539,6 @@
             <summary>
             Respresents Transaction Response from YoApp
             </summary>
-        </member>
-        <member name="T:YoAppWebProxy.Controllers.WebProxyController">
-            <summary>
-            YoApp WebProxy Documentation 
-            </summary>
-        </member>
-        <member name="M:YoAppWebProxy.Controllers.WebProxyController.RealTimeVoucherPaymentsProxy(YoAppWebProxy.Models.YoAppRequest)">
-            <summary>
-            Receives YoApp Response, 
-            Structures response to match client's Request, 
-            Sends client's Request to the Client's URL endpoint,
-            Receives client's Response
-            Structures client's Response to match YoApp's Request
-            Sends Request to YoApp
-            </summary>
-            <param name="yoAppRequest">Request from YoApp</param>
-        </member>
-        <member name="M:YoAppWebProxy.Controllers.WebProxyController.TrekServicesProxy(YoAppWebProxy.Models.YoAppRequest)">
-            <summary>
-            CBZ API Requests and Responses
-            </summary>
-            <param name="yoAppRequest"></param>
-            <returns></returns>
-        </member>
-        <member name="M:YoAppWebProxy.Controllers.WebProxyController.PopulateFieldProxy(YoAppWebProxy.Models.YoAppRequest)">
-            <summary>
-            CBZ API Requests and Responses
-            </summary>
-            <param name="yoAppRequest"></param>
-            <returns></returns>
-        </member>
-        <member name="M:YoAppWebProxy.Controllers.WebProxyController.AgriBankBulkPaymentsProxy(YoAppWebProxy.Models.YoAppRequest)">
-            <summary>
-            CBZ API Requests and Responses
-            </summary>
-            <param name="yoAppRequest"></param>
-            <returns></returns>
-        </member>
-        <member name="M:YoAppWebProxy.Controllers.WebProxyController.ESolutionsServicesProxy(YoAppWebProxy.Models.YoAppRequest)">
-            <summary>
-            CBZ API Requests and Responses
-            </summary>
-            <param name="yoAppRequest"></param>
-            <returns></returns>
         </member>
     </members>
 </doc>

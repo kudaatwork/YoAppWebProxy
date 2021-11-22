@@ -50,7 +50,7 @@ namespace YoAppWebProxy
             var apiAmount = amount.Replace(".", "");
             #endregion
 
-            request.transactionAmount = Convert.ToInt64(apiAmount);
+            //request.transactionAmount = Convert.ToInt64(apiAmount);
 
             #region transmissionDate
             var dateTime = DateTime.Now.ToString();
@@ -80,7 +80,7 @@ namespace YoAppWebProxy
             request.utilityAccount = eSolutionsRequest.utilityAccount;
             request.sourceMobile = eSolutionsRequest.sourceMobile;
             request.targetMobile = eSolutionsRequest.targetMobile;
-            request.serviceId = eSolutionsRequest.serviceId;
+           // request.serviceId = eSolutionsRequest.serviceId;
 
             if (String.IsNullOrEmpty(eSolutionsRequest.currencyCode))
             {
@@ -251,7 +251,7 @@ namespace YoAppWebProxy
             var apiAmount = amount.Replace(".", "");
             #endregion
 
-            request.transactionAmount = Convert.ToInt64(apiAmount);
+            //request.transactionAmount = Convert.ToInt64(apiAmount);
 
             #region transmissionDate
             var dateTime = DateTime.Now.ToString();
@@ -281,7 +281,7 @@ namespace YoAppWebProxy
             request.utilityAccount = eSolutionsRequest.utilityAccount;
             request.sourceMobile = eSolutionsRequest.sourceMobile;
             request.targetMobile = eSolutionsRequest.targetMobile;
-            request.serviceId = eSolutionsRequest.serviceId;
+            //request.serviceId = eSolutionsRequest.serviceId;
 
             if (String.IsNullOrEmpty(eSolutionsRequest.currencyCode))
             {
@@ -460,7 +460,7 @@ namespace YoAppWebProxy
             var apiAmount = amount.Replace(".", "");
             #endregion
 
-            request.transactionAmount = Convert.ToInt64(apiAmount);
+            //request.transactionAmount = Convert.ToInt64(apiAmount);
 
             #region transmissionDate
             var dateTime = DateTime.Now.ToString();
@@ -490,7 +490,7 @@ namespace YoAppWebProxy
             request.utilityAccount = eSolutionsRequest.utilityAccount;
             request.sourceMobile = eSolutionsRequest.sourceMobile;
             request.targetMobile = eSolutionsRequest.targetMobile;
-            request.serviceId = eSolutionsRequest.serviceId;
+            //request.serviceId = eSolutionsRequest.serviceId;
 
             if (String.IsNullOrEmpty(eSolutionsRequest.currencyCode))
             {
@@ -671,14 +671,22 @@ namespace YoAppWebProxy
                 request.vendorReference = eSolutionsRequest.vendorReference;
             }
 
-            request.processingCode = eSolutionsApiObjects.DirectPaymentRequest;
+            request.processingCode = eSolutionsRequest.processingCode;
 
             #region transactionAmount
-            var amount = Convert.ToString(eSolutionsRequest.transactionAmount);
-            var apiAmount = amount.Replace(".", "");
+            var ammt = Convert.ToDecimal(eSolutionsRequest.transactionAmount);
+
+            var serverAmount = Math.Round(ammt, 2);
+
+            var serverAmountCents = serverAmount * 100;
+
+            int amt = Convert.ToInt32(serverAmountCents);
+
+            //var amount = Convert.ToString(amt);
+            var apiAmount = Convert.ToString(amt); ;
             #endregion
 
-            request.transactionAmount = Convert.ToInt64(apiAmount);
+            request.transactionAmount = apiAmount;
 
             #region transmissionDate
             var dateTime = DateTime.Now.ToString();
@@ -708,7 +716,7 @@ namespace YoAppWebProxy
             request.utilityAccount = eSolutionsRequest.utilityAccount;
             request.sourceMobile = eSolutionsRequest.sourceMobile;
             request.targetMobile = eSolutionsRequest.targetMobile;
-            request.serviceId = eSolutionsRequest.serviceId;
+            //request.serviceId = eSolutionsRequest.serviceId;
 
             if (String.IsNullOrEmpty(eSolutionsRequest.currencyCode))
             {
@@ -726,9 +734,13 @@ namespace YoAppWebProxy
             else
             {
                 request.aggregator = eSolutionsRequest.aggregator;
-            }            
+            }
+
+            Log.RequestsAndResponses("Service_Purchase_Request", serviceProvider, request);
 
             var response = eSolutionsConnector.GetESolutionsResponse(request);
+
+            Log.RequestsAndResponses("Service_Purchase_Response", serviceProvider, response);
 
             if (response.responseCode == "00" || response.responseCode == "09") // Transaction Successful or Request still in Progress
             {
@@ -741,9 +753,11 @@ namespace YoAppWebProxy
                     yoAppResponse.Note = "Success";
                     yoAppResponse.Description = response.narrative;
 
+                    yoAppResponse.Narrative = JsonConvert.SerializeObject(response);
+
                     return yoAppResponse;
                 }
-                if (response.responseCode == "09") // 
+                else if (response.responseCode == "09") // 
                 {
                     message = "Transaction still in progress";
                     success = false;
@@ -751,8 +765,17 @@ namespace YoAppWebProxy
                     yoAppResponse.ResponseCode = "00000";
                     yoAppResponse.Note = "Success";
                     yoAppResponse.Description = response.narrative;
-                    yoAppResponse.CustomerData = response.customerData;
-                    yoAppResponse.CustomerAccount = response.utilityAccount;
+
+                    yoAppResponse.Narrative = JsonConvert.SerializeObject(response);
+
+                    return yoAppResponse;
+                }
+                else
+                {
+                    yoAppResponse.ResponseCode = "00008";
+                    yoAppResponse.Note = "Failed";
+
+                    return yoAppResponse;
                 }
             }
             else if (response.responseCode == "05")
@@ -762,9 +785,11 @@ namespace YoAppWebProxy
 
                 yoAppResponse.ResponseCode = "00008";
                 yoAppResponse.Note = "Failed";
-                yoAppResponse.Description = "General Error. Check \"narrative\" in \"Narrative\" for error message";
+                yoAppResponse.Description = "General Error: " + response.narrative;
                 yoAppResponse.CustomerData = response.customerData;
                 yoAppResponse.CustomerAccount = response.utilityAccount;
+
+                return yoAppResponse;
             }
             else if (response.responseCode == "12")
             {
@@ -787,6 +812,8 @@ namespace YoAppWebProxy
                 yoAppResponse.Description = "Invalid meter number/Meter is blocked";
                 yoAppResponse.CustomerData = response.customerData;
                 yoAppResponse.CustomerAccount = response.utilityAccount;
+
+                return yoAppResponse;
             }
             else if (response.responseCode == "51")
             {
@@ -809,6 +836,8 @@ namespace YoAppWebProxy
                 yoAppResponse.Description = "Customer account has reversal in progress";
                 yoAppResponse.CustomerData = response.customerData;
                 yoAppResponse.CustomerAccount = response.utilityAccount;
+
+                return yoAppResponse;
             }
             else if (response.responseCode == "63")
             {
@@ -820,6 +849,8 @@ namespace YoAppWebProxy
                 yoAppResponse.Description = "Security violation";
                 yoAppResponse.CustomerData = response.customerData;
                 yoAppResponse.CustomerAccount = response.utilityAccount;
+
+                return yoAppResponse;
             }
             else if (response.responseCode == "68")
             {
@@ -831,6 +862,8 @@ namespace YoAppWebProxy
                 yoAppResponse.Description = "Transaction timeout";
                 yoAppResponse.CustomerData = response.customerData;
                 yoAppResponse.CustomerAccount = response.utilityAccount;
+
+                return yoAppResponse;
             }
             else if (response.responseCode == "94")
             {
@@ -842,10 +875,17 @@ namespace YoAppWebProxy
                 yoAppResponse.Description = "Duplicate transaction";
                 yoAppResponse.CustomerData = response.customerData;
                 yoAppResponse.CustomerAccount = response.utilityAccount;
-            }
 
-            var serializedResponse = JsonConvert.SerializeObject(response, Formatting.Indented);
-            yoAppResponse.Narrative = serializedResponse;
+                return yoAppResponse;
+            }
+            else
+            {
+                yoAppResponse.ResponseCode = "00008";
+                yoAppResponse.Note = "Failed";
+                success = false;
+
+                return yoAppResponse;
+            }
 
             return yoAppResponse;
         }
@@ -878,7 +918,7 @@ namespace YoAppWebProxy
             var apiAmount = amount.Replace(".", "");
             #endregion
 
-            request.transactionAmount = Convert.ToInt64(apiAmount);
+            //request.transactionAmount = Convert.ToInt64(apiAmount);
 
             #region transmissionDate
             var dateTime = DateTime.Now.ToString();
@@ -908,7 +948,7 @@ namespace YoAppWebProxy
             request.utilityAccount = eSolutionsRequest.utilityAccount;
             request.sourceMobile = eSolutionsRequest.sourceMobile;
             request.targetMobile = eSolutionsRequest.targetMobile;
-            request.serviceId = eSolutionsRequest.serviceId;
+            //request.serviceId = eSolutionsRequest.serviceId;
 
             if (String.IsNullOrEmpty(eSolutionsRequest.currencyCode))
             {
@@ -1084,7 +1124,7 @@ namespace YoAppWebProxy
             var apiAmount = amount.Replace(".", "");            
             #endregion
 
-            request.transactionAmount = Convert.ToInt64(apiAmount);
+            //request.transactionAmount = Convert.ToInt64(apiAmount);
 
             #region transmissionDate
             var dateTimeNow = DateTime.Now.ToString();

@@ -14,7 +14,7 @@ namespace YoAppWebProxy.Models
         public string description { get; set; }
         public string vendorReference { get; set; }
         public string processingCode { get; set; }
-        public long transactionAmount { get; set; }
+        public string transactionAmount { get; set; }
         public string transmissionDate { get; set; }
         public string vendorNumber { get; set; }
         public string transactionReference { get; set; }
@@ -36,6 +36,6 @@ namespace YoAppWebProxy.Models
         public string utilityAccount { get; set; }
         public string sourceMobile { get; set; }
         public string targetMobile { get; set; }
-        public string serviceId { get; set; }
+        //public long serviceId { get; set; }
     }
 }

@@ -7,21 +7,21 @@ namespace YoAppWebProxy
 {
     public class ESolutionsCredentials
     {
-        private string username = "testz_api_user01";
+        private string username = "faithworks_api_user";
 
         public string Username
         {
             get { return username; }
         }
 
-        private string password = "csssbynd";
+        private string password = "qlfvwmgn";
 
         public string Password
         {
             get { return password; }
         }
 
-        private string vendorNumber = "VE20245865801";
+        private string vendorNumber = "VE25005931105";
 
         public string VendorNumber
         {
