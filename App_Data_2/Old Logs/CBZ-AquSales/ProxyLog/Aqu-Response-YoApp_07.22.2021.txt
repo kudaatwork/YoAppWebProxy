@@ -1,0 +1,8 @@
+DateTime Logged: 07/22/2021 08:56:54, ServiceProvider: CBZ-AquSales, Request Object: {"Status":"Success","Description":null,"ErrorList":[]}
+=============================================
+DateTime Logged: 07/22/2021 09:10:55, ServiceProvider: CBZ-AquSales, Request Object: {"Status":"Success","Description":"NICHOLAS TASUNUNGURWA GOCHE~63-355978-S-68~(USD) created as new customer","ErrorList":[]}
+=============================================
+DateTime Logged: 07/22/2021 09:36:22, ServiceProvider: CBZ-AquSales, Request Object: {"Status":"Success","Description":null,"ErrorList":[]}
+=============================================
+DateTime Logged: 07/22/2021 10:45:01, ServiceProvider: CBZ-AquSales, Request Object: {"Status":"Success","Description":null,"ErrorList":[]}
+=============================================

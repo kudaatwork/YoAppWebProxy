@@ -1,8 +1,0 @@
-DateTime Logged: 04/18/2021/ 09:15:31, ServiceProvider: Trek, Request Object: "Empty Body"
-=============================================
-DateTime Logged: 04/18/2021/ 10:31:15, ServiceProvider: Trek, Request Object: "Empty Body"
-=============================================
-DateTime Logged: 04/18/2021/ 11:32:44, ServiceProvider: Trek, Request Object: "Empty Body"
-=============================================
-DateTime Logged: 04/18/2021/ 11:33:48, ServiceProvider: Trek, Request Object: "Empty Body"
-=============================================

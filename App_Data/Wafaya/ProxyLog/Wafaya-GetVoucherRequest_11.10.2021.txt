@@ -1,6 +1,0 @@
-DateTime Logged: 11/10/2021 20:08:13, ServiceProvider: Wafaya, Request Object: ""
-=============================================
-DateTime Logged: 11/10/2021 20:11:33, ServiceProvider: Wafaya, Request Object: ""
-=============================================
-DateTime Logged: 11/10/2021 20:12:43, ServiceProvider: Wafaya, Request Object: ""
-=============================================

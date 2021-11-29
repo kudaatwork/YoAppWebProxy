@@ -769,7 +769,7 @@ namespace YoAppWebProxy
                     yoAppResponse.Narrative = JsonConvert.SerializeObject(response);
 
                     return yoAppResponse;
-                }
+                }               
                 else
                 {
                     yoAppResponse.ResponseCode = "00008";
@@ -815,7 +815,7 @@ namespace YoAppWebProxy
 
                 return yoAppResponse;
             }
-            else if (response.responseCode == "51")
+            else if (response.responseCode == "51" || response.responseCode == "16")
             {
                 message = "Insufficient funds";
                 success = false;

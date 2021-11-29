@@ -1,4 +1,0 @@
-DateTime Logged: 10/06/2021/ 08:45:11, ServiceProvider: Wafaya, Request Object: "The remote server returned an error: (401) Unauthorized."
-=============================================
-DateTime Logged: 10/06/2021/ 08:52:46, ServiceProvider: Wafaya, Request Object: "The remote server returned an error: (401) Unauthorized."
-=============================================

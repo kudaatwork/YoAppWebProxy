@@ -1,6 +1,0 @@
-DateTime Logged: 10/06/2021 09:17:18, ServiceProvider: Wafaya, Request Object: {"client_id":"94730d4c-b6bc-4a1a-9ac9-07b5b9c139fd","client_secret":"RfPGn92XOcKgEi4zo08pNinb6M6T4VtdyAijlpZI","username":"yoapp@wa-faya.com","password":"12345678","scope":"","grant_type":"password"}
-=============================================
-DateTime Logged: 10/06/2021 09:29:50, ServiceProvider: Wafaya, Request Object: {"client_id":"94730d4c-b6bc-4a1a-9ac9-07b5b9c139fd","client_secret":"RfPGn92XOcKgEi4zo08pNinb6M6T4VtdyAijlpZI","username":"yoapp@wa-faya.com","password":"12345678","scope":"","grant_type":"password"}
-=============================================
-DateTime Logged: 10/06/2021 09:37:38, ServiceProvider: Wafaya, Request Object: {"client_id":"94730d4c-b6bc-4a1a-9ac9-07b5b9c139fd","client_secret":"RfPGn92XOcKgEi4zo08pNinb6M6T4VtdyAijlpZI","username":"yoapp@wa-faya.com","password":"12345678","scope":"","grant_type":"password"}
-=============================================

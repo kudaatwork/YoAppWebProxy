@@ -8,8 +8,8 @@ namespace YoAppWebProxy.Models.AuditLog
     public class AuditTrail
     {
         public string DateTimeLogged { get; set; }
+        public string LogType { get; set; }
         public string ServiceProvider { get; set; }
-        public string Request { get; set; }
-        public string Response { get; set; }
+        public dynamic RequestResponse { get; set; }        
     }
 }

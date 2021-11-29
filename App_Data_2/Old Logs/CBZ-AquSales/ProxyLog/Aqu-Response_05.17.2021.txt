@@ -1,0 +1,10 @@
+DateTime Logged: 05/17/2021/ 14:12:17, ServiceProvider: CBZ-AquSales, Request Object: {"Status":"Success","Description":"BRIAN MUBVUMBI~34-070478-C-34~(USD) created as new customer","ErrorList":[]}
+=============================================
+DateTime Logged: 05/17/2021/ 22:04:43, ServiceProvider: CBZ-AquSales, Request Object: {"Status":"Failed","Description":"Request not in correct format","ErrorList":["TransactionReference missing"]}
+=============================================
+DateTime Logged: 05/17/2021/ 22:10:48, ServiceProvider: CBZ-AquSales, Request Object: {"Status":null,"Description":null,"ErrorList":null}
+=============================================
+DateTime Logged: 05/17/2021/ 22:11:10, ServiceProvider: CBZ-AquSales, Request Object: {"Status":"Failed","Description":"Request not in correct format","ErrorList":["TransactionReference missing"]}
+=============================================
+DateTime Logged: 05/17/2021/ 22:12:57, ServiceProvider: CBZ-AquSales, Request Object: {"Status":"Success","Description":"KUDAKWASHE MUNDANGEPFUPFU~34-070478-C-34~(USD) created as new customer","ErrorList":[]}
+=============================================
