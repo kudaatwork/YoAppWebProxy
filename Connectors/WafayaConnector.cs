@@ -151,7 +151,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("https://dev.wa-faya.com/api/voucher/" + wafayaInitializeRedemptionRequest.voucher + "/initialize-redemption");
+                string url = String.Format("https://dev.wa-faya.com/api/voucher/" + wafayaInitializeRedemptionRequest.voucher + "/initialize-redemption?disable_messaging=true");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.PreAuthenticate = true;
                 httpWebRequest.Timeout = 120000;

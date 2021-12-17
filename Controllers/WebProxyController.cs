@@ -3078,14 +3078,82 @@ namespace YoAppWebProxy.Controllers
                                         {
                                             yoAppResponse.ResponseCode = "00000";
                                             yoAppResponse.Description = "Voucher Retrived successfully";
-                                            yoAppResponse.Note = wafayaVoucherResponse.redeemer_name;
-                                            yoAppResponse.CustomerAccount = wafayaVoucherResponse.voucher_code;
-                                            yoAppResponse.Amount = wafayaVoucherResponse.voucher_value;
-                                            yoAppResponse.Balance = Convert.ToString(wafayaVoucherResponse.voucher_balance);
-                                            yoAppResponse.CustomerMSISDN = wafayaVoucherResponse.redeemer_phone;
-                                            yoAppResponse.IsActive = wafayaVoucherResponse.active;
-                                            yoAppResponse.Currency = wafayaVoucherResponse.voucher_currency;
+                                           
+                                            if (wafayaVoucherResponse.redeemer_name != null)
+                                            {
+                                                yoAppResponse.Note = wafayaVoucherResponse.redeemer_name;   
+                                                
+                                                yoAppNarrative.ReceiversName = wafayaVoucherResponse.redeemer_name;
 
+                                                yoAppNarrative.ReceiversSurname = "na";
+                                            }
+                                            else
+                                            {
+                                                yoAppResponse.Note = "na";
+
+                                                yoAppNarrative.ReceiversName = wafayaVoucherResponse.redeemer_name;
+
+                                                yoAppNarrative.ReceiversSurname = "na";
+                                            }
+
+                                            if (wafayaVoucherResponse.voucher_code != null)
+                                            {
+                                                yoAppResponse.CustomerAccount = wafayaVoucherResponse.voucher_code;
+                                            }
+                                            else
+                                            {
+                                                yoAppResponse.CustomerAccount = "na";
+                                            }
+
+                                            yoAppResponse.Amount = wafayaVoucherResponse.voucher_value;
+
+                                            if (Convert.ToString(wafayaVoucherResponse.voucher_balance) != null)
+                                            {
+                                                yoAppResponse.Balance = Convert.ToString(wafayaVoucherResponse.voucher_balance);
+                                            }
+                                            else
+                                            {
+                                                yoAppResponse.Balance = "na";
+                                            }
+
+                                            if (wafayaVoucherResponse.redeemer_phone != null)
+                                            {
+                                                yoAppResponse.CustomerMSISDN = wafayaVoucherResponse.redeemer_phone;          
+                                               
+                                            }
+                                            else
+                                            {
+                                                yoAppResponse.CustomerMSISDN = "na";
+                                            }
+                                                                                                                                    
+                                            yoAppResponse.IsActive = wafayaVoucherResponse.active;
+
+                                            if (wafayaVoucherResponse.voucher_currency != null)
+                                            {
+                                                yoAppResponse.Currency = wafayaVoucherResponse.voucher_currency;
+                                            }
+                                            else
+                                            {
+                                                yoAppResponse.Currency = "na";
+                                            }
+
+                                            yoAppNarrative.ReceiversIdentification = "na";
+                                            yoAppNarrative.CustomerId = "Profile/8-0001-0015964";
+                                            yoAppNarrative.ServiceName = "ETENGA";
+                                            yoAppNarrative.ServiceType = "RETAIL";
+                                            yoAppNarrative.ServiceAgentId = "5-0001-0000751";
+                                            yoAppNarrative.SupplierId = "5-0001-0000751";
+                                            yoAppNarrative.SupplierName = "NRICHARDS";
+                                            yoAppNarrative.Description = "Etenga wallet";
+                                            yoAppNarrative.CustomerName = "NRICHARDS";
+                                            yoAppNarrative.CustomerMobileNumber = "263772610890";
+                                            yoAppResponse.Quantity = 1;
+
+
+                                            var narrative = JsonConvert.SerializeObject(yoAppNarrative);
+
+                                            yoAppResponse.Narrative = narrative;
+                                           
                                             Log.RequestsAndResponses("Wafaya-GetVoucherResponse-YoApp", serviceProvider, yoAppResponse);
 
                                             return yoAppResponse;
@@ -3413,13 +3481,54 @@ namespace YoAppWebProxy.Controllers
 
                                                     foreach (var item in wafayaVoucherResponse.payload)
                                                     {
-                                                        yoAppResponse.Note = item.voucher.redeemer_name;
-                                                        yoAppResponse.CustomerAccount = item.voucher.voucher_code;
+                                                        if (item.voucher.redeemer_name != null)
+                                                        {
+                                                            yoAppResponse.Note = item.voucher.redeemer_name;
+                                                        }
+                                                        else
+                                                        {
+                                                            yoAppResponse.Note = " ";
+                                                        }
+
+                                                        if (item.voucher.voucher_code != null)
+                                                        {
+                                                            yoAppResponse.CustomerAccount = item.voucher.voucher_code;
+                                                        }
+                                                        else
+                                                        {
+                                                            yoAppResponse.CustomerAccount = " ";
+                                                        }
+                                                                                                               
                                                         yoAppResponse.Amount = item.voucher.voucher_value;
-                                                        yoAppResponse.Balance = Convert.ToString(item.voucher.voucher_balance);
-                                                        yoAppResponse.CustomerMSISDN = item.voucher.redeemer_phone;
+
+                                                        if (Convert.ToString(item.voucher.voucher_balance) != null)
+                                                        {
+                                                            yoAppResponse.Balance = Convert.ToString(item.voucher.voucher_balance);
+                                                        }
+                                                        else
+                                                        {
+                                                            yoAppResponse.Balance = " ";
+                                                        }
+
+                                                        if (item.voucher.redeemer_phone != null)
+                                                        {
+                                                            yoAppResponse.CustomerMSISDN = item.voucher.redeemer_phone;
+                                                        }
+                                                        else
+                                                        {
+                                                            yoAppResponse.CustomerMSISDN = " ";
+                                                        }
+                                                                                                                
                                                         yoAppResponse.IsActive = item.voucher.active;
-                                                        yoAppResponse.Currency = item.voucher.voucher_currency;
+
+                                                        if (item.voucher.voucher_currency != null)
+                                                        {
+                                                            yoAppResponse.Currency = item.voucher.voucher_currency;
+                                                        }
+                                                        else
+                                                        {
+                                                            yoAppResponse.Currency = " ";
+                                                        }                                                        
                                                     }
 
                                                     Log.RequestsAndResponses("Wafaya-FinalizeVoucherResponse-YoApp", serviceProvider, yoAppResponse);
@@ -4034,6 +4143,49 @@ namespace YoAppWebProxy.Controllers
             }
 
             return yoAppResponse;
+        }
+
+        [Route("api/merchant-bank/service")]
+        [HttpPost]
+        public YoAppResponse Service(YoAppResponse response)
+        {
+            #region Declared Objects
+            var serviceProvider = "MerchantBank";
+            YoAppResponse yoAppResponse = new YoAppResponse();
+            #endregion
+
+            #region First Log
+            Log.RequestsAndResponses("YoAppResponse", serviceProvider, response);
+            #endregion
+
+            if (response == null)
+            {
+                string message = "Received Nothing. Your request object is null";
+
+                yoAppResponse.ResponseCode = "00008";
+                yoAppResponse.Note = "Failed";
+                yoAppResponse.Description = message;
+
+                return yoAppResponse;
+            }
+            else
+            {
+                switch (yoAppResponse.ServiceId)
+                {
+                    case 1: // Clients
+                        break;
+
+                    case 2: // Agents
+                        break;
+
+                    case 3: // Transactions
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+
         }
 
         [NonAction]

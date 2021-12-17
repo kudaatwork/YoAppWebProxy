@@ -18,6 +18,7 @@ namespace YoAppWebProxy.Controllers
             return View();
         }
 
+        [HttpGet]
         public ActionResult AuditTrail()
         {
             AuditTrailViewModel auditTrail = new AuditTrailViewModel();
@@ -26,15 +27,19 @@ namespace YoAppWebProxy.Controllers
             auditTrail.SubDirectories = new List<string>();
 
             // Populate ServiceProviders
-            var serviceProviders = GetServiceProviders();           
-            
+            var serviceProviders = GetServiceProviders();
+
+            ViewBag.ServiceProviders = serviceProviders.Select(x => new SelectListItem { Value = x, Text = x }).ToList();
+
             if (serviceProviders != null)
             {
-                auditTrail.ServiceProviders.AddRange(serviceProviders);           
+                auditTrail.ServiceProviders.AddRange(serviceProviders);
             }
 
             // Populate ServiceSubCategories
             var subCategories = GetSubDirectories(auditTrail.ServiceProviders[0]);
+
+            ViewBag.SubFolders = subCategories.Select(x => new SelectListItem { Value = x, Text = x }).ToList();
 
             if (subCategories != null)
             {
@@ -43,27 +48,162 @@ namespace YoAppWebProxy.Controllers
 
             var logfiles = GetLogFiles(auditTrail.ServiceProviders[0] + "/" + auditTrail.SubDirectories[0]);
 
-            var fileLines = System.IO.File.ReadAllLines(logfiles[0]);
+            auditTrail.Logs = new List<Models.AuditLog.AuditTrail>();
+
+            foreach (var item in logfiles)
+            {
+                var fileLines = System.IO.File.ReadAllLines(item);
+
+                foreach (var fileLine in fileLines)
+                {
+                    if (!fileLine.StartsWith("=="))
+                    {
+                        var line = JsonConvert.DeserializeObject<AuditTrail>(fileLine);
+
+                        auditTrail.Logs.Add(line);
+                    }
+                }
+            }
+
+            //var logfiles = GetLogFiles(auditTrail.ServiceProviders[0] + "/" + auditTrail.SubDirectories[0]);
+
+            //var fileLines = System.IO.File.ReadAllLines(logfiles.LastOrDefault());
+
+            //auditTrail.Logs = new List<Models.AuditLog.AuditTrail>();
+
+            //foreach (var fileLine in fileLines)
+            //{
+            //    if (!fileLine.StartsWith("=="))
+            //    {
+            //        var line = JsonConvert.DeserializeObject<AuditTrail>(fileLine);
+
+            //        auditTrail.Logs.Add(line);
+            //    }
+            //}
+
+            auditTrail.StartDate = DateTime.Now.Date.ToString("dd/MM/yyyy");
+            auditTrail.EndDate = DateTime.Now.Date.ToString("dd/MM/yyyy");
+
+            return View(auditTrail);
+        }
+
+        [HttpPost]
+        public ActionResult AuditTrail(string serviceProvider)
+        {
+            bool status = false;
+
+            AuditTrailViewModel auditTrail = new AuditTrailViewModel();
+
+            auditTrail.ServiceProviders = new List<string>();
+            auditTrail.SubDirectories = new List<string>();
+           
+            // Populate ServiceProviders
+            var serviceProviders = GetServiceProviders();
+
+            ViewBag.ServiceProviders = serviceProviders.Select(x => new SelectListItem { Value = x, Text = x }).ToList();
+
+            if (serviceProviders != null)
+            {
+                auditTrail.ServiceProviders.AddRange(serviceProviders);
+            }
+
+            // Populate ServiceSubCategories
+            var subCategories = GetSubDirectories(serviceProvider);
+
+            ViewBag.SubFolders = subCategories.Select(x => new SelectListItem { Value = x, Text = x }).ToList();
+
+            if (subCategories != null)
+            {
+                auditTrail.SubDirectories.AddRange(subCategories);
+            }
+
+            var logfiles = GetLogFiles(serviceProvider + "/" + auditTrail.SubDirectories[0]);
 
             auditTrail.Logs = new List<Models.AuditLog.AuditTrail>();
 
-            foreach (var fileLine in fileLines)
+            foreach (var item in logfiles)
             {
-                if (!fileLine.StartsWith("=="))
-                {
-                    var line = JsonConvert.DeserializeObject<AuditTrail>(fileLine);
+                var fileLines = System.IO.File.ReadAllLines(item);
 
-                    auditTrail.Logs.Add(line);
-                }                
+                foreach (var fileLine in fileLines)
+                {
+                    if (!fileLine.StartsWith("=="))
+                    {
+                        var line = JsonConvert.DeserializeObject<AuditTrail>(fileLine);
+
+                        auditTrail.Logs.Add(line);
+                    }
+                }
             }
 
-            return View(auditTrail);
+            //var fileLines = System.IO.File.ReadAllLines(logfiles.LastOrDefault());
+
+            //auditTrail.Logs = new List<Models.AuditLog.AuditTrail>();
+
+            //foreach (var fileLine in fileLines)
+            //{
+            //    if (!fileLine.StartsWith("=="))
+            //    {
+            //        var line = JsonConvert.DeserializeObject<AuditTrail>(fileLine);
+
+            //        auditTrail.Logs.Add(line);
+            //    }
+            //}
+
+            return PartialView("AuditTrailPartial", auditTrail);
+        }
+
+        [HttpPost]
+        public ActionResult DateRangeFilter(string startDate, string endDate, string serviceProvider, string subFolder)
+        {
+            AuditTrailViewModel auditTrail = new AuditTrailViewModel();
+
+            auditTrail.Logs = new List<Models.AuditLog.AuditTrail>();
+
+            if (!string.IsNullOrEmpty(startDate) && !string.IsNullOrEmpty(endDate) && !string.IsNullOrEmpty(serviceProvider) && !string.IsNullOrEmpty(subFolder))
+            {
+                var convertedStartDate = Convert.ToDateTime(startDate);
+                var convertedEndDate = Convert.ToDateTime(endDate);
+
+                var logfiles = GetLogFiles(serviceProvider + "/" + subFolder);
+
+                foreach (var item in logfiles)
+                {
+                    var fileName = Path.GetFileName(item);
+
+                    var parts = fileName.Split(new char[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    if (parts.Length == 4)
+                    {
+                        var formatedFileName = parts[0] + "/" + parts[1] + "/" + parts[2];
+
+                        var datedFile = DateTime.ParseExact(formatedFileName, "MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+
+                        if (convertedStartDate <= datedFile && datedFile <= convertedEndDate)
+                        {
+                            var fileLines = System.IO.File.ReadAllLines(item);
+
+                            foreach (var fileLine in fileLines)
+                            {
+                                if (!fileLine.StartsWith("=="))
+                                {
+                                    var line = JsonConvert.DeserializeObject<AuditTrail>(fileLine);
+
+                                    auditTrail.Logs.Add(line);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return PartialView("AuditTrailPartial", auditTrail);
         }
 
         [NonAction]
         public List<string> GetServiceProviders()
         {
-            string root = Server.MapPath("~/App_Data/");        
+            string root = Server.MapPath("~/App_Data/");
 
             var subdirectoryEntries = Directory.GetDirectories(root);
 
@@ -71,7 +211,7 @@ namespace YoAppWebProxy.Controllers
 
             if (subdirectoryEntries != null)
             {
-                List<string> serviceProvidersList = new List<string>(subdirectoryEntries);                
+                List<string> serviceProvidersList = new List<string>(subdirectoryEntries);
 
                 foreach (var serviceProvider in serviceProvidersList)
                 {
@@ -108,8 +248,8 @@ namespace YoAppWebProxy.Controllers
                 if (serviceProviderName.Contains("ProxyLog"))
                 {
                     subDirectories.Add(serviceProviderName);
-                }                
-            }           
+                }
+            }
 
             return subDirectories;
         }

@@ -257,6 +257,28 @@
     <Compile Include="Models\EOS\EosTopupProducts.cs" />
     <Compile Include="Models\EOS\EosTopupRequest.cs" />
     <Compile Include="Models\EOS\EosTopupResponse.cs" />
+    <Compile Include="Models\MerchantBank-Agents\AgentCommissionReportDTO.cs" />
+    <Compile Include="Models\MerchantBank-Agents\AgentCommissionResponse.cs" />
+    <Compile Include="Models\MerchantBank-Agents\AgentTransactionTypeReportDTO.cs" />
+    <Compile Include="Models\MerchantBank-Agents\CommissionReportDTO.cs" />
+    <Compile Include="Models\MerchantBank-Agents\FeeSplitResponse.cs" />
+    <Compile Include="Models\MerchantBank-Agents\FeeSplitsReportDTO.cs" />
+    <Compile Include="Models\MerchantBank-Agents\JRBeanCollectionDataSource.cs" />
+    <Compile Include="Models\MerchantBank-Agents\Resource.cs" />
+    <Compile Include="Models\MerchantBank-Clients\Address.cs" />
+    <Compile Include="Models\MerchantBank-Clients\Agent.cs" />
+    <Compile Include="Models\MerchantBank-Clients\Client.cs" />
+    <Compile Include="Models\MerchantBank-Clients\ClientResponse.cs" />
+    <Compile Include="Models\MerchantBank-Clients\ContactPerson.cs" />
+    <Compile Include="Models\MerchantBank-Clients\Pageable.cs" />
+    <Compile Include="Models\MerchantBank-Clients\PageAgent.cs" />
+    <Compile Include="Models\MerchantBank-Clients\PageClient.cs" />
+    <Compile Include="Models\MerchantBank-Clients\RegisterAgentRequest.cs" />
+    <Compile Include="Models\MerchantBank-Clients\RegisterClientRequest.cs" />
+    <Compile Include="Models\MerchantBank-Clients\RegistrationCountResponse.cs" />
+    <Compile Include="Models\MerchantBank-Clients\SelfRegistrationRequest.cs" />
+    <Compile Include="Models\MerchantBank-Clients\Sort.cs" />
+    <Compile Include="Models\MerchantBank-Clients\UpdateAgentRequest.cs" />
     <Compile Include="Models\Trek\CardBalance.cs" />
     <Compile Include="Models\Trek\CardTransactions.cs" />
     <Compile Include="Models\Trek\CardTransactionsByDate.cs" />
@@ -352,10 +374,33 @@
     <Content Include="build\images\loading.gif" />
     <Content Include="build\js\custom.js" />
     <Content Include="build\js\custom.min.js" />
+    <Content Include="chosen\chosen-sprite%402x.png" />
+    <Content Include="chosen\chosen-sprite.png" />
+    <Content Include="chosen\chosen.css" />
+    <Content Include="chosen\chosen.jquery.js" />
+    <Content Include="chosen\chosen.jquery.min.js" />
+    <Content Include="chosen\chosen.min.css" />
+    <Content Include="chosen\chosen.png" />
+    <Content Include="chosen\chosen.proto.js" />
+    <Content Include="chosen\chosen.proto.min.js" />
+    <Content Include="chosen\init.js" />
+    <Content Include="chosen\init.proto.js" />
+    <Content Include="chosen\jquery-1.12.4.min.js" />
+    <Content Include="chosen\jquery-3.2.1.min.js" />
+    <Content Include="chosen\oss-credit.png" />
+    <Content Include="chosen\prism.css" />
+    <Content Include="chosen\prism.js" />
+    <Content Include="chosen\prototype-1.7.0.0.js" />
+    <Content Include="chosen\style.css" />
     <Content Include="Content\bootstrap-theme.css" />
     <Content Include="Content\bootstrap-theme.min.css" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\bubble.gif" />
+    <Content Include="Content\jquery.fancybox-1.3.4.css" />
+    <Content Include="Content\preloader.gif" />
+    <Content Include="Content\style.css" />
+    <Content Include="Content\wrench.gif" />
     <Content Include="css\maps\jquery-jvectormap-2.0.3.css" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
@@ -409,6 +454,11 @@
     <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\CollectionModelDescription.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ApiGroup.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
+    <Content Include="Scripts\jquery-1.4.3.min.js" />
+    <Content Include="Scripts\jquery.easing-1.3.pack.js" />
+    <Content Include="Scripts\jquery.fancybox-1.3.4.js" />
+    <Content Include="Scripts\jquery.fancybox-1.3.4.pack.js" />
+    <Content Include="Scripts\jquery.mousewheel-3.0.4.pack.js" />
     <Content Include="src\js\custom.js" />
     <Content Include="src\js\examples.js" />
     <Content Include="src\js\helpers\smartresize.js" />
@@ -4087,6 +4137,7 @@
       <DependentUpon>ProxyWebServiceModel.edmx</DependentUpon>
     </Content>
     <Content Include="libman.json" />
+    <Content Include="chosen\composer.json" />
     <None Include="Properties\PublishProfiles\YWP.pubxml" />
     <None Include="Scripts\jquery-3.4.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.4.1.js" />
@@ -5162,6 +5213,7 @@
     <Content Include="Views\Shared\_AdminLayout.cshtml" />
     <Content Include="Views\Admin\Index.cshtml" />
     <Content Include="Views\Admin\AuditTrail.cshtml" />
+    <Content Include="Views\Admin\AuditTrailPartial.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
