@@ -9,9 +9,9 @@ namespace YoAppWebProxy.Models.MerchantBank
     {
         public string dateCreated { get; set; }
         public string dateModified { get; set; }
-        public int version { get; set; }
+        public Nullable<int> version { get; set; }
         public bool deleted { get; set; }
-        public int id { get; set; }
+        public Nullable<int> id { get; set; }
         public string firstName { get; set; }
         public string lastName { get; set; }
         public string email { get; set; }
@@ -26,7 +26,7 @@ namespace YoAppWebProxy.Models.MerchantBank
         public string street { get; set; }
         public string city { get; set; }
         public string suburb { get; set; }
-        public int userId { get; set; }
+        public Nullable<int> userId { get; set; }
         public string status { get; set; }        
     }
 }

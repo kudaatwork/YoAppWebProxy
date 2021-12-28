@@ -66,7 +66,7 @@ namespace YoAppWebProxy.Connectors
                 (
                     delegate { return true; }
                 );
-
+                
                 string queryRequest = wafayaVoucherRequest.Voucher;                   
 
                 string url = String.Format("https://dev.wa-faya.com/api/voucher/" + queryRequest);
