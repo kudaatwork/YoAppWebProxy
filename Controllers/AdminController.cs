@@ -46,40 +46,40 @@ namespace YoAppWebProxy.Controllers
                 auditTrail.SubDirectories.AddRange(subCategories);
             }
 
-            var logfiles = GetLogFiles(auditTrail.ServiceProviders[0] + "/" + auditTrail.SubDirectories[0]);
-
-            auditTrail.Logs = new List<Models.AuditLog.AuditTrail>();
-
-            foreach (var item in logfiles)
-            {
-                var fileLines = System.IO.File.ReadAllLines(item);
-
-                foreach (var fileLine in fileLines)
-                {
-                    if (!fileLine.StartsWith("=="))
-                    {
-                        var line = JsonConvert.DeserializeObject<AuditTrail>(fileLine);
-
-                        auditTrail.Logs.Add(line);
-                    }
-                }
-            }
-
             //var logfiles = GetLogFiles(auditTrail.ServiceProviders[0] + "/" + auditTrail.SubDirectories[0]);
-
-            //var fileLines = System.IO.File.ReadAllLines(logfiles.LastOrDefault());
 
             //auditTrail.Logs = new List<Models.AuditLog.AuditTrail>();
 
-            //foreach (var fileLine in fileLines)
+            //foreach (var item in logfiles)
             //{
-            //    if (!fileLine.StartsWith("=="))
-            //    {
-            //        var line = JsonConvert.DeserializeObject<AuditTrail>(fileLine);
+            //    var fileLines = System.IO.File.ReadAllLines(item);
 
-            //        auditTrail.Logs.Add(line);
+            //    foreach (var fileLine in fileLines)
+            //    {
+            //        if (!fileLine.StartsWith("=="))
+            //        {
+            //            var line = JsonConvert.DeserializeObject<AuditTrail>(fileLine);
+
+            //            auditTrail.Logs.Add(line);
+            //        }
             //    }
             //}
+
+            var logfiles = GetLogFiles(auditTrail.ServiceProviders[0] + "/" + auditTrail.SubDirectories[0]);
+
+            var fileLines = System.IO.File.ReadAllLines(logfiles.LastOrDefault());
+
+            auditTrail.Logs = new List<Models.AuditLog.AuditTrail>();
+
+            foreach (var fileLine in fileLines)
+            {
+                if (!fileLine.StartsWith("=="))
+                {
+                    var line = JsonConvert.DeserializeObject<AuditTrail>(fileLine);
+
+                    auditTrail.Logs.Add(line);
+                }
+            }
 
             auditTrail.StartDate = DateTime.Now.Date.ToString("dd/MM/yyyy");
             auditTrail.EndDate = DateTime.Now.Date.ToString("dd/MM/yyyy");
@@ -119,36 +119,36 @@ namespace YoAppWebProxy.Controllers
 
             var logfiles = GetLogFiles(serviceProvider + "/" + auditTrail.SubDirectories[0]);
 
-            auditTrail.Logs = new List<Models.AuditLog.AuditTrail>();
-
-            foreach (var item in logfiles)
-            {
-                var fileLines = System.IO.File.ReadAllLines(item);
-
-                foreach (var fileLine in fileLines)
-                {
-                    if (!fileLine.StartsWith("=="))
-                    {
-                        var line = JsonConvert.DeserializeObject<AuditTrail>(fileLine);
-
-                        auditTrail.Logs.Add(line);
-                    }
-                }
-            }
-
-            //var fileLines = System.IO.File.ReadAllLines(logfiles.LastOrDefault());
-
             //auditTrail.Logs = new List<Models.AuditLog.AuditTrail>();
 
-            //foreach (var fileLine in fileLines)
+            //foreach (var item in logfiles)
             //{
-            //    if (!fileLine.StartsWith("=="))
-            //    {
-            //        var line = JsonConvert.DeserializeObject<AuditTrail>(fileLine);
+            //    var fileLines = System.IO.File.ReadAllLines(item);
 
-            //        auditTrail.Logs.Add(line);
+            //    foreach (var fileLine in fileLines)
+            //    {
+            //        if (!fileLine.StartsWith("=="))
+            //        {
+            //            var line = JsonConvert.DeserializeObject<AuditTrail>(fileLine);
+
+            //            auditTrail.Logs.Add(line);
+            //        }
             //    }
             //}
+
+            var fileLines = System.IO.File.ReadAllLines(logfiles.LastOrDefault());
+
+            auditTrail.Logs = new List<Models.AuditLog.AuditTrail>();
+
+            foreach (var fileLine in fileLines)
+            {
+                if (!fileLine.StartsWith("=="))
+                {
+                    var line = JsonConvert.DeserializeObject<AuditTrail>(fileLine);
+
+                    auditTrail.Logs.Add(line);
+                }
+            }
 
             return PartialView("AuditTrailPartial", auditTrail);
         }

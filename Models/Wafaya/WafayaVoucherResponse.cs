@@ -20,5 +20,6 @@ namespace YoAppWebProxy.Models.Wafaya
         public decimal voucher_balance { get; set; }
         public List<RedemptionLimits> redemption_limits { get; set; }
         public ProductRedemptionLimit product_redemption_limit { get; set; }
+        public string pin { get; set; }
     }
 }

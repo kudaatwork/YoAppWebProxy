@@ -12,13 +12,14 @@ using YoAppWebProxy.Logs;
 using YoAppWebProxy.Models.MerchantBank;
 using YoAppWebProxy.Models.MerchantBank_Clients;
 using YoAppWebProxy.Models.MerchantBank_Login;
+using YoAppWebProxy.Models.MerchantBank_Recipients;
 using YoAppWebProxy.Models.MerchantBank_Transaction;
 
 namespace YoAppWebProxy.Connectors
 {
     public class MerchantBankConnector
     {
-        public Client GetClientByClientId(string serviceProvider, ClientRequest clientRequest)
+        public Client GetClientByClientId(string serviceProvider, ClientRequest clientRequest, string token)
         {
             Client client = new Client();
             MetBankCredentials metBankCredentials = new MetBankCredentials();
@@ -36,7 +37,7 @@ namespace YoAppWebProxy.Connectors
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
-                httpWebRequest.Headers.Add("Authorization", "Bearer " + metBankCredentials.AccessToken);
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
                 httpWebRequest.ContentType = "application/json";
                 httpWebRequest.Method = "GET";
                 httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
@@ -62,7 +63,197 @@ namespace YoAppWebProxy.Connectors
             return client;
         }
 
-        public ClientResponse GetClientByPhoneNumber(string serviceProvider, ClientRequest clientRequest)
+        public Client ApproveClient(string serviceProvider, ClientRequest clientRequest, string token)
+        {
+            Client client = new Client();
+            MetBankCredentials metBankCredentials = new MetBankCredentials();
+
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback
+                (
+                    delegate { return true; }
+                );
+
+                string queryRequest = clientRequest.clientId;
+
+                string url = String.Format("http://62.171.136.41:8203/clients/approve-client/" + queryRequest);
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                httpWebRequest.Timeout = 120000;
+                //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "PUT";
+                httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
+
+                string json = JsonConvert.SerializeObject(clientRequest);
+
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    streamWriter.Write(json);
+                    streamWriter.Flush();
+                    streamWriter.Close();
+
+                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+                    if (httpResponse.StatusCode == HttpStatusCode.OK)
+                    {
+                        using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                        {
+                            var result = streamReader.ReadToEnd();
+                            client = JsonConvert.DeserializeObject<Client>(result);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Log.HttpError("Exception", serviceProvider, "Message: " + e.Message + ", InnerException: " + e.InnerException + ", StackTrace: " + e.StackTrace);
+            }
+
+            return client;
+        }
+
+        public Client DisApproveClient(string serviceProvider, ClientRequest clientRequest, string token)
+        {
+            Client client = new Client();
+            MetBankCredentials metBankCredentials = new MetBankCredentials();
+
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback
+                (
+                    delegate { return true; }
+                );
+
+                string queryRequest = clientRequest.clientId;
+
+                string url = String.Format("http://62.171.136.41:8203/clients/disapprove-client/" + queryRequest);
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                httpWebRequest.Timeout = 120000;
+                //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "PUT";
+                httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
+
+                string json = JsonConvert.SerializeObject(clientRequest);
+
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    streamWriter.Write(json);
+                    streamWriter.Flush();
+                    streamWriter.Close();
+
+                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+                    if (httpResponse.StatusCode == HttpStatusCode.OK)
+                    {
+                        using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                        {
+                            var result = streamReader.ReadToEnd();
+                            client = JsonConvert.DeserializeObject<Client>(result);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Log.HttpError("Exception", serviceProvider, "Message: " + e.Message + ", InnerException: " + e.InnerException + ", StackTrace: " + e.StackTrace);
+            }
+
+            return client;
+        }
+
+        public RegistrationCountResponse GetNumberOfRegisteredClients(string serviceProvider, ClientRequest clientRequest, string token)
+        {
+            RegistrationCountResponse registrationCountResponse = new RegistrationCountResponse();
+            MetBankCredentials metBankCredentials = new MetBankCredentials();
+
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback
+                (
+                    delegate { return true; }
+                );
+
+                //string queryRequest = clientRequest.clientId;
+
+                string url = String.Format("http://62.171.136.41:8203/agents/number-of-registered-agents");
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                httpWebRequest.Timeout = 120000;
+                //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "GET";
+                httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
+
+                HttpWebResponse httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+                using (Stream stream = httpResponse.GetResponseStream())
+
+                    if (httpResponse.StatusCode == HttpStatusCode.OK)
+                    {
+                        using (StreamReader streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                        {
+                            var result = streamReader.ReadToEnd();
+                            registrationCountResponse = JsonConvert.DeserializeObject<RegistrationCountResponse>(result);
+                        }
+                    }
+            }
+            catch (Exception e)
+            {
+                Log.HttpError("Exception", serviceProvider, "Message: " + e.Message + ", InnerException: " + e.InnerException + ", StackTrace: " + e.StackTrace);
+            }
+
+            return registrationCountResponse;
+        }
+
+        public ClientSearchResponse ClientLogin(string serviceProvider, ClientRequest clientRequest, string token)
+        {
+            ClientSearchResponse clientSearchResponse = new ClientSearchResponse();
+            MetBankCredentials metBankCredentials = new MetBankCredentials();
+
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback
+                (
+                    delegate { return true; }
+                );
+
+                string queryRequest = clientRequest.phoneNumber;
+
+                string url = String.Format("http://62.171.136.41:8203/clients/phone-number-login/" + queryRequest);
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                httpWebRequest.Timeout = 120000;
+                //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "GET";
+                httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
+
+                HttpWebResponse httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+                using (Stream stream = httpResponse.GetResponseStream())
+
+                    if (httpResponse.StatusCode == HttpStatusCode.OK)
+                    {
+                        using (StreamReader streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                        {
+                            var result = streamReader.ReadToEnd();
+                            clientSearchResponse = JsonConvert.DeserializeObject<ClientSearchResponse>(result);
+                        }
+                    }
+            }
+            catch (Exception e)
+            {
+                Log.HttpError("Exception", serviceProvider, "Message: " + e.Message + ", InnerException: " + e.InnerException + ", StackTrace: " + e.StackTrace);
+            }
+
+            return clientSearchResponse;
+        }
+
+        public ClientResponse GetClientByPhoneNumber(string serviceProvider, ClientRequest clientRequest, string token)
         {
             ClientResponse clientResponse = new ClientResponse();
             MetBankCredentials metBankCredentials = new MetBankCredentials();
@@ -80,7 +271,7 @@ namespace YoAppWebProxy.Connectors
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
-                httpWebRequest.Headers.Add("Authorization", "Bearer " + metBankCredentials.AccessToken);
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
                 httpWebRequest.ContentType = "application/json";
                 httpWebRequest.Method = "GET";
                 httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
@@ -106,7 +297,7 @@ namespace YoAppWebProxy.Connectors
             return clientResponse;
         }
 
-        public PageClient GetClientsByPagesAndSize(string serviceProvider, ClientRequest clientRequest)
+        public PageClient GetClientsByPagesAndSize(string serviceProvider, ClientRequest clientRequest, string token)
         {
             PageClient pageClient = new PageClient();
             MetBankCredentials metBankCredentials = new MetBankCredentials();
@@ -125,7 +316,7 @@ namespace YoAppWebProxy.Connectors
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
-                httpWebRequest.Headers.Add("Authorization", "Bearer " + metBankCredentials.AccessToken);
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
                 httpWebRequest.ContentType = "application/json";
                 httpWebRequest.Method = "GET";
                 httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
@@ -151,7 +342,7 @@ namespace YoAppWebProxy.Connectors
             return pageClient;
         }
 
-        public ClientResponse GetClientByNationalId(string serviceProvider, ClientRequest clientRequest)
+        public ClientResponse GetClientByNationalId(string serviceProvider, ClientRequest clientRequest, string token)
         {
             ClientResponse clientResponse = new ClientResponse();
 
@@ -168,6 +359,7 @@ namespace YoAppWebProxy.Connectors
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
                 httpWebRequest.ContentType = "application/json";
                 httpWebRequest.Method = "GET";
                 httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
@@ -193,7 +385,7 @@ namespace YoAppWebProxy.Connectors
             return clientResponse;
         }
 
-        public Client PutClient(ClientRequest clientRequest)
+        public Client PutClient(string serviceProvider, ClientRequest clientRequest, string token)
         {
             Client client = new Client();
 
@@ -210,6 +402,7 @@ namespace YoAppWebProxy.Connectors
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
                 httpWebRequest.ContentType = "application/json";
                 httpWebRequest.Method = "PUT";
 
@@ -235,7 +428,7 @@ namespace YoAppWebProxy.Connectors
             }
             catch (Exception e)
             {
-                ESolutionsLog.HttpErrorLog(e.Message);
+                Log.HttpError("Exception", serviceProvider, "Message: " + e.Message + ", InnerException: " + e.InnerException + ", StackTrace: " + e.StackTrace);
             }
 
             return client;
@@ -420,7 +613,7 @@ namespace YoAppWebProxy.Connectors
             return resultDTO;
         }
 
-        public Agent RegisterAgent(string serviceProvider, RegisterAgentRequest registerAgentRequest)
+        public Agent RegisterAgent(string serviceProvider, RegisterAgentRequest registerAgentRequest, string token)
         {
             Agent agent = new Agent();
             MetBankCredentials metBankCredentials = new MetBankCredentials();
@@ -435,7 +628,7 @@ namespace YoAppWebProxy.Connectors
                 string url = String.Format("http://62.171.136.41:8203/agents/register");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
-                httpWebRequest.Headers.Add("Authorization", "Bearer " + metBankCredentials.AccessToken);
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
                 httpWebRequest.ContentType = "application/json";
                 httpWebRequest.Method = "POST";
 
@@ -465,6 +658,53 @@ namespace YoAppWebProxy.Connectors
             }
 
             return agent;
+        }
+
+        public Recipient RegisterRecipient(string serviceProvider, RecipientsRequest recipientsRequest, string token)
+        {
+            Recipient recipient = new Recipient();
+            MetBankCredentials metBankCredentials = new MetBankCredentials();
+
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback
+                (
+                    delegate { return true; }
+                );
+
+                string url = String.Format("http://62.171.136.41:8205/recipients");
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                httpWebRequest.Timeout = 120000;
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "POST";
+
+                string json = JsonConvert.SerializeObject(recipientsRequest);
+
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    streamWriter.Write(json);
+                    streamWriter.Flush();
+                    streamWriter.Close();
+
+                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+                    if (httpResponse.StatusCode == HttpStatusCode.OK || httpResponse.StatusCode == HttpStatusCode.Created)
+                    {
+                        using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                        {
+                            var result = streamReader.ReadToEnd();
+                            recipient = JsonConvert.DeserializeObject<Recipient>(result);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Log.HttpError("Exception", serviceProvider, "Message: " + e.Message + ", InnerException: " + e.InnerException + ", StackTrace: " + e.StackTrace);
+            }
+
+            return recipient;
         }
 
         public TransactionResponse ApproveSendMoney(string serviceProvider, ApproveSendMoneyRequest approveSendMoneyRequest, string token)
@@ -561,6 +801,53 @@ namespace YoAppWebProxy.Connectors
             return transactionResponse;
         }
 
+        public TransactionResponse ReceiveMoney(string serviceProvider, ReceiveMoneyRequest receiveMoneyRequest, string token)
+        {
+            TransactionResponse transactionResponse = new TransactionResponse();
+            MetBankCredentials metBankCredentials = new MetBankCredentials();
+
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback
+                (
+                    delegate { return true; }
+                );
+
+                string url = String.Format("http://62.171.136.41:8205/transactions/receive-money/transaction");
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                httpWebRequest.Timeout = 120000;
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "POST";
+
+                string json = JsonConvert.SerializeObject(receiveMoneyRequest);
+
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    streamWriter.Write(json);
+                    streamWriter.Flush();
+                    streamWriter.Close();
+
+                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+                    if (httpResponse.StatusCode == HttpStatusCode.OK)
+                    {
+                        using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                        {
+                            var result = streamReader.ReadToEnd();
+                            transactionResponse = JsonConvert.DeserializeObject<TransactionResponse>(result);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Log.HttpError("Exception", serviceProvider, "Message: " + e.Message + ", InnerException: " + e.InnerException + ", StackTrace: " + e.StackTrace);
+            }
+
+            return transactionResponse;
+        }
+
         public SendMoneyPreAuthResponse PreAuthSendMoney(string serviceProvider, SendMoneyPreAuthRequest sendMoneyPreAuthRequest, string token)
         {
             SendMoneyPreAuthResponse sendMoneyPreAuthResponse = new SendMoneyPreAuthResponse();
@@ -606,6 +893,100 @@ namespace YoAppWebProxy.Connectors
             }
 
             return sendMoneyPreAuthResponse;
+        }
+
+        public ClientSendMoneyResponse ClientPreAuthSendMoney(string serviceProvider, ClientSendMoneyPreAuthRequest clientSendMoneyPreAuthRequest, string token)
+        {
+            ClientSendMoneyResponse clientSendMoneyResponse = new ClientSendMoneyResponse();
+            MetBankCredentials metBankCredentials = new MetBankCredentials();
+
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback
+                (
+                    delegate { return true; }
+                );
+
+                string url = String.Format("http://62.171.136.41:8205/transactions/client-send-money/transaction");
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                httpWebRequest.Timeout = 120000;
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "POST";
+
+                string json = JsonConvert.SerializeObject(clientSendMoneyPreAuthRequest);
+
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    streamWriter.Write(json);
+                    streamWriter.Flush();
+                    streamWriter.Close();
+
+                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+                    if (httpResponse.StatusCode == HttpStatusCode.OK)
+                    {
+                        using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                        {
+                            var result = streamReader.ReadToEnd();
+                            clientSendMoneyResponse = JsonConvert.DeserializeObject<ClientSendMoneyResponse>(result);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Log.HttpError("Exception", serviceProvider, "Message: " + e.Message + ", InnerException: " + e.InnerException + ", StackTrace: " + e.StackTrace);
+            }
+
+            return clientSendMoneyResponse;
+        }
+
+        public TransactionResponse ClientSendMoney(string serviceProvider, ClientSendMoneyRequest clientSendMoneyRequest, string token)
+        {
+            TransactionResponse transactionResponse = new TransactionResponse();
+            MetBankCredentials metBankCredentials = new MetBankCredentials();
+
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback
+                (
+                    delegate { return true; }
+                );
+
+                string url = String.Format("http://62.171.136.41:8205/transactions/client-send-money/transaction");
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                httpWebRequest.Timeout = 120000;
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "POST";
+
+                string json = JsonConvert.SerializeObject(clientSendMoneyRequest);
+
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    streamWriter.Write(json);
+                    streamWriter.Flush();
+                    streamWriter.Close();
+
+                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+                    if (httpResponse.StatusCode == HttpStatusCode.OK)
+                    {
+                        using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                        {
+                            var result = streamReader.ReadToEnd();
+                            transactionResponse = JsonConvert.DeserializeObject<TransactionResponse>(result);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Log.HttpError("Exception", serviceProvider, "Message: " + e.Message + ", InnerException: " + e.InnerException + ", StackTrace: " + e.StackTrace);
+            }
+
+            return transactionResponse;
         }
 
         public void SetBasicAuthHeader(WebRequest request, String userName, String userPassword)
