@@ -4236,6 +4236,8 @@ namespace YoAppWebProxy.Controllers
 
             #endregion
 
+            var json = JsonConvert.SerializeObject(response);
+
             if (response.Narrative != null)
             {
                 narrative = JsonConvert.DeserializeObject<Narrative>(response.Narrative);
@@ -4542,7 +4544,7 @@ namespace YoAppWebProxy.Controllers
                                     return yoAppResponse;
                                 }
 
-                            case "380000": // Edit Client
+                            case "1": // Edit Client
 
                                 try
                                 {
@@ -4683,7 +4685,7 @@ namespace YoAppWebProxy.Controllers
                                     return yoAppResponse;
                                 }                                
 
-                            case "400000": // Delete Client
+                            case "2": // Delete Client
 
                                 if (response.CustomerAccount != null)
                                 {
@@ -4815,18 +4817,18 @@ namespace YoAppWebProxy.Controllers
                                             registerClientRequest.lastName = narrative.ReceiversSurname;
                                             registerClientRequest.email = narrative.CustomerName;
                                             registerClientRequest.phoneNumber = narrative.ReceiverMobile;
-                                            registerClientRequest.idPhotoPath = parts2[0];
-                                            registerClientRequest.photoWithIdPath = parts2[1];
+                                            registerClientRequest.idPhotoPath = "na";
+                                            registerClientRequest.photoWithIdPath = "na";
                                             registerClientRequest.gender = narrative.ReceiversGender;
                                             registerClientRequest.nationalId = narrative.ReceiversIdentification;
-                                            registerClientRequest.street = parts[0];
-                                            registerClientRequest.suburb = parts[1];
-                                            registerClientRequest.city = parts[2];
-                                            registerClientRequest.country = parts[3];
-                                            var date = DateTime.ParseExact(narrative.ServiceProvince, "dd/mm/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+                                            registerClientRequest.street = narrative.Information2;
+                                            registerClientRequest.suburb = narrative.ServiceRegion;
+                                            registerClientRequest.city = narrative.ServiceProvince;
+                                            registerClientRequest.country = narrative.ServiceCountry;
+                                            var date = DateTime.ParseExact(narrative.Information1, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
                                             registerClientRequest.dateOfBirth = date.ToString("yyyy-mm-dd");
-                                            registerClientRequest.agentId = (int)narrative.Quantity;
-                                            registerClientRequest.idTypeName = narrative.ServiceRegion;
+                                            registerClientRequest.agentId = 74;
+                                            registerClientRequest.idTypeName = "National Id";
                                             tokenFile = LoadMetBankJson(file);
 
                                             Log.RequestsAndResponses("ClientRegistrationRequest", serviceProvider, registerClientRequest);
@@ -4837,6 +4839,10 @@ namespace YoAppWebProxy.Controllers
 
                                             if (!string.IsNullOrEmpty(client.status))
                                             {
+                                                yoAppResponse.ResponseCode = "00000";
+                                                yoAppResponse.Description = "Recipient Created!";
+                                                yoAppResponse.Note = "Success";
+
                                                 var dateCreatedResponse = DateTime.ParseExact(client.dateCreated, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
                                                 var convertedCreatedDate = dateCreatedResponse.ToString("dd/mm/yyyy");
                                                 narrative.DateCreated = Convert.ToDateTime(convertedCreatedDate);
@@ -4847,15 +4853,15 @@ namespace YoAppWebProxy.Controllers
 
                                                 narrative.IsActive = client.deleted;
                                                 narrative.Status = client.status;
-                                                narrative.Id = (long)client.id;
+                                                yoAppResponse.CustomerAccount = client.id.ToString(); // Customer Account
                                                 narrative.ReceiversName = client.firstName;
                                                 narrative.ReceiversSurname = client.lastName;
-                                                yoAppResponse.Note = client.email;
+                                                narrative.CustomerName = client.email;
                                                 narrative.ReceiverMobile = client.phoneNumber;
                                                 narrative.ReceiversIdentification = client.nationalId;
                                                 narrative.ReceiversGender = client.gender;
                                                 narrative.ServiceCountry = client.country;
-                                                narrative.CustomerId = client.userId.ToString();
+                                                narrative.CustomerId = client.userId.ToString();                                                
                                                 yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
 
                                                 Log.RequestsAndResponses("Yoapp-ClientRegistrationResponse", serviceProvider, yoAppResponse);
@@ -5793,7 +5799,7 @@ namespace YoAppWebProxy.Controllers
                                 }
                                 break;
 
-                            case "320000": // Send Money
+                            case "360000": // Send Money
 
                                 try
                                 {
@@ -5866,17 +5872,17 @@ namespace YoAppWebProxy.Controllers
                                     if (isTokenValid)
                                     {
                                         // Send Money PreAuth Transaction
-                                        sendMoneyPreAuthRequest.amountSend = response.Amount;
-                                        sendMoneyPreAuthRequest.sourceCountryCode = response.Note;
-                                        sendMoneyPreAuthRequest.destinationCountryCode = response.Product;
-                                        sendMoneyPreAuthRequest.currencyCodeSend = narrative.ServiceCountry;
+                                        sendMoneyPreAuthRequest.amountSend = (decimal)narrative.Balance;
+                                        sendMoneyPreAuthRequest.sourceCountryCode = narrative.ServiceCountry;
+                                        sendMoneyPreAuthRequest.destinationCountryCode = narrative.ServiceRegion;
+                                        sendMoneyPreAuthRequest.currencyCodeSend = "1";
                                         sendMoneyPreAuthRequest.clientId = (int)narrative.Id;
-                                        sendMoneyPreAuthRequest.agentId = Convert.ToInt32(narrative.ServiceAgentId);
-                                        sendMoneyPreAuthRequest.collectionAmount = response.Amount;
-                                        sendMoneyPreAuthRequest.collectionCurrencyCode = response.Currency;
+                                        sendMoneyPreAuthRequest.agentId = 74;
+                                        sendMoneyPreAuthRequest.collectionAmount = Convert.ToDecimal(narrative.Information2);
+                                        sendMoneyPreAuthRequest.collectionCurrencyCode = narrative.Currency;
                                         sendMoneyPreAuthRequest.recipientId = Convert.ToInt32(narrative.CustomerId);
-                                        sendMoneyPreAuthRequest.tellerId = Convert.ToInt32(narrative.ServiceId);
-                                        sendMoneyPreAuthRequest.reasonForTransfer = response.Action;
+                                        sendMoneyPreAuthRequest.tellerId = 114;
+                                        sendMoneyPreAuthRequest.reasonForTransfer = narrative.Information1;
                                         tokenFile = LoadMetBankJson(file);
 
                                         Log.RequestsAndResponses("PreAuthSendMoneyRequest", serviceProvider, sendMoneyPreAuthRequest);
@@ -6498,7 +6504,7 @@ namespace YoAppWebProxy.Controllers
                                         recipientsRequest.lastName = narrative.ReceiversSurname;
                                         recipientsRequest.gender = narrative.ReceiversGender;
                                         recipientsRequest.relationship = narrative.ResponseDescription;
-                                        recipientsRequest.countryId = narrative.ServiceCountry;
+                                        recipientsRequest.countryId = "1";
                                         recipientsRequest.address = narrative.Information1;
                                         tokenFile = LoadMetBankJson(file);
 
@@ -6570,6 +6576,352 @@ namespace YoAppWebProxy.Controllers
 
                                     return yoAppResponse;
                                 }
+
+                            case "370000": // Search Recipient
+
+                                try
+                                {
+                                    string file = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
+                                    var tokenFile = LoadMetBankJson(file);
+
+                                    if (tokenFile != null) // We have generated the Token Already
+                                    {
+                                        var expiryDateString = tokenFile.expires_in;
+
+                                        var expiryDate = DateTime.ParseExact(expiryDateString, "dd/MM/yyyy-HH:mm:ss", null);
+
+                                        var currentDateTime = DateTime.Now;
+
+                                        if (expiryDate > currentDateTime) // Token is still valid
+                                        {
+                                            isTokenValid = true;
+                                        }
+                                        else // Token is no longer valid
+                                        {
+                                            RefreshMetBankToken(tokenFile.refresh_token);
+                                            isTokenValid = true;
+
+                                            tokenFile = LoadMetBankJson(file);
+                                        }
+                                    }
+                                    else // Generate a new Token
+                                    {
+                                        userLogin.password = metBankCredentials.Password;
+                                        userLogin.username = metBankCredentials.Username;
+
+                                        Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
+
+                                        var result = merchantBankConnector.GetToken(serviceProvider, userLogin);
+
+                                        Log.RequestsAndResponses("MetBankTokenResponse", serviceProvider, result);
+
+                                        if (result.token_type.ToLower() == "bearer")
+                                        {
+                                            isTokenValid = true;
+                                            yoAppResponse.ResponseCode = "00000";
+                                            yoAppResponse.Description = "Token generated successfully";
+                                            yoAppResponse.Note = "Transaction Successful";
+
+                                            var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(result.expires_in));
+
+                                            result.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
+
+                                            var token = JsonConvert.SerializeObject(result);
+
+                                            yoAppResponse.Narrative = token;
+
+                                            Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+                                            Log.StoreData("tokens", serviceProvider, result);
+
+                                            tokenFile = LoadMetBankJson(file);
+                                        }
+                                        else
+                                        {
+                                            yoAppResponse.ResponseCode = "00008";
+                                            yoAppResponse.Description = "Code could not be generated";
+                                            yoAppResponse.Note = "Transaction Failed";
+
+                                            Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+
+                                            return yoAppResponse;
+                                        }
+                                    }
+
+                                    if (isTokenValid)
+                                    {
+                                        if (narrative.Id > 0 && string.IsNullOrEmpty(narrative.CustomerId)) // Search by Id
+                                        {
+                                            ClientRequest clientRequest = new ClientRequest();
+
+                                            clientRequest.id = (int)narrative.Id;
+                                            tokenFile = LoadMetBankJson(file);
+
+                                            Log.RequestsAndResponses("RecipientDetailsByIdRequest", serviceProvider, clientRequest);
+
+                                            var recipient = merchantBankConnector.GetRecipientById(serviceProvider, clientRequest, tokenFile.access_token);
+
+                                            Log.RequestsAndResponses("RecipientDetailsByIdResponse", serviceProvider, recipient);
+
+                                            if (recipient != null && recipient.deleted == false && recipient.firstName != null)
+                                            {
+                                                yoAppResponse.ResponseCode = "00000";
+                                                yoAppResponse.Description = "Recipient Found!";
+                                                narrative.DateCreated = DateTime.ParseExact(recipient.dateCreated, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
+                                                narrative.DatelastAccess = DateTime.ParseExact(recipient.dateModified, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
+                                                narrative.IsActive = recipient.deleted;
+                                                narrative.Status = recipient.version.ToString();
+                                                narrative.Id = (long)recipient.id;
+                                                narrative.ReceiversName = recipient.firstName;
+                                                narrative.ReceiversSurname = recipient.lastName;
+                                                yoAppResponse.Note = recipient.relationship;
+                                                narrative.ReceiverMobile = recipient.phoneNumber;
+                                                narrative.ReceiversIdentification = recipient.nationalId;
+                                                narrative.ReceiversGender = recipient.gender;
+                                                narrative.ServiceCountry = recipient.countryId;
+                                                narrative.Information1 = recipient.countryName;
+                                                narrative.Information2 = recipient.address;
+                                                narrative.CustomerId = recipient.clientId.ToString();
+                                                yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
+
+                                                Log.RequestsAndResponses("RecipientDetailsByIdResponse-YoApp", serviceProvider, yoAppResponse);
+
+                                                return yoAppResponse;
+                                            }
+                                            else
+                                            {
+                                                yoAppResponse.ResponseCode = "00008";
+                                                yoAppResponse.Note = "Client not Found";
+                                                yoAppResponse.Description = "Received Nothing for the clientId submitted";
+                                                
+                                                Log.RequestsAndResponses("RecipientDetailsByIdResponse-YoApp", serviceProvider, yoAppResponse);
+
+                                                return yoAppResponse;
+                                            }
+                                        }
+                                        else if (narrative.Id <= 0 && !string.IsNullOrEmpty(narrative.CustomerId)) // Search by ClientId
+                                        {
+                                            ClientRequest clientRequest = new ClientRequest();
+
+                                            clientRequest.clientId = narrative.CustomerId;
+                                            tokenFile = LoadMetBankJson(file);
+
+                                            Log.RequestsAndResponses("RecipientDetailsByClientIdRequest", serviceProvider, clientRequest);
+
+                                            var recipient = merchantBankConnector.GetRecipientByClientId(serviceProvider, clientRequest, tokenFile.access_token);
+
+                                            Log.RequestsAndResponses("RecipientDetailsByClientIdResponse", serviceProvider, recipient);
+
+                                            if (recipient != null && recipient.deleted == false && recipient.firstName != null)
+                                            {
+                                                yoAppResponse.ResponseCode = "00000";
+                                                yoAppResponse.Description = "Recipient Found!";
+                                                narrative.DateCreated = DateTime.ParseExact(recipient.dateCreated, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
+                                                narrative.DatelastAccess = DateTime.ParseExact(recipient.dateModified, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
+                                                narrative.IsActive = recipient.deleted;
+                                                narrative.Status = recipient.version.ToString();
+                                                narrative.Id = (long)recipient.id;
+                                                narrative.ReceiversName = recipient.firstName;
+                                                narrative.ReceiversSurname = recipient.lastName;
+                                                yoAppResponse.Note = recipient.relationship;
+                                                narrative.ReceiverMobile = recipient.phoneNumber;
+                                                narrative.ReceiversIdentification = recipient.nationalId;
+                                                narrative.ReceiversGender = recipient.gender;
+                                                narrative.ServiceCountry = recipient.countryId;
+                                                narrative.Information1 = recipient.countryName;
+                                                narrative.Information2 = recipient.address;
+                                                narrative.CustomerId = recipient.clientId.ToString();
+                                                yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
+
+                                                Log.RequestsAndResponses("RecipientDetailsByClientIdResponse-YoApp", serviceProvider, yoAppResponse);
+
+                                                return yoAppResponse;
+                                            }
+                                            else
+                                            {
+                                                yoAppResponse.ResponseCode = "00008";
+                                                yoAppResponse.Note = "Client not Found";
+                                                yoAppResponse.Description = "Received Nothing for the clientId submitted";
+
+                                                Log.RequestsAndResponses("RecipientDetailsByClientIdResponse-YoApp", serviceProvider, yoAppResponse);
+
+                                                return yoAppResponse;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            yoAppResponse.ResponseCode = "00008";
+                                            yoAppResponse.Description = "Cannot Search for receipient because No Id or ClientId was received from the server";
+                                            yoAppResponse.Note = "Transaction Failed";
+
+                                            Log.RequestsAndResponses("RecipientDetailsByClientIdResponse-YoApp", serviceProvider, yoAppResponse);
+
+                                            return yoAppResponse;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        yoAppResponse.ResponseCode = "00008";
+                                        yoAppResponse.Description = "Token is not Valid";
+                                        yoAppResponse.Note = "Request Failed";
+
+                                        Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+
+                                        return yoAppResponse;
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Log.HttpError("Exception", serviceProvider, "Message: " + ex.Message + ", InnerException: " + ex.InnerException + ", StackTrace: " + ex.StackTrace);
+
+                                    return yoAppResponse;
+                                }
+
+                            case "1": // Update Recipient
+
+                                try
+                                {
+                                    string file = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
+                                    var tokenFile = LoadMetBankJson(file);
+
+                                    if (tokenFile != null) // We have generated the Token Already
+                                    {
+                                        var expiryDateString = tokenFile.expires_in;
+
+                                        var expiryDate = DateTime.ParseExact(expiryDateString, "dd/MM/yyyy-HH:mm:ss", null);
+
+                                        var currentDateTime = DateTime.Now;
+
+                                        if (expiryDate > currentDateTime) // Token is still valid
+                                        {
+                                            isTokenValid = true;
+                                        }
+                                        else // Token is no longer valid
+                                        {
+                                            RefreshMetBankToken(tokenFile.refresh_token);
+                                            isTokenValid = true;
+
+                                            tokenFile = LoadMetBankJson(file);
+                                        }
+                                    }
+                                    else // Generate a new Token
+                                    {
+                                        userLogin.password = metBankCredentials.Password;
+                                        userLogin.username = metBankCredentials.Username;
+
+                                        Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
+
+                                        var result = merchantBankConnector.GetToken(serviceProvider, userLogin);
+
+                                        Log.RequestsAndResponses("MetBankTokenResponse", serviceProvider, result);
+
+                                        if (result.token_type.ToLower() == "bearer")
+                                        {
+                                            isTokenValid = true;
+                                            yoAppResponse.ResponseCode = "00000";
+                                            yoAppResponse.Description = "Token generated successfully";
+                                            yoAppResponse.Note = "Transaction Successful";
+
+                                            var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(result.expires_in));
+
+                                            result.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
+
+                                            var token = JsonConvert.SerializeObject(result);
+
+                                            yoAppResponse.Narrative = token;
+
+                                            Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+                                            Log.StoreData("tokens", serviceProvider, result);
+
+                                            tokenFile = LoadMetBankJson(file);
+                                        }
+                                        else
+                                        {
+                                            yoAppResponse.ResponseCode = "00008";
+                                            yoAppResponse.Description = "Code could not be generated";
+                                            yoAppResponse.Note = "Transaction Failed";
+
+                                            Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+
+                                            return yoAppResponse;
+                                        }
+                                    }
+
+                                    if (isTokenValid)
+                                    {
+                                        if (!string.IsNullOrEmpty(narrative.ReceiverMobile) && string.IsNullOrEmpty(response.Note)) // Update Phone Number
+                                        {
+                                            ClientRequest clientRequest = new ClientRequest();
+
+                                            clientRequest.id = (int)narrative.Id;
+                                            clientRequest.phoneNumber = narrative.ReceiverMobile;
+                                            tokenFile = LoadMetBankJson(file);
+
+                                            Log.RequestsAndResponses("RecipientDetailsByPhoneNumberRequest", serviceProvider, clientRequest);
+
+                                            var recipient = merchantBankConnector.GetRecipientByClientId(serviceProvider, clientRequest, tokenFile.access_token);
+
+                                            Log.RequestsAndResponses("RecipientDetailsByPhoneNumberResponse", serviceProvider, recipient);
+
+                                            if (recipient != null && recipient.deleted == false && recipient.firstName != null)
+                                            {
+                                                yoAppResponse.ResponseCode = "00000";
+                                                yoAppResponse.Description = "Recipient Found!";
+                                                narrative.DateCreated = DateTime.ParseExact(recipient.dateCreated, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
+                                                narrative.DatelastAccess = DateTime.ParseExact(recipient.dateModified, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
+                                                narrative.IsActive = recipient.deleted;
+                                                narrative.Status = recipient.version.ToString();
+                                                narrative.Id = (long)recipient.id;
+                                                narrative.ReceiversName = recipient.firstName;
+                                                narrative.ReceiversSurname = recipient.lastName;
+                                                yoAppResponse.Note = recipient.relationship;
+                                                narrative.ReceiverMobile = recipient.phoneNumber;
+                                                narrative.ReceiversIdentification = recipient.nationalId;
+                                                narrative.ReceiversGender = recipient.gender;
+                                                narrative.ServiceCountry = recipient.countryId;
+                                                narrative.Information1 = recipient.countryName;
+                                                narrative.Information2 = recipient.address;
+                                                narrative.CustomerId = recipient.clientId.ToString();
+                                                yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
+
+                                                Log.RequestsAndResponses("RecipientDetailsPhoneNumberResponse-YoApp", serviceProvider, yoAppResponse);
+
+                                                return yoAppResponse;
+                                            }
+                                            else
+                                            {
+                                                yoAppResponse.ResponseCode = "00008";
+                                                yoAppResponse.Note = "Client not Found";
+                                                yoAppResponse.Description = "Received Nothing for the clientId submitted";
+
+                                                Log.RequestsAndResponses("RecipientDetailsByPhoneNumberResponse-YoApp", serviceProvider, yoAppResponse);
+
+                                                return yoAppResponse;
+                                            }
+                                        }
+                                        else if (string.IsNullOrEmpty(narrative.ReceiverMobile) && !string.IsNullOrEmpty(response.Note)) // Update Relationship
+                                        {
+
+                                        }
+                                    }
+                                    else
+                                    {
+                                        yoAppResponse.ResponseCode = "00008";
+                                        yoAppResponse.Description = "Token is not Valid";
+                                        yoAppResponse.Note = "Request Failed";
+
+                                        Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+
+                                        return yoAppResponse;
+                                    }                                    
+                                }
+                                catch (Exception ex)
+                                {
+                                    Log.HttpError("Exception", serviceProvider, "Message: " + ex.Message + ", InnerException: " + ex.InnerException + ", StackTrace: " + ex.StackTrace);
+
+                                    return yoAppResponse;
+                                }
+
+                                break;
 
                             default:
                                 break;
@@ -6731,6 +7083,12 @@ namespace YoAppWebProxy.Controllers
 
                         break;
 
+                    case 6: // Send Money
+
+
+
+                        break;
+
                     default:
                         break;
                 }
@@ -6799,7 +7157,7 @@ namespace YoAppWebProxy.Controllers
             try
             {
                 refresherTokenRequest.token = refresherToken;
-                refresherTokenRequest.username = metBankCredentials.Username;
+                refresherTokenRequest.username = metBankCredentials.Username;                
 
                 Log.RequestsAndResponses("MetBankRefresherTokenRequest", serviceProvider, refresherTokenRequest);
 
@@ -6807,24 +7165,33 @@ namespace YoAppWebProxy.Controllers
 
                 Log.RequestsAndResponses("MetBankRefresherTokenResponse", serviceProvider, refresherTokenResponse);
 
-                if (refresherTokenResponse != null && refresherTokenResponse.token_type.ToLower() == "bearer")
+                if (!string.IsNullOrEmpty(refresherTokenResponse.token_type))
                 {
-                    Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, refresherTokenResponse);
+                    if (refresherTokenResponse.token_type.ToLower() == "bearer")
+                    {
+                        Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, refresherTokenResponse);
 
-                    var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(refresherTokenResponse.expires_in));
+                        var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(refresherTokenResponse.expires_in));
 
-                    refresherTokenResponse.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
+                        refresherTokenResponse.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
 
-                    Log.StoreData("tokens", serviceProvider, refresherTokenResponse);
+                        Log.StoreData("tokens", serviceProvider, refresherTokenResponse);
 
-                    return refresherTokenResponse;
+                        return refresherTokenResponse;
+                    }
+                    else
+                    {
+                        Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, refresherTokenResponse);
+
+                        return refresherTokenResponse;
+                    }
                 }
                 else
-                {
-                    Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, refresherTokenResponse);
-
+                {                    
+                    refresherTokenResponse.scope = "There has been an error on generating a new token from the refresher token";
+                   
                     return refresherTokenResponse;
-                }
+                }                
             }
             catch (Exception ex)
             {

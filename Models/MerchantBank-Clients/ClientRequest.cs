@@ -7,6 +7,7 @@ namespace YoAppWebProxy.Models.MerchantBank_Clients
 {
     public class ClientRequest
     {
+        public int id { get; set; }
         public string clientId { get; set; }
         public string phoneNumber { get; set; }
         public string nationalId { get; set; }
