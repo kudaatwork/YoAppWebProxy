@@ -20,6 +20,7 @@ namespace YoAppWebProxy.Models
         public string ServiceRegion { set; get; }// district
         public string ServiceProvince { set; get; }
         public string ServiceCountry { set; get; }
+        public string SourceCountry { set; get; }
         public string Status { set; get; }
         public string Currency { set; get; }
         public decimal? Balance { set; get; }
@@ -30,6 +31,7 @@ namespace YoAppWebProxy.Models
         public string ProductDetails { set; get; }
         public string ServiceProvider { set; get; }
         public string ProviderAccountNumber { set; get; }
+        public string ReceiverProviderAccountNumber { set; get; }
         public string SupplierId { set; get; }
         public string ServiceAgentId { set; get; }
         public string SupplierName { set; get; }

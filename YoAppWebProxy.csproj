@@ -141,6 +141,7 @@
     <Compile Include="Api_Credentials\BulkPaymentsCredentials.cs" />
     <Compile Include="Api_Credentials\EosCredentials.cs" />
     <Compile Include="Api_Credentials\MetBankCredentials.cs" />
+    <Compile Include="Api_Credentials\YoAppCredentials.cs" />
     <Compile Include="Api_Credentials\WafayaCredentials.cs" />
     <Compile Include="Connectors\AgribankBearerConnector.cs" />
     <Compile Include="Connectors\AquSalesConnector.cs" />
@@ -150,6 +151,7 @@
     <Compile Include="Connectors\TrekGetConnector.cs" />
     <Compile Include="Connectors\TrekPostConnector.cs" />
     <Compile Include="Connectors\WafayaConnector.cs" />
+    <Compile Include="Controllers\WebServiceController.cs" />
     <Compile Include="Controllers\AdminController.cs" />
     <Compile Include="Helpful_Functions\BulkPaymentsMethods.cs" />
     <Compile Include="Helpful_Functions\ExternalFieldMethods.cs" />
@@ -204,6 +206,8 @@
     <Compile Include="Logs\IpLog.cs" />
     <Compile Include="Logs\Log.cs" />
     <Compile Include="Logs\TrekLog.cs" />
+    <Compile Include="Models\Aqusales\Company.cs" />
+    <Compile Include="Models\Aqusales\ExpenseTransactionVM.cs" />
     <Compile Include="Models\Aqusales\PurchaseLine.cs" />
     <Compile Include="Models\AuditLog\AuditTrail.cs" />
     <Compile Include="Models\BulkPayments\107_ABV_1_RequestToServer.cs" />
@@ -269,6 +273,8 @@
     <Compile Include="Models\MerchantBank-Login\UserPermission.cs" />
     <Compile Include="Models\MerchantBank-Recipients\Recipient.cs" />
     <Compile Include="Models\MerchantBank-Recipients\RecipientsRequest.cs" />
+    <Compile Include="Models\MerchantBank-Transaction\CalculateCurrencyRateResponse.cs" />
+    <Compile Include="Models\MerchantBank-Transaction\CalculateCurrencyRateRequest.cs" />
     <Compile Include="Models\MerchantBank-Transaction\AgentCommissionReportDTO.cs" />
     <Compile Include="Models\MerchantBank-Transaction\AgentCommissionResponse.cs" />
     <Compile Include="Models\MerchantBank-Transaction\AgentTransactionTypeReportDTO.cs" />
@@ -281,6 +287,8 @@
     <Compile Include="Models\MerchantBank-Transaction\FeeSplitsReportDTO.cs" />
     <Compile Include="Models\MerchantBank-Transaction\IComplianceReportDTO.cs" />
     <Compile Include="Models\MerchantBank-Transaction\JRBeanCollectionDataSource.cs" />
+    <Compile Include="Models\MerchantBank-Transaction\ReceiveMoneyPreAuthRequest.cs" />
+    <Compile Include="Models\MerchantBank-Transaction\ReceiveMoneyPreAuthResponse.cs" />
     <Compile Include="Models\MerchantBank-Transaction\ReceiveMoneyRequest.cs" />
     <Compile Include="Models\MerchantBank-Transaction\Resource.cs" />
     <Compile Include="Models\MerchantBank-Clients\Address.cs" />
@@ -331,6 +339,8 @@
     <Compile Include="Models\Wafaya\WafayaTokenResponse.cs" />
     <Compile Include="Models\Wafaya\WafayaVoucherRequest.cs" />
     <Compile Include="Models\Wafaya\WafayaVoucherResponse.cs" />
+    <Compile Include="Models\YoApp\WebPayments.cs" />
+    <Compile Include="Models\YoApp\Payments.cs" />
     <Compile Include="Models\YoApp\GRVProducts.cs" />
     <Compile Include="Models\YoApp\YoAppGrvResponse.cs" />
     <Compile Include="Models\YoApp\InitialProducts.cs" />

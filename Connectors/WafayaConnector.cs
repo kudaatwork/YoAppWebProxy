@@ -30,7 +30,7 @@ namespace YoAppWebProxy.Connectors
                     "&redirect_uri" + codeRequest.redirect_uri +
                     "&scope" + codeRequest.scope;
 
-                string url = String.Format("https://dev.wa-faya.com/oauth/authorize?" + queryRequest);
+                string url = String.Format("https://www.wa-faya.com/oauth/authorize?" + queryRequest);
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.PreAuthenticate = true;
                 httpWebRequest.Timeout = 120000;
@@ -69,7 +69,7 @@ namespace YoAppWebProxy.Connectors
                 
                 string queryRequest = wafayaVoucherRequest.Voucher;                   
 
-                string url = String.Format("https://dev.wa-faya.com/api/voucher/" + queryRequest);
+                string url = String.Format("https://www.wa-faya.com/api/voucher/" + queryRequest);
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.PreAuthenticate = true;
                 httpWebRequest.Timeout = 120000;
@@ -107,7 +107,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
                                
-                string url = String.Format("https://dev.wa-faya.com/oauth/token");
+                string url = String.Format("https://www.wa-faya.com/oauth/token");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.PreAuthenticate = true;
                 httpWebRequest.Timeout = 120000;
@@ -151,7 +151,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("https://dev.wa-faya.com/api/voucher/" + wafayaInitializeRedemptionRequest.voucher + "/initialize-redemption?disable_messaging=true");
+                string url = String.Format("https://www.wa-faya.com/api/voucher/" + wafayaInitializeRedemptionRequest.voucher + "/initialize-redemption?disable_messaging=true");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.PreAuthenticate = true;
                 httpWebRequest.Timeout = 120000;
@@ -196,7 +196,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("https://dev.wa-faya.com/api/voucher/" + wafayaFinalizeVoucherRequest.voucher + "/finalize-redemption");
+                string url = String.Format("https://www.wa-faya.com/api/voucher/" + wafayaFinalizeVoucherRequest.voucher + "/finalize-redemption");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.PreAuthenticate = true;
                 httpWebRequest.Timeout = 120000;
@@ -241,7 +241,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("https://dev.wa-faya.com/oauth/token");
+                string url = String.Format("https://www.wa-faya.com/oauth/token");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.PreAuthenticate = true;
                 httpWebRequest.Timeout = 120000;
@@ -285,7 +285,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("https://dev.wa-faya.com/oauth/token");
+                string url = String.Format("https://www.wa-faya.com/oauth/token");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.PreAuthenticate = true;
                 httpWebRequest.Timeout = 120000;

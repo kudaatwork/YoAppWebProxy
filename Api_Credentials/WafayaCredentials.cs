@@ -42,14 +42,14 @@ namespace YoAppWebProxy.Api_Credentials
             get { return clientUrl; }
         }
 
-        private string username = "yoapp@wa-faya.com";
+        private string username = "vouchers@nrichards.co.zw";
 
         public string Username
         {
             get { return username; }
         }
 
-        private string password = "12345678";
+        private string password = "nrg2022pass";
 
         public string Password
         {

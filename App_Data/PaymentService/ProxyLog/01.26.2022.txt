@@ -1,0 +1,32 @@
+{"DateTimeLogged":"01/26/2022 10:33:04","ServiceProvider":"PaymentService","LogType":"WebHook-Push","RequestResponse":{"custmerEmail":"brian@faithworksystems.com","transactionAmount":"30.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/26/2022 10:33:50","ServiceProvider":"PaymentService","LogType":"WebHook-Push","RequestResponse":{"custmerEmail":"brian@faithworksystems.com","transactionAmount":"30.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/26/2022 10:34:44","ServiceProvider":"PaymentService","LogType":"WebHook-Push","RequestResponse":{"custmerEmail":"brian@faithworksystems.com","transactionAmount":"30.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/26/2022 10:42:20","ServiceProvider":"PaymentService","LogType":"WebHook-Push","RequestResponse":{"custmerEmail":"brian@faithworksystems.com","transactionAmount":"30.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/26/2022 12:21:02","ServiceProvider":"PaymentService","LogType":"WebHook-Push","RequestResponse":{"custmerEmail":"brian@faithworksystems.com","transactionAmount":"30.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/26/2022/ 12:21:21","ServiceProvider":"PaymentService","LogType":"Exception","RequestResponse":"Message: String was not recognized as a valid DateTime., InnerException: , StackTrace:    at System.DateTime.ParseExact(String s, String format, IFormatProvider provider)\r\n   at YoAppWebProxy.Controllers.WebProxyController.PaymentService(WebPayments payments) in C:\\Users\\kaydi.DESKTOP-VGM9USL\\source\\repos\\YoAppWebProxy\\Controllers\\WebProxyController.cs:line 7510"}
+=============================================
+{"DateTimeLogged":"01/26/2022 12:21:29","ServiceProvider":"PaymentService","LogType":"WebHook-Push","RequestResponse":{"custmerEmail":"brian@faithworksystems.com","transactionAmount":"30.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/26/2022/ 12:21:45","ServiceProvider":"PaymentService","LogType":"Exception","RequestResponse":"Message: String was not recognized as a valid DateTime., InnerException: , StackTrace:    at System.DateTime.ParseExact(String s, String format, IFormatProvider provider)\r\n   at YoAppWebProxy.Controllers.WebProxyController.PaymentService(WebPayments payments) in C:\\Users\\kaydi.DESKTOP-VGM9USL\\source\\repos\\YoAppWebProxy\\Controllers\\WebProxyController.cs:line 7510"}
+=============================================
+{"DateTimeLogged":"01/26/2022 12:22:26","ServiceProvider":"PaymentService","LogType":"WebHook-Push","RequestResponse":{"custmerEmail":"brian@faithworksystems.com","transactionAmount":"30.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/26/2022 12:23:22","ServiceProvider":"PaymentService","LogType":"WebHook-Push","RequestResponse":{"custmerEmail":"brian@faithworksystems.com","transactionAmount":"30.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/26/2022/ 12:23:53","ServiceProvider":"PaymentService","LogType":"Exception","RequestResponse":"Message: String was not recognized as a valid DateTime., InnerException: , StackTrace:    at System.DateTime.ParseExact(String s, String format, IFormatProvider provider)\r\n   at YoAppWebProxy.Controllers.WebProxyController.PaymentService(WebPayments payments) in C:\\Users\\kaydi.DESKTOP-VGM9USL\\source\\repos\\YoAppWebProxy\\Controllers\\WebProxyController.cs:line 7510"}
+=============================================
+{"DateTimeLogged":"01/26/2022 12:24:42","ServiceProvider":"PaymentService","LogType":"WebHook-Push","RequestResponse":{"custmerEmail":"brian@faithworksystems.com","transactionAmount":"30.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/26/2022 12:27:27","ServiceProvider":"PaymentService","LogType":"WebHook-Push","RequestResponse":{"custmerEmail":"brian@faithworksystems.com","transactionAmount":"30.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/26/2022 12:27:50","ServiceProvider":"PaymentService","LogType":"YoAppPaymentsRequest","RequestResponse":{"merchantCode":"5-0001-0000509:baskiti2020","successURL":"https://www.aqusales.com/","failedURL":"https://www.aqusales.com/aqusales-lite/","ReceiptNo":"YOAPP012622002728","custmerEmail":"brian@faithworksystems.com","transactionAmount":"30.00","paymentCurrency":"USD","transactionDescription":"Aqusales Lite Payment","paymentref":"REF012622002728","paymentType":null,"status":"Success","hash":"System.Byte[]"}}
+=============================================
+{"DateTimeLogged":"01/26/2022 12:27:54","ServiceProvider":"PaymentService","LogType":"YoAppPaymentsResponse","RequestResponse":"https://yomoneyservice.com/Payment/Index/?Id=02a9e249fa74b09c95b3d4ec4094f76716f5acedcfd397e2fb1b797635b185c60a064c9c8909a4222355ef13f2b47413c7-https://yomoneyservice.com/Payment/Polls/?Id=02a9e249fa74b09c95b3d4ec4094f76716f5acedcfd397e2fb1b797635b185c60a064c9c8909a4222355ef13f2b47413c7"}
+=============================================
+{"DateTimeLogged":"01/26/2022 12:28:06","ServiceProvider":"PaymentService","LogType":"WebHook-Response","RequestResponse":{"custmerEmail":null,"transactionAmount":null,"paymentCurrency":null,"Status":"Success","Description":"Received the relevant payment details and redirecting to https://yomoneyservice.com/Payment/Index/?Id=02a9e249fa74b09c95b3d4ec4094f76716f5acedcfd397e2fb1b797635b185c60a064c9c8909a4222355ef13f2b47413c7"}}
+=============================================

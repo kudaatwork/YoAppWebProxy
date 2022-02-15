@@ -10,6 +10,7 @@ using System.Web;
 using YoAppWebProxy.Api_Credentials;
 using YoAppWebProxy.Logs;
 using YoAppWebProxy.Models.MerchantBank;
+using YoAppWebProxy.Models.MerchantBank_Agents;
 using YoAppWebProxy.Models.MerchantBank_Clients;
 using YoAppWebProxy.Models.MerchantBank_Login;
 using YoAppWebProxy.Models.MerchantBank_Recipients;
@@ -63,6 +64,93 @@ namespace YoAppWebProxy.Connectors
             return client;
         }
 
+        public ClientResponse GetClientByPhoneNumber(string serviceProvider, ClientRequest clientRequest, string token)
+        {
+            ClientResponse clientResponse = new ClientResponse();
+            MetBankCredentials metBankCredentials = new MetBankCredentials();
+
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback
+                (
+                    delegate { return true; }
+                );
+
+                string queryRequest = clientRequest.phoneNumber.Trim(); ;
+
+                string url = String.Format("https://test.api.metremit.co.zw/api/v1/registration/clients/phone-number/" + queryRequest);
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                httpWebRequest.Timeout = 120000;
+                //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "GET";
+                httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
+
+                HttpWebResponse httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+                using (Stream stream = httpResponse.GetResponseStream())
+
+                    if (httpResponse.StatusCode == HttpStatusCode.OK)
+                    {
+                        using (StreamReader streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                        {
+                            var result = streamReader.ReadToEnd();
+                            clientResponse = JsonConvert.DeserializeObject<ClientResponse>(result);
+                        }
+                    }
+            }
+            catch (Exception e)
+            {
+                Log.HttpError("Exception", serviceProvider, "Message: " + e.Message + ", InnerException: " + e.InnerException + ", StackTrace: " + e.StackTrace);
+            }
+
+            return clientResponse;
+        }
+
+        public ClientResponse GetClientByNationalId(string serviceProvider, ClientRequest clientRequest, string token)
+        {
+            ClientResponse clientResponse = new ClientResponse();
+
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback
+                (
+                    delegate { return true; }
+                );
+
+                string queryRequest = clientRequest.nationalId;
+
+                string url = String.Format("https://test.api.metremit.co.zw/api/v1/registration/clients/national-id/" + queryRequest);
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                httpWebRequest.Timeout = 120000;
+                //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "GET";
+                httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
+
+                HttpWebResponse httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+                using (Stream stream = httpResponse.GetResponseStream())
+
+                    if (httpResponse.StatusCode == HttpStatusCode.OK)
+                    {
+                        using (StreamReader streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                        {
+                            var result = streamReader.ReadToEnd();
+                            clientResponse = JsonConvert.DeserializeObject<ClientResponse>(result);
+                        }
+                    }
+            }
+            catch (Exception e)
+            {
+                Log.HttpError("Exception", serviceProvider, "Message: " + e.Message + ", InnerException: " + e.InnerException + ", StackTrace: " + e.StackTrace);
+            }
+
+            return clientResponse;
+        }
+
         public Recipient GetRecipientById(string serviceProvider, ClientRequest clientRequest, string token)
         {
             Recipient recipient = new Recipient();
@@ -77,7 +165,7 @@ namespace YoAppWebProxy.Connectors
 
                 string queryRequest = clientRequest.clientId;
 
-                string url = String.Format("http://62.171.136.41:8205/recipients/" + queryRequest);
+                string url = String.Format("https://test.api.metremit.co.zw/api/v1/transactions-service/recipients/" + queryRequest);
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
@@ -121,7 +209,7 @@ namespace YoAppWebProxy.Connectors
 
                 string queryRequest = clientRequest.clientId;
 
-                string url = String.Format("http://62.171.136.41:8205/recipients/client/" + queryRequest);
+                string url = String.Format("https://test.api.metremit.co.zw/api/v1/transactions-service/recipients/client/" + queryRequest);
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
@@ -384,51 +472,7 @@ namespace YoAppWebProxy.Connectors
 
             return clientSearchResponse;
         }
-
-        public ClientResponse GetClientByPhoneNumber(string serviceProvider, ClientRequest clientRequest, string token)
-        {
-            ClientResponse clientResponse = new ClientResponse();
-            MetBankCredentials metBankCredentials = new MetBankCredentials();
-
-            try
-            {
-                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback
-                (
-                    delegate { return true; }
-                );
-
-                string queryRequest = clientRequest.phoneNumber;
-
-                string url = String.Format("http://62.171.136.41:8203/clients/phone-number/" + queryRequest);
-                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
-                httpWebRequest.Timeout = 120000;
-                //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
-                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
-                httpWebRequest.ContentType = "application/json";
-                httpWebRequest.Method = "GET";
-                httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
-
-                HttpWebResponse httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-
-                using (Stream stream = httpResponse.GetResponseStream())
-
-                    if (httpResponse.StatusCode == HttpStatusCode.OK)
-                    {
-                        using (StreamReader streamReader = new StreamReader(httpResponse.GetResponseStream()))
-                        {
-                            var result = streamReader.ReadToEnd();
-                            clientResponse = JsonConvert.DeserializeObject<ClientResponse>(result);
-                        }
-                    }                
-            }
-            catch (Exception e)
-            {
-                Log.HttpError("Exception", serviceProvider, "Message: " + e.Message + ", InnerException: " + e.InnerException + ", StackTrace: " + e.StackTrace);
-            }
-
-            return clientResponse;
-        }
-
+        
         public PageClient GetClientsByPagesAndSize(string serviceProvider, ClientRequest clientRequest, string token)
         {
             PageClient pageClient = new PageClient();
@@ -472,49 +516,6 @@ namespace YoAppWebProxy.Connectors
             }
 
             return pageClient;
-        }
-
-        public ClientResponse GetClientByNationalId(string serviceProvider, ClientRequest clientRequest, string token)
-        {
-            ClientResponse clientResponse = new ClientResponse();
-
-            try
-            {
-                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback
-                (
-                    delegate { return true; }
-                );
-
-                string queryRequest = clientRequest.nationalId;
-
-                string url = String.Format("http://62.171.136.41:8203/clients/national-id/" + queryRequest);
-                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
-                httpWebRequest.Timeout = 120000;
-                //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
-                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
-                httpWebRequest.ContentType = "application/json";
-                httpWebRequest.Method = "GET";
-                httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
-
-                HttpWebResponse httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-
-                using (Stream stream = httpResponse.GetResponseStream())
-
-                    if (httpResponse.StatusCode == HttpStatusCode.OK)
-                    {
-                        using (StreamReader streamReader = new StreamReader(httpResponse.GetResponseStream()))
-                        {
-                            var result = streamReader.ReadToEnd();
-                            clientResponse = JsonConvert.DeserializeObject<ClientResponse>(result);
-                        }
-                    }
-            }
-            catch (Exception e)
-            {
-                Log.HttpError("Exception", serviceProvider, "Message: " + e.Message + ", InnerException: " + e.InnerException + ", StackTrace: " + e.StackTrace);
-            }
-
-            return clientResponse;
         }
 
         public Client UpdateRecipientsByPhoneNumber(string serviceProvider, ClientRequest clientRequest, string token)
@@ -665,7 +666,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
                 
-                string url = String.Format("http://62.171.136.41:8203/clients/agent-register");
+                string url = String.Format("https://test.api.metremit.co.zw/api/v1/registration/clients/agent-register");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;            
                 httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
@@ -759,7 +760,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("http://62.171.136.41:8201/login");
+                string url = String.Format("https://test.api.metremit.co.zw/api/v1/oauth-server/client-login");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                // httpWebRequest.Headers.Add("Authorization", "Bearer " + metBankCredentials.AccessToken);
@@ -853,7 +854,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("http://62.171.136.41:8205/recipients");
+                string url = String.Format("https://test.api.metremit.co.zw/api/v1/transactions-service/recipients");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
@@ -947,7 +948,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("http://62.171.136.41:8205/transactions/send-money/transaction");
+                string url = String.Format("https://test.api.metremit.co.zw/api/v1/transactions-service/transactions/send-money/transaction");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
@@ -994,7 +995,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("http://62.171.136.41:8205/transactions/receive-money/transaction");
+                string url = String.Format("https://test.api.metremit.co.zw/api/v1/transactions-service/transactions/receive-money/transaction");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
@@ -1029,6 +1030,53 @@ namespace YoAppWebProxy.Connectors
             return transactionResponse;
         }
 
+        public ReceiveMoneyPreAuthResponse PreAuthReceiveMoney(string serviceProvider, ReceiveMoneyPreAuthRequest receiveMoneyPreAuthRequest, string token)
+        {
+            ReceiveMoneyPreAuthResponse receiveMoneyPreAuth = new ReceiveMoneyPreAuthResponse();
+            MetBankCredentials metBankCredentials = new MetBankCredentials();
+
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback
+                (
+                    delegate { return true; }
+                );
+
+                string url = String.Format("https://test.api.metremit.co.zw/api/v1/transactions-service/transactions/receive-money/preauth");
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                httpWebRequest.Timeout = 120000;
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "POST";
+
+                string json = JsonConvert.SerializeObject(receiveMoneyPreAuthRequest);
+
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    streamWriter.Write(json);
+                    streamWriter.Flush();
+                    streamWriter.Close();
+
+                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+                    if (httpResponse.StatusCode == HttpStatusCode.OK)
+                    {
+                        using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                        {
+                            var result = streamReader.ReadToEnd();
+                            receiveMoneyPreAuth = JsonConvert.DeserializeObject<ReceiveMoneyPreAuthResponse>(result);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Log.HttpError("Exception", serviceProvider, "Message: " + e.Message + ", InnerException: " + e.InnerException + ", StackTrace: " + e.StackTrace);
+            }
+
+            return receiveMoneyPreAuth;
+        }
+
         public SendMoneyPreAuthResponse PreAuthSendMoney(string serviceProvider, SendMoneyPreAuthRequest sendMoneyPreAuthRequest, string token)
         {
             SendMoneyPreAuthResponse sendMoneyPreAuthResponse = new SendMoneyPreAuthResponse();
@@ -1041,7 +1089,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("http://62.171.136.41:8205/transactions/send-money/preauth");
+                string url = String.Format("https://test.api.metremit.co.zw/api/v1/transactions-service/transactions/send-money/preauth");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
@@ -1169,6 +1217,53 @@ namespace YoAppWebProxy.Connectors
 
             return transactionResponse;
         }
+
+        public CalculateCurrencyRateResponse CalculateCurrencyRate(string serviceProvider, CalculateCurrencyRateRequest calculateCurrencyRateRequest, string token)
+        {
+            CalculateCurrencyRateResponse currencyRateResponse = new CalculateCurrencyRateResponse();
+            MetBankCredentials metBankCredentials = new MetBankCredentials();
+
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback
+                (
+                    delegate { return true; }
+                );
+
+                string url = String.Format("http://62.171.136.41:8205/transactions/client-send-money/transaction");
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                httpWebRequest.Timeout = 120000;
+                httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "POST";
+
+                string json = JsonConvert.SerializeObject(calculateCurrencyRateRequest);
+
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    streamWriter.Write(json);
+                    streamWriter.Flush();
+                    streamWriter.Close();
+
+                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+                    if (httpResponse.StatusCode == HttpStatusCode.OK)
+                    {
+                        using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                        {
+                            var result = streamReader.ReadToEnd();
+                            currencyRateResponse = JsonConvert.DeserializeObject<CalculateCurrencyRateResponse>(result);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Log.HttpError("Exception", serviceProvider, "Message: " + e.Message + ", InnerException: " + e.InnerException + ", StackTrace: " + e.StackTrace);
+            }
+
+            return currencyRateResponse;
+        } 
 
         public void SetBasicAuthHeader(WebRequest request, String userName, String userPassword)
         {

@@ -20,6 +20,7 @@ namespace YoAppWebProxy.Models
         public string TransactionRef { get; set; }
         public string CustomerAccount { get; set; }
         public string CustomerData { get; set; }
+        public string CustomerName { get; set; }
         public string Product { get; set; }
         public string ServiceProvider { get; set; }
         public string Source { get; set; }
