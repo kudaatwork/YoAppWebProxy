@@ -552,7 +552,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("http://192.168.100.75:5000/Yomoney/CreateCompany");
+                string url = String.Format("http://192.168.100.88:5000/Yomoney/CreateCompany");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.PreAuthenticate = true;
                 httpWebRequest.Timeout = 120000;

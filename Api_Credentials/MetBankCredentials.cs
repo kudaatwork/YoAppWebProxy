@@ -27,5 +27,19 @@ namespace YoAppWebProxy.Api_Credentials
         {
             get { return accessToken; }
         }
+
+        private string clientSecret = "appclient@123";
+
+        public string ClientSecret
+        {
+            get { return clientSecret; }
+        }
+
+        private string clientId = "AGENT";
+
+        public string ClientId
+        {
+            get { return clientId; }
+        }
     }
 }

@@ -200,6 +200,7 @@
     <Compile Include="Api_Credentials\ESolutionsCredentials.cs" />
     <Compile Include="Helpful_Functions\ESolutionsMethods.cs" />
     <Compile Include="Helpful_Functions\TrekMethods.cs" />
+    <Compile Include="Helpful_Objects\MetBank_Objects.cs" />
     <Compile Include="Logs\AgriBankLog.cs" />
     <Compile Include="Logs\ESolutionsLog.cs" />
     <Compile Include="Logs\CbzLog.cs" />

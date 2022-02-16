@@ -5338,7 +5338,7 @@ namespace YoAppWebProxy.Controllers
                                         else // Token is no longer valid
                                         {
                                             // RefreshMetBankToken(tokenFile.refresh_token);
-                                            //GenerateMetBankToken();
+                                            GenerateMetBankToken();
                                             isTokenValid = true;
 
                                             //tokenFile = LoadMetBankJson(file);
@@ -5350,6 +5350,8 @@ namespace YoAppWebProxy.Controllers
                                     {
                                         userLogin.password = metBankCredentials.Password;
                                         userLogin.username = metBankCredentials.Username;
+                                        userLogin.clientSecret = metBankCredentials.ClientSecret;
+                                        userLogin.clientId = metBankCredentials.ClientId;
 
                                         Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
 
@@ -5402,7 +5404,7 @@ namespace YoAppWebProxy.Controllers
 
                                                 Log.RequestsAndResponses("ClientDetailsByIdRequest", serviceProvider, clientRequest);
 
-                                                var client = merchantBankConnector.GetClientByClientId(serviceProvider, clientRequest, metBankCredentials.AccessToken);
+                                                var client = merchantBankConnector.GetClientByClientId(serviceProvider, clientRequest, tokenFile.access_token); //metBankCredentials.AccessToken
 
                                                 Log.RequestsAndResponses("ClientDetailsByIdResponse", serviceProvider, client);
 
@@ -5459,7 +5461,7 @@ namespace YoAppWebProxy.Controllers
 
                                                 Log.RequestsAndResponses("ClientDetailsByMobileRequest", serviceProvider, clientRequest);
 
-                                                var clientResponse = merchantBankConnector.GetClientByPhoneNumber(serviceProvider, clientRequest, metBankCredentials.AccessToken);
+                                                var clientResponse = merchantBankConnector.GetClientByPhoneNumber(serviceProvider, clientRequest, tokenFile.access_token); // metBankCredentials.AccessToken
 
                                                 Log.RequestsAndResponses("ClientDetailsByMobileResponse", serviceProvider, clientResponse);
 
@@ -5620,7 +5622,7 @@ namespace YoAppWebProxy.Controllers
 
                                                 Log.RequestsAndResponses("RecipientDetailsByIdRequest", serviceProvider, clientRequest);
 
-                                                var recipient = merchantBankConnector.GetRecipientById(serviceProvider, clientRequest, metBankCredentials.AccessToken);
+                                                var recipient = merchantBankConnector.GetRecipientById(serviceProvider, clientRequest, tokenFile.access_token); // metBankCredentials.AccessToken
 
                                                 Log.RequestsAndResponses("RecipientDetailsByIdResponse", serviceProvider, recipient);
 
@@ -7420,7 +7422,7 @@ namespace YoAppWebProxy.Controllers
                                 else // Token is no longer valid
                                 {
                                     //RefreshMetBankToken(tokenFile.refresh_token);
-                                    //GenerateMetBankToken();
+                                    GenerateMetBankToken();
                                     isTokenValid = true;
 
                                     //tokenFile = LoadMetBankJson(file);
@@ -7432,6 +7434,8 @@ namespace YoAppWebProxy.Controllers
                             {
                                 userLogin.password = metBankCredentials.Password;
                                 userLogin.username = metBankCredentials.Username;
+                                userLogin.clientSecret = metBankCredentials.ClientSecret;
+                                userLogin.clientId = metBankCredentials.ClientId;
 
                                 Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
 
@@ -7473,23 +7477,25 @@ namespace YoAppWebProxy.Controllers
 
                             if (isTokenValid)
                             {
+                                tokenFile = LoadMetBankJson(file);
+
                                 // Receive Money PreAuth Request
                                 ReceiveMoneyPreAuthRequest receiveMoneyPreAuthRequest = new ReceiveMoneyPreAuthRequest();
 
-                                receiveMoneyPreAuthRequest.agentId = 74;
-                                receiveMoneyPreAuthRequest.voucherNumber = "";
+                                receiveMoneyPreAuthRequest.agentId = (long)tokenFile.agentId;
+                                receiveMoneyPreAuthRequest.voucherNumber = response.CustomerAccount;
                                 receiveMoneyPreAuthRequest.tellerId = "114";
 
                                 Log.RequestsAndResponses("ReceiveMoneyPreAuthRequest", serviceProvider, receiveMoneyPreAuthRequest);
 
-                                var receiveMoneyPreAuthResponse = merchantBankConnector.PreAuthReceiveMoney(serviceProvider, receiveMoneyPreAuthRequest, metBankCredentials.AccessToken);
+                                var receiveMoneyPreAuthResponse = merchantBankConnector.PreAuthReceiveMoney(serviceProvider, receiveMoneyPreAuthRequest, tokenFile.access_token); //metBankCredentials.AccessToken
 
                                 Log.RequestsAndResponses("ReceiveMoneyPreAuthResponse", serviceProvider, receiveMoneyPreAuthResponse);
 
                                 if (!string.IsNullOrEmpty(receiveMoneyPreAuthResponse.preauthId))
                                 {
                                     receiveMoneyRequest.tellerId = 114;
-                                    receiveMoneyRequest.agentId = 74;
+                                    receiveMoneyRequest.agentId = (int)tokenFile.agentId;
                                     receiveMoneyRequest.preauthId = receiveMoneyPreAuthResponse.preauthId;
                                     receiveMoneyRequest.voucherNumber = receiveMoneyPreAuthRequest.voucherNumber;
                                     tokenFile = LoadMetBankJson(file);
@@ -7582,7 +7588,7 @@ namespace YoAppWebProxy.Controllers
                                 {
                                     //RefreshMetBankToken(tokenFile.refresh_token);
 
-                                    // GenerateMetBankToken();
+                                    GenerateMetBankToken();
                                     isTokenValid = true;
 
                                     //tokenFile = LoadMetBankJson(file);
@@ -7594,6 +7600,8 @@ namespace YoAppWebProxy.Controllers
                             {
                                 userLogin.password = metBankCredentials.Password;
                                 userLogin.username = metBankCredentials.Username;
+                                userLogin.clientSecret = metBankCredentials.ClientSecret;
+                                userLogin.clientId = metBankCredentials.ClientId;
 
                                 Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
 
@@ -7635,13 +7643,15 @@ namespace YoAppWebProxy.Controllers
 
                             if (isTokenValid)
                             {
+                                tokenFile = LoadMetBankJson(file);
+
                                 // Send Money PreAuth Transaction
                                 sendMoneyPreAuthRequest.amountSend = (decimal)narrative.Balance;
                                 sendMoneyPreAuthRequest.sourceCountryCode = narrative.SourceCountry.Trim();
                                 sendMoneyPreAuthRequest.destinationCountryCode = narrative.ServiceCountry.Trim();
                                 sendMoneyPreAuthRequest.currencyCodeSend = narrative.Currency.Trim();
                                 sendMoneyPreAuthRequest.clientId = Convert.ToInt32(narrative.ProviderAccountNumber.Trim());
-                                sendMoneyPreAuthRequest.agentId = 74;
+                                sendMoneyPreAuthRequest.agentId = (int)tokenFile.agentId;
                                 sendMoneyPreAuthRequest.collectionAmount = (decimal)narrative.Balance;
                                 sendMoneyPreAuthRequest.collectionCurrencyCode = narrative.Currency.Trim();
 
@@ -7757,7 +7767,7 @@ namespace YoAppWebProxy.Controllers
                                 else // Token is no longer valid
                                 {
                                     //RefreshMetBankToken(tokenFile.refresh_token);
-                                    //GenerateMetBankToken();
+                                    GenerateMetBankToken();
                                     isTokenValid = true;
 
                                     //tokenFile = LoadMetBankJson(file);
@@ -7769,6 +7779,8 @@ namespace YoAppWebProxy.Controllers
                             {
                                 userLogin.password = metBankCredentials.Password;
                                 userLogin.username = metBankCredentials.Username;
+                                userLogin.clientSecret = metBankCredentials.ClientSecret;
+                                userLogin.clientId = metBankCredentials.ClientId;
 
                                 Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
 
@@ -7810,10 +7822,12 @@ namespace YoAppWebProxy.Controllers
 
                             if (isTokenValid)
                             {
+                                tokenFile = LoadMetBankJson(file);
+
                                 if (response != null)
                                 {
-                                    var parts = narrative.Information1.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                                    var parts2 = narrative.Information2.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                                   // var parts = narrative.Information1.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                                    //var parts2 = narrative.Information2.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
                                     registerClientRequest.firstName = narrative.ReceiversName;
                                     registerClientRequest.lastName = narrative.ReceiversSurname;
@@ -7829,13 +7843,13 @@ namespace YoAppWebProxy.Controllers
                                     registerClientRequest.country = narrative.ServiceCountry;
                                     var date = DateTime.ParseExact(narrative.Information1, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
                                     registerClientRequest.dateOfBirth = date.ToString("yyyy-mm-dd");
-                                    registerClientRequest.agentId = 74;
+                                    registerClientRequest.agentId = (int)tokenFile.agentId;
                                     registerClientRequest.idTypeName = "National Id";
                                     tokenFile = LoadMetBankJson(file);
 
                                     Log.RequestsAndResponses("ClientRegistrationRequest", serviceProvider, registerClientRequest);
 
-                                    var client = merchantBankConnector.RegisterClient(serviceProvider, registerClientRequest, metBankCredentials.AccessToken);
+                                    var client = merchantBankConnector.RegisterClient(serviceProvider, registerClientRequest, tokenFile.access_token); // metBankCredentials.AccessToken
 
                                     Log.RequestsAndResponses("ClientRegistrationResponse", serviceProvider, client);
 
@@ -7936,7 +7950,7 @@ namespace YoAppWebProxy.Controllers
                                 else // Token is no longer valid
                                 {
                                     //RefreshMetBankToken(tokenFile.refresh_token);
-                                    //GenerateMetBankToken();
+                                    GenerateMetBankToken();
                                     isTokenValid = true;
 
                                     //tokenFile = LoadMetBankJson(file);
@@ -7948,6 +7962,8 @@ namespace YoAppWebProxy.Controllers
                             {
                                 userLogin.password = metBankCredentials.Password;
                                 userLogin.username = metBankCredentials.Username;
+                                userLogin.clientSecret = metBankCredentials.ClientSecret;
+                                userLogin.clientId = metBankCredentials.ClientId; 
 
                                 Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
 
@@ -8003,7 +8019,7 @@ namespace YoAppWebProxy.Controllers
 
                                 Log.RequestsAndResponses("ReceipientsRequest", serviceProvider, recipientsRequest);
 
-                                var recipient = merchantBankConnector.RegisterRecipient(serviceProvider, recipientsRequest, metBankCredentials.AccessToken);
+                                var recipient = merchantBankConnector.RegisterRecipient(serviceProvider, recipientsRequest, tokenFile.access_token); //metBankCredentials.AccessToken
 
                                 Log.RequestsAndResponses("ReceipientsResponse", serviceProvider, recipient);
 
@@ -8400,6 +8416,8 @@ namespace YoAppWebProxy.Controllers
 
             userLogin.password = metBankCredentials.Password;
             userLogin.username = metBankCredentials.Username;
+            userLogin.clientSecret = metBankCredentials.ClientSecret;
+            userLogin.clientId = metBankCredentials.ClientId;
 
             Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
 
