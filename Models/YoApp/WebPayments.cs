@@ -24,5 +24,7 @@ namespace YoAppWebProxy.Models.YoApp
         public string paymentPeriod { get; set; }
         public string billingCycle { get; set; }
         public int cycleQuantity { get; set; }
+        public string paymentReference { get; set; }
+        public string paymentMethod { get; set; }
     }
 }

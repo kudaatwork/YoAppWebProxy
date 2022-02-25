@@ -76,9 +76,9 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string queryRequest = clientRequest.phoneNumber.Trim(); ;
+                string queryRequest = clientRequest.phoneNumber.Trim();
 
-                string url = String.Format("https://test.api.metremit.co.zw/api/v1/registration/clients/phone-number/" + queryRequest);
+                string url = String.Format("https://api-remit263.metbank.co.zw/api/v1/registration/clients/phone-number/" + queryRequest);
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
@@ -121,7 +121,7 @@ namespace YoAppWebProxy.Connectors
 
                 string queryRequest = clientRequest.nationalId;
 
-                string url = String.Format("https://test.api.metremit.co.zw/api/v1/registration/clients/national-id/" + queryRequest);
+                string url = String.Format("https://api-remit263.metbank.co.zw/api/v1/registration/clients/national-id/" + queryRequest);
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
@@ -165,7 +165,7 @@ namespace YoAppWebProxy.Connectors
 
                 string queryRequest = clientRequest.clientId;
 
-                string url = String.Format("https://test.api.metremit.co.zw/api/v1/transactions-service/recipients/" + queryRequest);
+                string url = String.Format("https://api-remit263.metbank.co.zw/api/v1/transactions-service/recipients/" + queryRequest);
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
@@ -195,9 +195,9 @@ namespace YoAppWebProxy.Connectors
             return recipient;
         }
 
-        public Recipient GetRecipientByClientId(string serviceProvider, ClientRequest clientRequest, string token)
+        public List<Recipient> GetRecipientByClientId(string serviceProvider, ClientRequest clientRequest, string token)
         {
-            Recipient recipient = new Recipient();
+            List<Recipient> recipients = new List<Recipient>();
             MetBankCredentials metBankCredentials = new MetBankCredentials();
 
             try
@@ -209,7 +209,7 @@ namespace YoAppWebProxy.Connectors
 
                 string queryRequest = clientRequest.clientId;
 
-                string url = String.Format("https://test.api.metremit.co.zw/api/v1/transactions-service/recipients/client/" + queryRequest);
+                string url = String.Format("https://api-remit263.metbank.co.zw/api/v1/transactions-service/recipients/client/" + queryRequest);
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
@@ -227,7 +227,7 @@ namespace YoAppWebProxy.Connectors
                         using (StreamReader streamReader = new StreamReader(httpResponse.GetResponseStream()))
                         {
                             var result = streamReader.ReadToEnd();
-                            recipient = JsonConvert.DeserializeObject<Recipient>(result);
+                            recipients = JsonConvert.DeserializeObject<List<Recipient>>(result);
                         }
                     }
             }
@@ -236,7 +236,7 @@ namespace YoAppWebProxy.Connectors
                 Log.HttpError("Exception", serviceProvider, "Message: " + e.Message + ", InnerException: " + e.InnerException + ", StackTrace: " + e.StackTrace);
             }
 
-            return recipient;
+            return recipients;
         }
 
         public Recipient GetRecipientByPhoneNumber(string serviceProvider, ClientRequest clientRequest, string token)
@@ -251,9 +251,9 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string queryRequest = clientRequest.id.ToString();
+                string queryRequest = clientRequest.phoneNumber;
 
-                string url = String.Format("http://62.171.136.41:8205/recipients/" + queryRequest + "/update-phone-number");
+                string url = String.Format("https://api-remit263.metbank.co.zw/api/v1/transactions-service/recipients/phone-number/" + queryRequest);
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 //SetBasicAuthHeader(httpWebRequest, eSolutionsCredentials.Username, eSolutionsCredentials.Password);
@@ -666,7 +666,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
                 
-                string url = String.Format("https://test.api.metremit.co.zw/api/v1/registration/clients/agent-register");
+                string url = String.Format("https://api-remit263.metbank.co.zw/api/v1/registration/clients/agent-register");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;            
                 httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
@@ -760,7 +760,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("https://test.api.metremit.co.zw/api/v1/oauth-server/client-login");
+                string url = String.Format("https://api-remit263.metbank.co.zw/api/v1/oauth-server/client-login");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                // httpWebRequest.Headers.Add("Authorization", "Bearer " + metBankCredentials.AccessToken);
@@ -854,7 +854,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("https://test.api.metremit.co.zw/api/v1/transactions-service/recipients");
+                string url = String.Format("https://api-remit263.metbank.co.zw/api/v1/transactions-service/recipients");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
@@ -948,7 +948,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("https://test.api.metremit.co.zw/api/v1/transactions-service/transactions/send-money/transaction");
+                string url = String.Format("https://api-remit263.metbank.co.zw/api/v1/transactions-service/transactions/send-money/transaction");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
@@ -965,7 +965,7 @@ namespace YoAppWebProxy.Connectors
 
                     var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
 
-                    if (httpResponse.StatusCode == HttpStatusCode.OK)
+                    if (httpResponse.StatusCode == HttpStatusCode.OK || httpResponse.StatusCode == HttpStatusCode.Created)
                     {
                         using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
                         {
@@ -995,7 +995,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("https://test.api.metremit.co.zw/api/v1/transactions-service/transactions/receive-money/transaction");
+                string url = String.Format("https://api-remit263.metbank.co.zw/api/v1/transactions-service/transactions/receive-money/transaction");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
@@ -1012,7 +1012,7 @@ namespace YoAppWebProxy.Connectors
 
                     var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
 
-                    if (httpResponse.StatusCode == HttpStatusCode.OK)
+                    if (httpResponse.StatusCode == HttpStatusCode.OK || httpResponse.StatusCode == HttpStatusCode.Created)
                     {
                         using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
                         {
@@ -1042,7 +1042,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("https://test.api.metremit.co.zw/api/v1/transactions-service/transactions/receive-money/preauth");
+                string url = String.Format("https://api-remit263.metbank.co.zw/api/v1/transactions-service/transactions/receive-money/preauth");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
@@ -1059,7 +1059,7 @@ namespace YoAppWebProxy.Connectors
 
                     var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
 
-                    if (httpResponse.StatusCode == HttpStatusCode.OK)
+                    if (httpResponse.StatusCode == HttpStatusCode.OK || httpResponse.StatusCode == HttpStatusCode.Created)
                     {
                         using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
                         {
@@ -1089,7 +1089,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("https://test.api.metremit.co.zw/api/v1/transactions-service/transactions/send-money/preauth");
+                string url = String.Format("https://api-remit263.metbank.co.zw/api/v1/transactions-service/transactions/send-money/preauth");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.Timeout = 120000;
                 httpWebRequest.Headers.Add("Authorization", "Bearer " + token);
@@ -1106,7 +1106,7 @@ namespace YoAppWebProxy.Connectors
 
                     var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
 
-                    if (httpResponse.StatusCode == HttpStatusCode.OK)
+                    if (httpResponse.StatusCode == HttpStatusCode.OK || httpResponse.StatusCode == HttpStatusCode.Created)
                     {
                         using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
                         {

@@ -209,7 +209,10 @@
     <Compile Include="Logs\TrekLog.cs" />
     <Compile Include="Models\Aqusales\Company.cs" />
     <Compile Include="Models\Aqusales\ExpenseTransactionVM.cs" />
+    <Compile Include="Models\Aqusales\PaymentTransaction.cs" />
     <Compile Include="Models\Aqusales\PurchaseLine.cs" />
+    <Compile Include="Models\Aqusales\User.cs" />
+    <Compile Include="Models\Aqusales\WebRedirect.cs" />
     <Compile Include="Models\AuditLog\AuditTrail.cs" />
     <Compile Include="Models\BulkPayments\107_ABV_1_RequestToServer.cs" />
     <Compile Include="Models\BulkPayments\31_BEQ_1_RequestToServer.cs" />
@@ -340,6 +343,8 @@
     <Compile Include="Models\Wafaya\WafayaTokenResponse.cs" />
     <Compile Include="Models\Wafaya\WafayaVoucherRequest.cs" />
     <Compile Include="Models\Wafaya\WafayaVoucherResponse.cs" />
+    <Compile Include="Models\YoApp\FailedPaymentResponse.cs" />
+    <Compile Include="Models\YoApp\ResponsePollsUrl.cs" />
     <Compile Include="Models\YoApp\WebPayments.cs" />
     <Compile Include="Models\YoApp\Payments.cs" />
     <Compile Include="Models\YoApp\GRVProducts.cs" />

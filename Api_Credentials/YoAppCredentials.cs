@@ -28,7 +28,7 @@ namespace YoAppWebProxy.Api_Credentials
             get { return successURL; }
         }
 
-        private string failureUrl = "http://102.130.120.163:8095/WebService/PaymentResponse/";
+        private string failureUrl = "https://aqusales.com/failedpayment";
 
         public string FailureUrl
         {

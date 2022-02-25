@@ -7,14 +7,14 @@ namespace YoAppWebProxy.Api_Credentials
 {
     public class MetBankCredentials
     {
-        private string username = "CMbizo";
+        private string username = "RChidemo";
 
         public string Username
         {
             get { return username; }
         }
 
-        private string password = "Venon?1986";
+        private string password = "FEEA75CC";
 
         public string Password
         {

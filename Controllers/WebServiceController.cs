@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography;
 using System.Text;
@@ -36,9 +37,12 @@ namespace YoAppWebProxy.Controllers
             Narrative narrative = new Narrative();
             Payments yoappPayments = new Payments();
             YoAppConnector yoAppConnector = new YoAppConnector();
+            AquSalesConnector aquSalesConnector = new AquSalesConnector();
             YoAppCredentials yoAppCredentials = new YoAppCredentials();
             string responseBrowseUrl = "";
             Company company = new Company();
+            User aqusalesUser = new User();
+
             #endregion
 
             try
@@ -52,159 +56,201 @@ namespace YoAppWebProxy.Controllers
 
                     Log.RequestsAndResponses("WebHook-Response", serviceProvider, payments);
 
-                    return Json(payments);
+                    return Json(payments, JsonRequestBehavior.AllowGet);
                 }
                 else
                 {
-                    #region Receipt and Ref No.
+                    // Check User if Username Exists in Aqusales
+                    aqusalesUser.Username = payments.username;
+                    aqusalesUser.Company = payments.orgName;
 
-                    var date = DateTime.Now.ToString();
-                    //var dateToBeConverted = DateTime.ParseExact(date, "dd/M/yyyy HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
-                    //var dateTimeConverterd = date.ToString("MMddyyHHmmss");
-                    var receiptNo = "YOAPP" + date;
-                    var refNo = "REF" + date;
+                    Log.RequestsAndResponses("CheckUserNameRequest", serviceProvider, aqusalesUser);
 
-                    #endregion
+                    var transactionResponse = aquSalesConnector.CheckUser(aqusalesUser, serviceProvider);
 
-                    #region Hashing
+                    Log.RequestsAndResponses("CheckUserNameResponse", serviceProvider, transactionResponse);
 
-                    var sSourceData = "MySourceData";
-                    var tmpHash = GetHashString(sSourceData);
-
-                    #endregion
-
-                    payments.packageType = "LITE";
-
-                    yoappPayments.merchantCode = yoAppCredentials.UserId;
-
-                    if (payments.billingCycle.ToUpper() == "MONTHLY")
+                    if (transactionResponse.Status.ToUpper() == "SUCCESS")
                     {
-                        payments.cycleQuantity = 1;
-                    }
-                    else if (payments.billingCycle.ToUpper() == "QUATERLY")
-                    {
-                        payments.cycleQuantity = 3;
-                    }
-                    else if (payments.billingCycle.ToUpper() == "ANNUALLY")
-                    {
-                        payments.cycleQuantity = 12;
-                    }
+                        #region Receipt and Ref No.
 
-                    #region Validate Comma's within strings
+                        var date = DateTime.Now.ToString("MMddyyHHmmss");
+                        //var dateToBeConverted = DateTime.ParseExact(date, "dd/M/yyyy HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+                        //var dateTimeConverterd = dateToBeConverted.ToString("MMddyyHHmmss");
+                        //var receiptNo = "YOAPP" + dateTimeConverterd;
+                        Random random = new Random();
 
-                    if (payments.orgName.Contains(","))
-                    {
-                        payments.orgName = payments.orgName.Replace(",", "|");
-                    }
+                        //int num = random.Next(1, 2000000000);
+                        var refNo = "REF" + date;
 
-                    if (payments.orgPhoneNumber.Contains(","))
-                    {
-                        payments.orgPhoneNumber = payments.orgPhoneNumber.Replace(",", "|");
-                    }
+                        Random random2 = new Random();
 
-                    if (payments.orgAddress.Contains(","))
-                    {
-                        payments.orgAddress = payments.orgAddress.Replace(",", "|");
-                    }
+                        int num2 = random2.Next(1, 1000000000);
+                        var receiptNo = "REC" + num2.ToString();
 
-                    if (payments.orgLocation.Contains(","))
-                    {
-                        payments.orgLocation = payments.orgLocation.Replace(",", "|");
-                    }
+                        #endregion
 
-                    if (payments.contactPersonName.Contains(","))
-                    {
-                        payments.contactPersonName = payments.contactPersonName.Replace(",", "|");
-                    }
+                        #region Hashing
 
-                    if (payments.contactPersonLastName.Contains(","))
-                    {
-                        payments.contactPersonLastName = payments.contactPersonLastName.Replace(",", "|");
-                    }
+                        var sSourceData = "MySourceData";
+                        var tmpHash = GetHashString(sSourceData);
 
-                    if (payments.customerEmail.Contains(","))
-                    {
-                        payments.customerEmail = payments.customerEmail.Replace(",", "|");
-                    }
+                        #endregion
 
-                    if (payments.username.Contains(","))
-                    {
-                        payments.username = payments.username.Replace(",", "|");
-                    }
+                        payments.packageType = "LITE";
 
-                    #endregion                    
+                        yoappPayments.merchantCode = yoAppCredentials.UserId;
 
-                    yoappPayments.successURL = yoAppCredentials.SuccessUrl + "?orgName=" + payments.orgName +
-                                                                             "&orgPhoneNumber=" + payments.orgPhoneNumber +
-                                                                             "&orgAddress=" + payments.orgAddress +
-                                                                             "&orgLocation=" + payments.orgLocation +
-                                                                             "&packageType=" + payments.packageType +
-                                                                             "&contactPersonName=" + payments.contactPersonName +
-                                                                             "&contactPersonLastName=" + payments.contactPersonLastName +
-                                                                             "&customerEmail=" + payments.customerEmail +
-                                                                             "&username=" + payments.username +
-                                                                             "&password=" + payments.password +
-                                                                             "&paymentCurrency=" + payments.paymentCurrency + 
-                                                                             "&transactionAmount=" + payments.transactionAmount +                                                                            
-                                                                             "&billingCycle=" + payments.billingCycle +
-                                                                             "&cycleQuantity=" + payments.cycleQuantity;
+                        if (payments.billingCycle.ToUpper() == "MONTHLY")
+                        {
+                            payments.cycleQuantity = 1;
+                        }
+                        else if (payments.billingCycle.ToUpper() == "QUATERLY")
+                        {
+                            payments.cycleQuantity = 3;
+                        }
+                        else if (payments.billingCycle.ToUpper() == "ANNUALLY")
+                        {
+                            payments.cycleQuantity = 12;
+                        }
 
-                    //company.CompanyName = payments.orgName;
-                    //company.CompanyPhoneNumber = payments.orgPhoneNumber;
-                    //company.CompanyAddress = payments.orgAddress;
-                    //company.CompanyLocation = payments.orgLocation;
-                    //company.PackageType = "AQUSALES LITE";
-                    //company.FirstName = payments.contactPersonName;
-                    //company.Surname = payments.contactPersonLastName;
-                    //company.EmailAddress = payments.customerEmail;
-                    //company.Username = payments.username;
-                    //company.Password = payments.password;
+                        #region Validate Comma's within strings
 
-                    //var d = DateTime.Now.ToString("yy.mm.HH.mm.ss");
+                        if (payments.orgName.Contains(","))
+                        {
+                            payments.orgName = payments.orgName.Replace(",", "|");
+                        }
 
-                    //var paymentId = "PAY-ID" + d;
+                        if (payments.orgPhoneNumber.Contains(","))
+                        {
+                            payments.orgPhoneNumber = payments.orgPhoneNumber.Replace(",", "|");
+                        }
 
-                    //Log.StoreData("PaymentIds", serviceProvider, company);
+                        if (payments.orgAddress.Contains(","))
+                        {
+                            payments.orgAddress = payments.orgAddress.Replace(",", "|");
+                        }
 
-                    yoappPayments.failedURL = yoAppCredentials.FailureUrl;
-                    yoappPayments.ReceiptNo = receiptNo;
-                    yoappPayments.custmerEmail = payments.customerEmail;
-                    yoappPayments.transactionAmount = payments.transactionAmount;
-                    yoappPayments.paymentCurrency = payments.paymentCurrency;
-                    yoappPayments.transactionDescription = "Aqusales Lite Payment";
-                    yoappPayments.paymentref = refNo;
-                    yoappPayments.status = "Success";
-                    yoappPayments.hash = tmpHash.ToString();
+                        if (payments.orgLocation.Contains(","))
+                        {
+                            payments.orgLocation = payments.orgLocation.Replace(",", "|");
+                        }
 
-                    Log.RequestsAndResponses("YoAppPaymentsRequest", serviceProvider, yoappPayments);
+                        if (payments.contactPersonName.Contains(","))
+                        {
+                            payments.contactPersonName = payments.contactPersonName.Replace(",", "|");
+                        }
 
-                    var responseUrls = yoAppConnector.YoAppPayment(serviceProvider, yoappPayments);
+                        if (payments.contactPersonLastName.Contains(","))
+                        {
+                            payments.contactPersonLastName = payments.contactPersonLastName.Replace(",", "|");
+                        }
 
-                    Log.RequestsAndResponses("YoAppPaymentsResponse", serviceProvider, responseUrls);
+                        if (payments.customerEmail.Contains(","))
+                        {
+                            payments.customerEmail = payments.customerEmail.Replace(",", "|");
+                        }
 
-                    if (!string.IsNullOrEmpty(responseUrls))
-                    {
-                        char[] delimiter = new char[] { '-' };
-                        string[] part = responseUrls.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
-                        responseBrowseUrl = part[0];
-                        var responsePollsUrl = part[1];
+                        if (payments.username.Contains(","))
+                        {
+                            payments.username = payments.username.Replace(",", "|");
+                        }
 
-                        webPayments.Status = "Success";
-                        webPayments.Description = "Received the relevant payment details and redirecting to " + responseBrowseUrl;
+                        #endregion
 
-                        Log.RequestsAndResponses("WebHook-Response", serviceProvider, webPayments);
-                        return Json(new { url = responseBrowseUrl }, JsonRequestBehavior.AllowGet);
-                        //return Redirect(responseBrowseUrl);
+                        payments.paymentReference = refNo;
+                        payments.paymentMethod = "";
+
+                        yoappPayments.successURL = yoAppCredentials.SuccessUrl + "?orgName=" + payments.orgName.Trim() +
+                                                                                 "&orgPhoneNumber=" + payments.orgPhoneNumber.Trim() +
+                                                                                 "&orgAddress=" + payments.orgAddress.Trim() +
+                                                                                 "&orgLocation=" + payments.orgLocation.Trim() +
+                                                                                 "&packageType=" + payments.packageType.Trim() +
+                                                                                 "&contactPersonName=" + payments.contactPersonName.Trim() +
+                                                                                 "&contactPersonLastName=" + payments.contactPersonLastName.Trim() +
+                                                                                 "&customerEmail=" + payments.customerEmail.Trim() +
+                                                                                 "&username=" + payments.username.Trim() +
+                                                                                 "&password=" + payments.password.Trim() +
+                                                                                 "&paymentCurrency=" + payments.paymentCurrency.Trim() +
+                                                                                 "&transactionAmount=" + payments.transactionAmount.Trim() +
+                                                                                 "&billingCycle=" + payments.billingCycle.Trim() +
+                                                                                 "&cycleQuantity=" + payments.cycleQuantity +
+                                                                                 "&paymentReference=" + payments.paymentReference.Trim() + 
+                                                                                 "&paymentMethod=" + payments.paymentMethod.Trim();
+
+                        //company.CompanyName = payments.orgName;
+                        //company.CompanyPhoneNumber = payments.orgPhoneNumber;
+                        //company.CompanyAddress = payments.orgAddress;
+                        //company.CompanyLocation = payments.orgLocation;
+                        //company.PackageType = "AQUSALES LITE";
+                        //company.FirstName = payments.contactPersonName;
+                        //company.Surname = payments.contactPersonLastName;
+                        //company.EmailAddress = payments.customerEmail;
+                        //company.Username = payments.username;
+                        //company.Password = payments.password;
+
+                        //var d = DateTime.Now.ToString("yy.mm.HH.mm.ss");
+
+                        //var paymentId = "PAY-ID" + d;
+
+                        //Log.StoreData("PaymentIds", serviceProvider, company);
+
+                        yoappPayments.failedURL = yoAppCredentials.FailureUrl;
+                        yoappPayments.ReceiptNo = receiptNo;
+                        yoappPayments.custmerEmail = payments.customerEmail;
+                        yoappPayments.transactionAmount = payments.transactionAmount;
+                        yoappPayments.paymentCurrency = payments.paymentCurrency;
+                        yoappPayments.transactionDescription = "Aqusales Lite Payment";
+                        yoappPayments.paymentref = refNo;
+                        yoappPayments.status = "Success";
+                        yoappPayments.hash = tmpHash.ToString();
+
+                        Log.RequestsAndResponses("YoAppPaymentsRequest", serviceProvider, yoappPayments);
+
+                        var responseUrls = yoAppConnector.YoAppPayment(serviceProvider, yoappPayments);
+
+                        Log.RequestsAndResponses("YoAppPaymentsResponse", serviceProvider, responseUrls);
+
+                        if (!string.IsNullOrEmpty(responseUrls))
+                        {
+                            char[] delimiter = new char[] { '-' };
+                            string[] part = responseUrls.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
+                            responseBrowseUrl = part[0];
+                            var responsePollsUrl = part[1];
+
+                            webPayments.Status = "Success";
+                            webPayments.Description = "Received the relevant payment details and redirecting to " + responseBrowseUrl;
+
+                            ResponsePollsUrl responsePolls = new ResponsePollsUrl();
+
+                            responsePolls.pollsUrl = responsePollsUrl;
+
+                            Log.StoreMpin(payments.paymentReference, serviceProvider, responsePolls);
+
+                            Log.RequestsAndResponses("WebHook-Response", serviceProvider, webPayments);
+
+                            return Json(new { url = responseBrowseUrl }, JsonRequestBehavior.AllowGet);
+                            //return Redirect(responseBrowseUrl);
+                        }
+                        else
+                        {
+                            webPayments.Status = "Failed";
+                            webPayments.Description = "Received the relevant payment details but failed to redirect to Payment Gateway";
+
+                            Log.RequestsAndResponses("WebHook-Response", serviceProvider, webPayments);
+
+                            return Json(webPayments, JsonRequestBehavior.AllowGet);
+                        }
                     }
                     else
                     {
-                        webPayments.Status = "Success";
-                        webPayments.Description = "Received the relevant payment details but failed to redirect to Payment Gateway";
+                        webPayments.Status = "Failed";
+                        webPayments.Description = "Username exists";
 
                         Log.RequestsAndResponses("WebHook-Response", serviceProvider, webPayments);
 
-                        return Json(webPayments);
-                    }
+                        return Json(webPayments, JsonRequestBehavior.AllowGet);
+                    }                    
                 }
             }
             catch (Exception e)
@@ -244,7 +290,7 @@ namespace YoAppWebProxy.Controllers
 
                     Log.RequestsAndResponses("YoAppPaymentResponse", serviceProvider, payments);
 
-                    return Json(payments);
+                    return Json(payments, JsonRequestBehavior.AllowGet);
                 }
                 else
                 {
@@ -266,19 +312,20 @@ namespace YoAppWebProxy.Controllers
                     #endregion                    
 
                     // Send API Request to YoApp to Create a new Customer and a Voucher. Send Response as a License and Company Creation Request to AquSales
-                    yoAppRequest.AgentCode = "5-0001-0001175:@qus@leslic3ns3";
-                    yoAppRequest.ServiceId = 2;
+                    yoAppRequest.AgentCode = "5-0001-0001185:@qus@leslic3ns3";
+                    yoAppRequest.ServiceId = 6;
                     yoAppRequest.ActionId = 1;
                     yoAppRequest.MTI = "0200";
                     yoAppRequest.TransactionType = 2;
-                    yoAppRequest.Currency = payments.paymentCurrency;
-                    yoAppRequest.Amount = Convert.ToDecimal(payments.transactionAmount);
-                    yoAppRequest.CustomerName = payments.orgName;
-                    yoAppRequest.CustomerMSISDN = payments.orgPhoneNumber;
-                    yoAppRequest.CustomerData = payments.contactPersonName + "," + payments.contactPersonLastName + "," + payments.username +
-                       "," + payments.customerEmail + "," + payments.orgPhoneNumber + ",na," + payments.packageType + "," + payments.billingCycle + "," 
-                       + payments.orgLocation + "," + payments.paymentCurrency + "," + payments.transactionAmount + "," + payments.cycleQuantity;
-                    yoAppRequest.ServiceProvider = "5-0001-0001174";
+                    yoAppRequest.Currency = payments.paymentCurrency.Trim();
+                    yoAppRequest.Amount = decimal.Parse(payments.transactionAmount.Trim(), System.Globalization.CultureInfo.InvariantCulture);
+                    yoAppRequest.CustomerName = payments.orgName.Trim();
+                    yoAppRequest.CustomerMSISDN = payments.orgPhoneNumber.Trim();
+                    yoAppRequest.CustomerData = payments.contactPersonName.Trim() + "," + payments.contactPersonLastName.Trim() + "," + payments.username.Trim() +
+                       "," + payments.customerEmail.Trim() + "," + payments.orgPhoneNumber.Trim() + ",na," + payments.packageType.Trim() + "," + payments.billingCycle.Trim() + "," 
+                       + payments.orgLocation.Trim() + "," + payments.paymentCurrency.Trim() + "," + payments.transactionAmount.Trim() + "," + payments.cycleQuantity +
+                       "," + payments.orgName.Trim() + "," + payments.orgPhoneNumber.Trim();
+                    yoAppRequest.ServiceProvider = "5-0001-0000980";
                     yoAppRequest.ProcessingCode = "360000";
 
                     Log.RequestsAndResponses("CreateCustomerAndLicenseRequest", serviceProvider, yoAppRequest);
@@ -291,17 +338,17 @@ namespace YoAppWebProxy.Controllers
                     {
                         var desirializedYoAppResponse = JsonConvert.DeserializeObject<Narrative>(yoApp.Narrative);
 
-                        company.CompanyName = payments.orgName;
-                        company.CompanyPhoneNumber = payments.orgPhoneNumber;
-                        company.CompanyAddress = payments.orgAddress;
-                        company.CompanyLocation = payments.orgLocation;
-                        company.PackageType = payments.packageType;
-                        company.FirstName = payments.contactPersonName;
-                        company.Surname = payments.contactPersonLastName;
-                        company.EmailAddress = payments.customerEmail;
-                        company.Username = payments.username;
-                        company.Password = payments.password;
-                        company.UserToken = desirializedYoAppResponse.TransactionCode;
+                        company.CompanyName = payments.orgName.Trim();
+                        company.CompanyPhoneNumber = payments.orgPhoneNumber.Trim();
+                        company.CompanyAddress = payments.orgAddress.Trim();
+                        company.CompanyLocation = payments.orgLocation.Trim();
+                        company.PackageType = payments.packageType.Trim();
+                        company.FirstName = payments.contactPersonName.Trim();
+                        company.Surname = payments.contactPersonLastName.Trim();
+                        company.EmailAddress = payments.customerEmail.Trim();
+                        company.Username = payments.username.Trim();
+                        company.Password = payments.password.Trim();
+                        company.UserToken = desirializedYoAppResponse.TransactionCode.Trim();
 
                         Log.RequestsAndResponses("AquSalesCompanyCreationRequest", serviceProvider, company);
 
@@ -311,14 +358,93 @@ namespace YoAppWebProxy.Controllers
 
                         if (response.Status.ToUpper() == "SUCCESS")
                         {
-                            yoAppResponse.ResponseCode = "00000";
-                            yoAppResponse.Description = response.Description;
-                            yoAppResponse.Note = "Success";
-                            yoAppResponse.Narrative = "Transaction/Payment Posted successfully";
+                            #region Query the Polls result
 
-                            Log.RequestsAndResponses("AquPayment-Response-YoApp", serviceProvider, response);
+                            string urlFilePath = System.Web.HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + payments.paymentReference + ".json");
 
-                            return Json(yoAppResponse);
+                            var urlFile = LoadResponseUrl(urlFilePath, serviceProvider);
+                            string result = "";
+
+                            try
+                            {
+                                using (var client = new HttpClient())
+                                {
+                                    client.DefaultRequestHeaders.Accept.Clear();
+
+                                    //client.DefaultRequestHeaders.Accept.Add(newMediaTypeWithQualityHeaderValue("application/json"));
+                                    //GET Method  
+
+                                    HttpResponseMessage paymentDetailsResponse = client.GetAsync(urlFile.pollsUrl.Trim()).Result;
+
+                                    if (paymentDetailsResponse.IsSuccessStatusCode)
+                                    {
+                                        result = paymentDetailsResponse.Content.ReadAsStringAsync().Result;
+
+                                        Log.RequestsAndResponses("PollsRedirectResponse", serviceProvider, result);
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("Internal server Error");
+                                    }
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Log.HttpError("Exception", serviceProvider, "Message: " + e.Message + ", InnerException: " + e.InnerException + ", StackTrace: " + e.StackTrace);
+                            }
+
+                            #endregion                            
+
+                            var polresult = JsonConvert.DeserializeObject<PaymentResponse>(result);
+
+                            payments.paymentMethod = polresult.PaymentType;
+
+                            PaymentTransaction paymentTransaction = new PaymentTransaction();
+
+                            paymentTransaction.CustomerName = payments.contactPersonName + " " + payments.contactPersonLastName;
+                            paymentTransaction.CustomerEmail = payments.customerEmail;
+                            paymentTransaction.CustomerPhoneNumber = payments.orgPhoneNumber;
+                            paymentTransaction.TransactionReference = payments.paymentReference;
+                            paymentTransaction.Company = payments.orgName;
+                            paymentTransaction.Currency = payments.paymentCurrency;
+                            paymentTransaction.PaymentMethod = payments.paymentMethod;
+                            paymentTransaction.Amount = decimal.Parse(payments.transactionAmount, System.Globalization.CultureInfo.InvariantCulture);
+                            paymentTransaction.TransactionDate = DateTime.Now.Date;
+                            paymentTransaction.TransactionName = "";
+                            paymentTransaction.Cashier = "ONLINE STORE";
+
+                            Log.RequestsAndResponses("AquSalesPaymentRequest", serviceProvider, paymentTransaction);
+
+                            var aqusalesServerResponse = aquSalesConnector.PostPayment(paymentTransaction, serviceProvider);
+
+                            Log.RequestsAndResponses("AquSalesPaymentResponse", serviceProvider, paymentTransaction);
+
+                            if (response.Status.ToUpper() == "SUCCESS")
+                            {
+                                #region Redirect to Aqusales Login
+                                aquSalesConnector.WebsiteRedirect(serviceProvider);
+                                #endregion
+
+                                yoAppResponse.ResponseCode = "00000";
+                                yoAppResponse.Description = response.Description;
+                                yoAppResponse.Note = "Success";
+                                yoAppResponse.Narrative = "Transaction/Payment Posted successfully";
+
+                                Log.RequestsAndResponses("AquPayment-Response-YoApp", serviceProvider, response);
+
+                                return Json(yoAppResponse, JsonRequestBehavior.AllowGet);
+                            }
+                            else
+                            {
+                                yoAppResponse.ResponseCode = "00008";
+                                yoAppResponse.Description = response.Description;
+                                yoAppResponse.Note = "Transaction Failed";
+                                yoAppResponse.Narrative = "Transaction Failed";
+
+                                Log.RequestsAndResponses("AquPayment-Response-YoApp", serviceProvider, response);
+
+                                return Json(yoAppResponse, JsonRequestBehavior.AllowGet);
+                            }
                         }
                         else
                         {
@@ -329,7 +455,7 @@ namespace YoAppWebProxy.Controllers
 
                             Log.RequestsAndResponses("AquPayment-Response-YoApp", serviceProvider, response);
 
-                            return Json(yoAppResponse);
+                            return Json(yoAppResponse, JsonRequestBehavior.AllowGet);
                         }
                     }
                     else
@@ -341,7 +467,7 @@ namespace YoAppWebProxy.Controllers
 
                         Log.RequestsAndResponses("YoAppCustomerAndLicenseCreation-Response-YoApp", serviceProvider, yoAppResponse);
 
-                        return Json(yoAppResponse);
+                        return Json(yoAppResponse, JsonRequestBehavior.AllowGet);
                     }
                 }
             }
@@ -350,7 +476,13 @@ namespace YoAppWebProxy.Controllers
                 Log.HttpError("Exception", serviceProvider, "Message: " + e.Message + ", InnerException: " + e.InnerException + ", StackTrace: " + e.StackTrace);
             }
 
-            return Json(yoAppResponse);
+            return Json(yoAppResponse, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpGet]
+        public ActionResult FailedPaymentResponse(FailedPaymentResponse failedPaymentResponse)
+        {
+            return Json(new { url = failedPaymentResponse.failedUrl }, JsonRequestBehavior.AllowGet);
         }
 
         public static byte[] GetHash(string inputString)
@@ -366,6 +498,33 @@ namespace YoAppWebProxy.Controllers
                 sb.Append(b.ToString("X2"));
 
             return sb.ToString();
+        }
+
+        [NonAction]
+        public ResponsePollsUrl LoadResponseUrl(string file, string serviceProvider)
+        {
+            try
+            {
+                using (FileStream fileStream = new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+
+                using (StreamReader sr = new StreamReader(fileStream))
+                {
+                    string json = sr.ReadToEnd();
+                    var responsePollsUrl = JsonConvert.DeserializeObject<ResponsePollsUrl>(json);
+
+                    return responsePollsUrl;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+
+                var exceptionMessage = "Message: " + ex.Message + ", Inner Exception: " + ex.InnerException + ", StackTrace: " + ex.StackTrace;
+
+                Log.HttpError("File-Exception", serviceProvider, exceptionMessage);
+
+                return null;
+            }
         }
     }
 }

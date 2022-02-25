@@ -114,14 +114,14 @@ namespace YoAppWebProxy
 
             try
             {
-                string url = String.Format("http://192.168.100.150:5000/yoclient/transaction");
+                string url = String.Format("https://www.yomoneyservice.com/yoclient/transaction");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.ContentType = "application/json";
                 httpWebRequest.Method = "POST";
                 httpWebRequest.Timeout = 120000;
                 httpWebRequest.CookieContainer = new CookieContainer();
                 Cookie cookie = new Cookie("AspxAutoDetectCookieSupport", "1");
-                cookie.Domain = "192.168.100.150";
+                cookie.Domain = "www.yomoneyservice.com";
                 httpWebRequest.CookieContainer.Add(cookie);
 
                 string json = JsonConvert.SerializeObject(yoappRequest, Formatting.Indented);
