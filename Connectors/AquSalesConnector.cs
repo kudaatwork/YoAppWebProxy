@@ -24,7 +24,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("http://102.130.120.163:8087/Yomoney/SaleTransaction");
+                string url = String.Format("http://102.130.120.163:8060/Yomoney/SaleTransaction");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.PreAuthenticate = true;
                 httpWebRequest.Timeout = 120000;               
@@ -216,7 +216,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("http://102.130.120.163:8087/Yomoney/SaleTransaction");
+                string url = String.Format("http://102.130.120.163:8060/Yomoney/SaleTransaction");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.PreAuthenticate = true;
                 httpWebRequest.Timeout = 120000;
@@ -360,7 +360,7 @@ namespace YoAppWebProxy.Connectors
                     delegate { return true; }
                 );
 
-                string url = String.Format("http://192.168.100.75:5000/Yomoney/GRVTransaction");
+                string url = String.Format("http://102.130.120.163:8060/Yomoney/GRVTransaction");
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.PreAuthenticate = true;
                 httpWebRequest.Timeout = 120000;

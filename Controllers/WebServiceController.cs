@@ -107,7 +107,7 @@ namespace YoAppWebProxy.Controllers
                         }
                         else if (payments.billingCycle.ToUpper() == "QUATERLY")
                         {
-                            payments.cycleQuantity = 3;
+                            payments.cycleQuantity = 4;
                         }
                         else if (payments.billingCycle.ToUpper() == "ANNUALLY")
                         {

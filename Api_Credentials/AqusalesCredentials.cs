@@ -7,7 +7,7 @@ namespace YoAppWebProxy.Api_Credentials
 {
     public class AqusalesCredentials
     {
-        private static string username = "Aqusales";
+        private static string username = "Salesaqu";
 
         public static string Username
         {

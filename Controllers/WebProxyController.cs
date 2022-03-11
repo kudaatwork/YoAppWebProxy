@@ -954,7 +954,7 @@ namespace YoAppWebProxy.Controllers
                             saleTransaction.Password = AqusalesCredentials.Password;
                             saleTransaction.IsCreditSale = true;
                             saleTransaction.TransactionReference = redemptionResponse.TransactionRef;
-                            saleTransaction.Company = "CBZ AGROYIELD";//deserializedResponse.CustomerName;
+                            saleTransaction.Company = "AFRICAN WIRELESS TECH";//deserializedResponse.CustomerName;
                             saleTransaction.Customer = deserializedResponse.ReceiversName.Trim() + " " + deserializedResponse.ReceiversSurname.Trim() + "~" +
                                 deserializedResponse.ReceiversIdentification.Trim() + "~(" + currency.Trim() + ")";
                             saleTransaction.CustomerMSISDN = deserializedResponse.ReceiverMobile.Trim();
@@ -1058,14 +1058,14 @@ namespace YoAppWebProxy.Controllers
                             grvTransaction.SupplierAccountType = AqusalesObjects.SupplierAccountType;
                             grvTransaction.TransactionName = AqusalesObjects.TransactionName;
                             grvTransaction.TransactionReference = aquResponse.OrderNumber.Trim();
-                            grvTransaction.Company = "CBZ AGROYIELD"; //aquResponse.BranchName;
+                            grvTransaction.Company = "AFRICAN WIRELESS TECH"; //aquResponse.BranchName;
                             grvTransaction.DebtorOrCreditor = aquResponse.BranchName?.Trim() + "(" + aquResponse.BranchId?.Trim() + ")";
                             grvTransaction.Amount = (decimal)aquResponse.StockedValue;
                             grvTransaction.Vat = 0.0m;
                             grvTransaction.PurchaseLines = purchaseLines;
 
                             TranCurrencyInfoVM tranCurrencyInfo = new TranCurrencyInfoVM();
-                            tranCurrencyInfo.TransactionCurrency = "ZWL"; //aquResponse.Currency;
+                            tranCurrencyInfo.TransactionCurrency = "ZAR"; //aquResponse.Currency;
                             tranCurrencyInfo.TransactionCurrencyRate = 1;
                             grvTransaction.TranCurrencyInfoVM = tranCurrencyInfo;
                             grvTransaction.TransactionDate = aquResponse.AuthorisationDate;
@@ -1123,7 +1123,7 @@ namespace YoAppWebProxy.Controllers
                             sale.Password = AqusalesCredentials.Password;
                             sale.IsCreditSale = true;
                             sale.TransactionReference = redemptionResponse.TransactionRef;
-                            sale.Company = "CBZ AGROYIELD";//deserializedResponse.CustomerName;
+                            sale.Company = "AFRICAN WIRELESS TECH";//deserializedResponse.CustomerName;
                             sale.Customer = deserializedResponse.ReceiversName.Trim() + " " + deserializedResponse.ReceiversSurname.Trim() + "~" +
                                 deserializedResponse.ReceiversIdentification.Trim() + "~(" + currency.Trim() + ")";
                             sale.CustomerMSISDN = deserializedResponse.ReceiverMobile.Trim();
@@ -4271,1093 +4271,1107 @@ namespace YoAppWebProxy.Controllers
                         switch (response.ProcessingCode)
                         {
                             #region Commented Area
-                            case "370000": // Request for Client's Details
-
-                                try
-                                {
-                                    string file = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
-                                    var tokenFile = LoadMetBankJson(file);
-
-                                    if (tokenFile != null) // We have generated the Token Already
-                                    {
-                                        var expiryDateString = tokenFile.expires_in;
-
-                                        var expiryDate = DateTime.ParseExact(expiryDateString, "dd/MM/yyyy-HH:mm:ss", null);
-
-                                        var currentDateTime = DateTime.Now;
-
-                                        if (expiryDate > currentDateTime) // Token is still valid
-                                        {
-                                            isTokenValid = true;
-                                        }
-                                        else // Token is no longer valid
-                                        {
-                                            RefreshMetBankToken(tokenFile.refresh_token);
-                                            isTokenValid = true;
-
-                                            tokenFile = LoadMetBankJson(file);
-                                        }
-                                    }
-                                    else // Generate a new Token
-                                    {
-                                        userLogin.password = metBankCredentials.Password;
-                                        userLogin.username = metBankCredentials.Username;
-
-                                        Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
-
-                                        var result = merchantBankConnector.GetToken(serviceProvider, userLogin);
-
-                                        Log.RequestsAndResponses("MetBankTokenResponse", serviceProvider, result);
-
-                                        if (result.token_type.ToLower() == "bearer")
-                                        {
-                                            isTokenValid = true;
-                                            yoAppResponse.ResponseCode = "00000";
-                                            yoAppResponse.Description = "Token generated successfully";
-                                            yoAppResponse.Note = "Transaction Successful";
-
-                                            var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(result.expires_in));
-
-                                            result.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
-
-                                            var token = JsonConvert.SerializeObject(result);
-
-                                            yoAppResponse.Narrative = token;
-
-                                            Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
-                                            Log.StoreData("tokens", serviceProvider, result);
-
-                                            tokenFile = LoadMetBankJson(file);
-                                        }
-                                        else
-                                        {
-                                            yoAppResponse.ResponseCode = "00008";
-                                            yoAppResponse.Description = "Code could not be generated";
-                                            yoAppResponse.Note = "Transaction Failed";
-
-                                            Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, yoAppResponse);
-
-                                            return yoAppResponse;
-                                        }
-                                    }
-
-                                    if (isTokenValid)
-                                    {
-                                        if (response.CustomerAccount != null) // Get Client Details Via ClientId
-                                        {
-                                            ClientRequest clientRequest = new ClientRequest();
-
-                                            clientRequest.clientId = yoAppResponse.CustomerAccount;
-                                            tokenFile = LoadMetBankJson(file);
-
-                                            Log.RequestsAndResponses("ClientDetailsByIdRequest", serviceProvider, clientRequest);
-
-                                            var client = merchantBankConnector.GetClientByClientId(serviceProvider, clientRequest, tokenFile.access_token);
-
-                                            Log.RequestsAndResponses("ClientDetailsByIdResponse", serviceProvider, client);
-
-                                            if (client != null && client.deleted == false && client.firstName != null)
-                                            {
-                                                yoAppResponse.ResponseCode = "00000";
-                                                yoAppResponse.Description = "Client Found!";
-                                                narrative.DateCreated = DateTime.ParseExact(client.dateCreated, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
-                                                narrative.DatelastAccess = DateTime.ParseExact(client.dateModified, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
-                                                narrative.IsActive = client.deleted;
-                                                narrative.Status = client.status;
-                                                narrative.Id = (long)client.id;
-                                                narrative.ReceiversName = client.firstName;
-                                                narrative.ReceiversSurname = client.lastName;
-                                                yoAppResponse.Note = client.email;
-                                                narrative.ReceiverMobile = client.phoneNumber;
-                                                narrative.ReceiversIdentification = client.nationalId;
-                                                narrative.ReceiversGender = client.gender;
-                                                narrative.ServiceCountry = client.country;
-                                                narrative.CustomerId = client.userId.ToString();
-                                                yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
-
-                                                return yoAppResponse;
-                                            }
-                                            else
-                                            {
-                                                yoAppResponse.ResponseCode = "00008";
-                                                yoAppResponse.Note = "Client not Found";
-                                                yoAppResponse.Description = "Received Nothing for the clientId submitted";
-
-                                                return yoAppResponse;
-                                            }
-                                        }
-                                        else if (narrative.ReceiverMobile != null) // Get Client Details Via Phone Number
-                                        {
-                                            ClientRequest clientRequest = new ClientRequest();
-
-                                            clientRequest.phoneNumber = narrative.ReceiverMobile;
-                                            tokenFile = LoadMetBankJson(file);
-
-                                            Log.RequestsAndResponses("ClientDetailsByMobileRequest", serviceProvider, clientRequest);
-
-                                            var clientResponse = merchantBankConnector.GetClientByPhoneNumber(serviceProvider, clientRequest, tokenFile.access_token);
-
-                                            Log.RequestsAndResponses("ClientDetailsByMobileResponse", serviceProvider, clientResponse);
-
-                                            if (clientResponse.clientFound)
-                                            {
-                                                yoAppResponse.ResponseCode = "00000";
-                                                yoAppResponse.Description = "Client Found!";
-                                                narrative.DateCreated = DateTime.ParseExact(clientResponse.client.dateCreated, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
-                                                narrative.DatelastAccess = DateTime.ParseExact(clientResponse.client.dateModified, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
-                                                narrative.IsActive = clientResponse.client.deleted;
-                                                narrative.Status = clientResponse.client.status;
-                                                narrative.Id = (long)clientResponse.client.id;
-                                                narrative.ReceiversName = clientResponse.client.firstName;
-                                                narrative.ReceiversSurname = clientResponse.client.lastName;
-                                                yoAppResponse.Note = clientResponse.client.email;
-                                                narrative.ReceiverMobile = clientResponse.client.phoneNumber;
-                                                narrative.ReceiversIdentification = clientResponse.client.nationalId;
-                                                narrative.ReceiversGender = clientResponse.client.gender;
-                                                narrative.ServiceCountry = clientResponse.client.country;
-                                                narrative.CustomerId = clientResponse.client.userId.ToString();
-                                                yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
-
-                                                return yoAppResponse;
-                                            }
-                                            else
-                                            {
-                                                yoAppResponse.ResponseCode = "00008";
-                                                yoAppResponse.Note = "Failed";
-                                                yoAppResponse.Description = "Received Nothing for the clientId submitted";
-
-                                                return yoAppResponse;
-                                            }
-                                        }
-                                        else if (narrative.ReceiversIdentification != null) // Get Client Details Via National Id
-                                        {
-                                            ClientRequest clientRequest = new ClientRequest();
-
-                                            clientRequest.nationalId = narrative.ReceiversIdentification;
-                                            tokenFile = LoadMetBankJson(file);
-
-                                            Log.RequestsAndResponses("ClientDetailsByNationalIdRequest", serviceProvider, clientRequest);
-
-                                            var clientResponse = merchantBankConnector.GetClientByNationalId(serviceProvider, clientRequest, tokenFile.access_token);
-
-                                            Log.RequestsAndResponses("ClientDetailsByNationalIdResponse", serviceProvider, clientResponse);
-
-                                            if (clientResponse.clientFound)
-                                            {
-                                                yoAppResponse.ResponseCode = "00000";
-                                                yoAppResponse.Description = "Clinet Found!";
-                                                narrative.DateCreated = DateTime.ParseExact(clientResponse.client.dateCreated, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
-                                                narrative.DatelastAccess = DateTime.ParseExact(clientResponse.client.dateModified, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
-                                                narrative.IsActive = clientResponse.client.deleted;
-                                                narrative.Status = clientResponse.client.status;
-                                                narrative.Id = (long)clientResponse.client.id;
-                                                narrative.ReceiversName = clientResponse.client.firstName;
-                                                narrative.ReceiversSurname = clientResponse.client.lastName;
-                                                yoAppResponse.Note = clientResponse.client.email;
-                                                narrative.ReceiverMobile = clientResponse.client.phoneNumber;
-                                                narrative.ReceiversIdentification = clientResponse.client.nationalId;
-                                                narrative.ReceiversGender = clientResponse.client.gender;
-                                                narrative.ServiceCountry = clientResponse.client.country;
-                                                narrative.CustomerId = clientResponse.client.userId.ToString();
-                                                yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
-
-                                                return yoAppResponse;
-                                            }
-                                            else
-                                            {
-                                                yoAppResponse.ResponseCode = "00008";
-                                                yoAppResponse.Note = "Failed";
-                                                yoAppResponse.Description = "Received Nothing for the clientId submitted";
-
-                                                return yoAppResponse;
-                                            }
-                                        }
-                                        else if (narrative.Information1 != null) // Get Client Details By Page and Number of entries per page
-                                        {
-                                            ClientRequest clientRequest = new ClientRequest();
-
-                                            var parts = narrative.Information1.Split(new char[] { '~' }, StringSplitOptions.RemoveEmptyEntries);
-
-                                            clientRequest.page = parts[0];
-                                            clientRequest.size = parts[1];
-
-                                            tokenFile = LoadMetBankJson(file);
-
-                                            Log.RequestsAndResponses("ClientDetailsByPageAndSizeRequest", serviceProvider, clientRequest);
-
-                                            var pageClient = merchantBankConnector.GetClientsByPagesAndSize(serviceProvider, clientRequest, tokenFile.access_token);
-
-                                            Log.RequestsAndResponses("ClientDetailsByPageAndSizeResponse", serviceProvider, pageClient);
-
-                                            if (pageClient.totalPages > 0)
-                                            {
-                                                response.CustomerData = pageClient.totalElements.ToString();
-                                                response.CustomerAccount = pageClient.totalPages.ToString();
-
-                                                var serializedContent = JsonConvert.SerializeObject(pageClient.content);
-
-                                                response.Note = serializedContent;
-                                                response.TerminalId = pageClient.number.ToString();
-
-                                                var serializedSort = JsonConvert.SerializeObject(pageClient.sort);
-
-                                                response.TransactionRef = serializedSort;
-                                                response.IsActive = pageClient.first;
-
-                                                var serializedPageable = JsonConvert.SerializeObject(pageClient.pageable);
-
-                                                response.Product = serializedPageable;
-                                                response.Quantity = pageClient.numberOfElements;
-                                                narrative.IsActive = pageClient.last;
-                                                narrative.CustomerName = pageClient.empty.ToString();
-                                                response.Narrative = JsonConvert.SerializeObject(narrative);
-
-                                                return yoAppResponse;
-                                            }
-                                            else
-                                            {
-                                                yoAppResponse.ResponseCode = "00008";
-                                                yoAppResponse.Note = "Client not found!";
-                                                yoAppResponse.Description = "Received Nothing for the clientId submitted";
-
-                                                return yoAppResponse;
-                                            }
-                                        }
-                                        else
-                                        {
-                                            yoAppResponse.ResponseCode = "00008";
-                                            yoAppResponse.Note = "Failed";
-                                            yoAppResponse.Description = "Received Nothing for the clientId submitted";
-
-                                            return yoAppResponse;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        yoAppResponse.ResponseCode = "00008";
-                                        yoAppResponse.Description = "Token is not Valid";
-                                        yoAppResponse.Note = "Request Failed";
-
-                                        Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
-
-                                        return yoAppResponse;
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Log.HttpError("Exception", serviceProvider, "Message: " + ex.Message + ", InnerException: " + ex.InnerException + ", StackTrace: " + ex.StackTrace);
-
-                                    return yoAppResponse;
-                                }
-
-                            case "1": // Edit Client
-
-                                try
-                                {
-                                    string file = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
-                                    var tokenFile = LoadMetBankJson(file);
-
-                                    if (tokenFile != null) // We have generated the Token Already
-                                    {
-                                        var expiryDateString = tokenFile.expires_in;
-
-                                        var expiryDate = DateTime.ParseExact(expiryDateString, "dd/MM/yyyy-HH:mm:ss", null);
-
-                                        var currentDateTime = DateTime.Now;
-
-                                        if (expiryDate > currentDateTime) // Token is still valid
-                                        {
-                                            isTokenValid = true;
-                                        }
-                                        else // Token is no longer valid
-                                        {
-                                            RefreshMetBankToken(tokenFile.refresh_token);
-                                            isTokenValid = true;
-
-                                            tokenFile = LoadMetBankJson(file);
-                                        }
-                                    }
-                                    else // Generate a new Token
-                                    {
-                                        userLogin.password = metBankCredentials.Password;
-                                        userLogin.username = metBankCredentials.Username;
-
-                                        Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
-
-                                        var result = merchantBankConnector.GetToken(serviceProvider, userLogin);
-
-                                        Log.RequestsAndResponses("MetBankTokenResponse", serviceProvider, result);
-
-                                        if (result.token_type.ToLower() == "bearer")
-                                        {
-                                            isTokenValid = true;
-                                            yoAppResponse.ResponseCode = "00000";
-                                            yoAppResponse.Description = "Token generated successfully";
-                                            yoAppResponse.Note = "Transaction Successful";
-
-                                            var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(result.expires_in));
-
-                                            result.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
-
-                                            var token = JsonConvert.SerializeObject(result);
-
-                                            yoAppResponse.Narrative = token;
-
-                                            Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
-                                            Log.StoreData("tokens", serviceProvider, result);
-
-                                            tokenFile = LoadMetBankJson(file);
-                                        }
-                                        else
-                                        {
-                                            yoAppResponse.ResponseCode = "00008";
-                                            yoAppResponse.Description = "Code could not be generated";
-                                            yoAppResponse.Note = "Transaction Failed";
-
-                                            Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, yoAppResponse);
-
-                                            return yoAppResponse;
-                                        }
-                                    }
-
-                                    if (isTokenValid)
-                                    {
-                                        if (response.CustomerAccount != null)
-                                        {
-                                            ClientRequest clientRequest = new ClientRequest();
-
-                                            clientRequest.clientId = yoAppResponse.CustomerAccount;
-
-                                            tokenFile = LoadMetBankJson(file);
-
-                                            Log.RequestsAndResponses("ClientEditRequest", serviceProvider, clientRequest);
-
-                                            var client = merchantBankConnector.PutClient(serviceProvider, clientRequest, tokenFile.access_token);
-
-                                            Log.RequestsAndResponses("ClientEditResponse", serviceProvider, client);
-
-                                            if (client != null)
-                                            {
-                                                narrative.DateCreated = DateTime.ParseExact(client.dateCreated, "MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture);
-                                                narrative.DatelastAccess = DateTime.ParseExact(client.dateModified, "MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture);
-                                                narrative.IsActive = client.deleted;
-                                                narrative.Status = client.status;
-                                                narrative.Id = (long)client.id;
-                                                narrative.ReceiversName = client.firstName;
-                                                narrative.ReceiversSurname = client.lastName;
-                                                yoAppResponse.Note = client.email;
-                                                narrative.ReceiverMobile = client.phoneNumber;
-                                                narrative.ReceiversIdentification = client.nationalId;
-                                                narrative.ReceiversGender = client.gender;
-                                                narrative.ServiceCountry = client.country;
-                                                narrative.CustomerId = client.userId.ToString();
-                                                yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
-
-                                                return yoAppResponse;
-                                            }
-                                            else
-                                            {
-                                                yoAppResponse.ResponseCode = "00008";
-                                                yoAppResponse.Note = "Failed";
-                                                yoAppResponse.Description = "Received Nothing for the clientId submitted";
-
-                                                return yoAppResponse;
-                                            }
-                                        }
-                                        else
-                                        {
-                                            yoAppResponse.ResponseCode = "00008";
-                                            yoAppResponse.Note = "Failed";
-                                            yoAppResponse.Description = "Received Nothing for the clientId submitted";
-
-                                            return yoAppResponse;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        yoAppResponse.ResponseCode = "00008";
-                                        yoAppResponse.Description = "Token is not Valid";
-                                        yoAppResponse.Note = "Request Failed";
-
-                                        Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
-
-                                        return yoAppResponse;
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Log.HttpError("Exception", serviceProvider, "Message: " + ex.Message + ", InnerException: " + ex.InnerException + ", StackTrace: " + ex.StackTrace);
-
-                                    return yoAppResponse;
-                                }
-
-                            case "2": // Delete Client
-
-                                if (response.CustomerAccount != null)
-                                {
-                                    Log.RequestsAndResponses("ClientDeleteRequest", serviceProvider, yoAppResponse.CustomerAccount);
-
-                                    ClientRequest clientRequest = new ClientRequest();
-
-                                    clientRequest.clientId = yoAppResponse.CustomerAccount;
-
-                                    var client = merchantBankConnector.DeleteClient(clientRequest);
-
-                                    Log.RequestsAndResponses("ClientDeleteResponse", serviceProvider, client);
-
-                                    if (client != null)
-                                    {
-                                        narrative.DateCreated = DateTime.ParseExact(client.dateCreated, "MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture);
-                                        narrative.DatelastAccess = DateTime.ParseExact(client.dateModified, "MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture);
-                                        narrative.IsActive = client.deleted;
-                                        narrative.Status = client.status;
-                                        narrative.Id = (long)client.id;
-                                        narrative.ReceiversName = client.firstName;
-                                        narrative.ReceiversSurname = client.lastName;
-                                        yoAppResponse.Note = client.email;
-                                        narrative.ReceiverMobile = client.phoneNumber;
-                                        narrative.ReceiversIdentification = client.nationalId;
-                                        narrative.ReceiversGender = client.gender;
-                                        narrative.ServiceCountry = client.country;
-                                        narrative.CustomerId = client.userId.ToString();
-                                        yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
-
-                                        return yoAppResponse;
-                                    }
-                                    else
-                                    {
-                                        yoAppResponse.ResponseCode = "00008";
-                                        yoAppResponse.Note = "Failed";
-                                        yoAppResponse.Description = "Received Nothing for the clientId submitted";
-
-                                        return yoAppResponse;
-                                    }
-                                }
-                                else
-                                {
-                                    yoAppResponse.ResponseCode = "00008";
-                                    yoAppResponse.Note = "Failed";
-                                    yoAppResponse.Description = "Received Nothing for the clientId submitted";
-
-                                    return yoAppResponse;
-                                }
-
-                            //case "360000": // Client Registration                                
-
-                            case "410000": // Client Login Request
-
-                                if (response.MTI != null && response.MTI == "0100")
-                                {
-                                    Log.RequestsAndResponses("ClientLoginRequest", serviceProvider, yoAppResponse.CustomerAccount);
-
-                                    ClientRequest clientRequest = new ClientRequest();
-
-                                    clientRequest.clientId = yoAppResponse.CustomerAccount;
-
-                                    var client = merchantBankConnector.GetClientByClientId(serviceProvider, clientRequest, "");
-
-                                    Log.RequestsAndResponses("ClientLoginResponse", serviceProvider, client);
-
-                                    if (client != null)
-                                    {
-                                        narrative.DateCreated = DateTime.ParseExact(client.dateCreated, "MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture);
-                                        narrative.DatelastAccess = DateTime.ParseExact(client.dateModified, "MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture);
-                                        narrative.IsActive = client.deleted;
-                                        narrative.Status = client.status;
-                                        narrative.Id = (long)client.id;
-                                        narrative.ReceiversName = client.firstName;
-                                        narrative.ReceiversSurname = client.lastName;
-                                        yoAppResponse.Note = client.email;
-                                        narrative.ReceiverMobile = client.phoneNumber;
-                                        narrative.ReceiversIdentification = client.nationalId;
-                                        narrative.ReceiversGender = client.gender;
-                                        narrative.ServiceCountry = client.country;
-                                        narrative.CustomerId = client.userId.ToString();
-                                        yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
-
-                                        return yoAppResponse;
-                                    }
-                                    else
-                                    {
-                                        yoAppResponse.ResponseCode = "00008";
-                                        yoAppResponse.Note = "Failed";
-                                        yoAppResponse.Description = "Received Nothing for the clientId submitted";
-
-                                        return yoAppResponse;
-                                    }
-                                }
-                                else
-                                {
-                                    yoAppResponse.ResponseCode = "00008";
-                                    yoAppResponse.Note = "Failed";
-                                    yoAppResponse.Description = "Received Nothing for the clientId submitted";
-
-                                    return yoAppResponse;
-                                }
-
-                            case "500000": // Approve Client
-
-                                try
-                                {
-                                    string file = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
-                                    var tokenFile = LoadMetBankJson(file);
-
-                                    if (tokenFile != null) // We have generated the Token Already
-                                    {
-                                        var expiryDateString = tokenFile.expires_in;
-
-                                        var expiryDate = DateTime.ParseExact(expiryDateString, "dd/MM/yyyy-HH:mm:ss", null);
-
-                                        var currentDateTime = DateTime.Now;
-
-                                        if (expiryDate > currentDateTime) // Token is still valid
-                                        {
-                                            isTokenValid = true;
-                                        }
-                                        else // Token is no longer valid
-                                        {
-                                            RefreshMetBankToken(tokenFile.refresh_token);
-                                            isTokenValid = true;
-
-                                            tokenFile = LoadMetBankJson(file);
-                                        }
-                                    }
-                                    else // Generate a new Token
-                                    {
-                                        userLogin.password = metBankCredentials.Password;
-                                        userLogin.username = metBankCredentials.Username;
-
-                                        Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
-
-                                        var result = merchantBankConnector.GetToken(serviceProvider, userLogin);
-
-                                        Log.RequestsAndResponses("MetBankTokenResponse", serviceProvider, result);
-
-                                        if (result.token_type.ToLower() == "bearer")
-                                        {
-                                            isTokenValid = true;
-                                            yoAppResponse.ResponseCode = "00000";
-                                            yoAppResponse.Description = "Token generated successfully";
-                                            yoAppResponse.Note = "Transaction Successful";
-
-                                            var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(result.expires_in));
-
-                                            result.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
-
-                                            var token = JsonConvert.SerializeObject(result);
-
-                                            yoAppResponse.Narrative = token;
-
-                                            Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
-                                            Log.StoreData("tokens", serviceProvider, result);
-
-                                            tokenFile = LoadMetBankJson(file);
-                                        }
-                                        else
-                                        {
-                                            yoAppResponse.ResponseCode = "00008";
-                                            yoAppResponse.Description = "Code could not be generated";
-                                            yoAppResponse.Note = "Transaction Failed";
-
-                                            Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
-
-                                            return yoAppResponse;
-                                        }
-                                    }
-
-                                    if (isTokenValid)
-                                    {
-                                        ClientRequest clientRequest = new ClientRequest();
-
-                                        clientRequest.clientId = yoAppResponse.CustomerAccount;
-                                        tokenFile = LoadMetBankJson(file);
-
-                                        Log.RequestsAndResponses("ApproveClientRequest", serviceProvider, clientRequest);
-
-                                        var client = merchantBankConnector.ApproveClient(serviceProvider, clientRequest, tokenFile.access_token);
-
-                                        Log.RequestsAndResponses("ApproveClientResponse", serviceProvider, client);
-
-                                        if (client != null && client.deleted == false && client.firstName != null)
-                                        {
-                                            yoAppResponse.ResponseCode = "00000";
-                                            yoAppResponse.Description = "Client Found!";
-                                            narrative.DateCreated = DateTime.ParseExact(client.dateCreated, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
-                                            narrative.DatelastAccess = DateTime.ParseExact(client.dateModified, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
-                                            narrative.IsActive = client.deleted;
-                                            narrative.Status = client.status;
-                                            narrative.Id = (long)client.id;
-                                            narrative.ReceiversName = client.firstName;
-                                            narrative.ReceiversSurname = client.lastName;
-                                            yoAppResponse.Note = client.email;
-                                            narrative.ReceiverMobile = client.phoneNumber;
-                                            narrative.ReceiversIdentification = client.nationalId;
-                                            narrative.ReceiversGender = client.gender;
-                                            narrative.ServiceCountry = client.country;
-                                            narrative.CustomerId = client.userId.ToString();
-                                            yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
-
-                                            return yoAppResponse;
-                                        }
-                                        else
-                                        {
-                                            yoAppResponse.ResponseCode = "00008";
-                                            yoAppResponse.Note = "Client not Found";
-                                            yoAppResponse.Description = "Received Nothing for the clientId submitted";
-
-                                            return yoAppResponse;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        yoAppResponse.ResponseCode = "00008";
-                                        yoAppResponse.Description = "Token is not Valid";
-                                        yoAppResponse.Note = "Request Failed";
-
-                                        Log.RequestsAndResponses("ApproveClientResponse-YoApp", serviceProvider, yoAppResponse);
-
-                                        return yoAppResponse;
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Log.HttpError("Exception", serviceProvider, "Message: " + ex.Message + ", InnerException: " + ex.InnerException + ", StackTrace: " + ex.StackTrace);
-
-                                    return yoAppResponse;
-                                }
-
-                            case "510000": // Disapprove Client
-
-                                try
-                                {
-                                    string file = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
-                                    var tokenFile = LoadMetBankJson(file);
-
-                                    if (tokenFile != null) // We have generated the Token Already
-                                    {
-                                        var expiryDateString = tokenFile.expires_in;
-
-                                        var expiryDate = DateTime.ParseExact(expiryDateString, "dd/MM/yyyy-HH:mm:ss", null);
-
-                                        var currentDateTime = DateTime.Now;
-
-                                        if (expiryDate > currentDateTime) // Token is still valid
-                                        {
-                                            isTokenValid = true;
-                                        }
-                                        else // Token is no longer valid
-                                        {
-                                            RefreshMetBankToken(tokenFile.refresh_token);
-                                            isTokenValid = true;
-
-                                            tokenFile = LoadMetBankJson(file);
-                                        }
-                                    }
-                                    else // Generate a new Token
-                                    {
-                                        userLogin.password = metBankCredentials.Password;
-                                        userLogin.username = metBankCredentials.Username;
-
-                                        Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
-
-                                        var result = merchantBankConnector.GetToken(serviceProvider, userLogin);
-
-                                        Log.RequestsAndResponses("MetBankTokenResponse", serviceProvider, result);
-
-                                        if (result.token_type.ToLower() == "bearer")
-                                        {
-                                            isTokenValid = true;
-                                            yoAppResponse.ResponseCode = "00000";
-                                            yoAppResponse.Description = "Token generated successfully";
-                                            yoAppResponse.Note = "Transaction Successful";
-
-                                            var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(result.expires_in));
-
-                                            result.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
-
-                                            var token = JsonConvert.SerializeObject(result);
-
-                                            yoAppResponse.Narrative = token;
-
-                                            Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
-                                            Log.StoreData("tokens", serviceProvider, result);
-
-                                            tokenFile = LoadMetBankJson(file);
-                                        }
-                                        else
-                                        {
-                                            yoAppResponse.ResponseCode = "00008";
-                                            yoAppResponse.Description = "Code could not be generated";
-                                            yoAppResponse.Note = "Transaction Failed";
-
-                                            Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
-
-                                            return yoAppResponse;
-                                        }
-                                    }
-
-                                    if (isTokenValid)
-                                    {
-                                        ClientRequest clientRequest = new ClientRequest();
-
-                                        clientRequest.clientId = yoAppResponse.CustomerAccount;
-                                        tokenFile = LoadMetBankJson(file);
-
-                                        Log.RequestsAndResponses("DisApproveClientRequest", serviceProvider, clientRequest);
-
-                                        var client = merchantBankConnector.DisApproveClient(serviceProvider, clientRequest, tokenFile.access_token);
-
-                                        Log.RequestsAndResponses("DisApproveClientResponse", serviceProvider, client);
-
-                                        if (client != null && client.deleted == false && client.firstName != null)
-                                        {
-                                            yoAppResponse.ResponseCode = "00000";
-                                            yoAppResponse.Description = "Client Found!";
-                                            narrative.DateCreated = DateTime.ParseExact(client.dateCreated, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
-                                            narrative.DatelastAccess = DateTime.ParseExact(client.dateModified, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
-                                            narrative.IsActive = client.deleted;
-                                            narrative.Status = client.status;
-                                            narrative.Id = (long)client.id;
-                                            narrative.ReceiversName = client.firstName;
-                                            narrative.ReceiversSurname = client.lastName;
-                                            yoAppResponse.Note = client.email;
-                                            narrative.ReceiverMobile = client.phoneNumber;
-                                            narrative.ReceiversIdentification = client.nationalId;
-                                            narrative.ReceiversGender = client.gender;
-                                            narrative.ServiceCountry = client.country;
-                                            narrative.CustomerId = client.userId.ToString();
-                                            yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
-
-                                            return yoAppResponse;
-                                        }
-                                        else
-                                        {
-                                            yoAppResponse.ResponseCode = "00008";
-                                            yoAppResponse.Note = "Client not Found";
-                                            yoAppResponse.Description = "Received Nothing for the clientId submitted";
-
-                                            return yoAppResponse;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        yoAppResponse.ResponseCode = "00008";
-                                        yoAppResponse.Description = "Token is not Valid";
-                                        yoAppResponse.Note = "Request Failed";
-
-                                        Log.RequestsAndResponses("DisApproveClientResponse-YoApp", serviceProvider, yoAppResponse);
-
-                                        return yoAppResponse;
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Log.HttpError("Exception", serviceProvider, "Message: " + ex.Message + ", InnerException: " + ex.InnerException + ", StackTrace: " + ex.StackTrace);
-
-                                    return yoAppResponse;
-                                }
-
-                            case "520000": // Number of Registered Clients
-
-                                try
-                                {
-                                    string file = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
-                                    var tokenFile = LoadMetBankJson(file);
-
-                                    if (tokenFile != null) // We have generated the Token Already
-                                    {
-                                        var expiryDateString = tokenFile.expires_in;
-
-                                        var expiryDate = DateTime.ParseExact(expiryDateString, "dd/MM/yyyy-HH:mm:ss", null);
-
-                                        var currentDateTime = DateTime.Now;
-
-                                        if (expiryDate > currentDateTime) // Token is still valid
-                                        {
-                                            isTokenValid = true;
-                                        }
-                                        else // Token is no longer valid
-                                        {
-                                            RefreshMetBankToken(tokenFile.refresh_token);
-                                            isTokenValid = true;
-
-                                            tokenFile = LoadMetBankJson(file);
-                                        }
-                                    }
-                                    else // Generate a new Token
-                                    {
-                                        userLogin.password = metBankCredentials.Password;
-                                        userLogin.username = metBankCredentials.Username;
-
-                                        Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
-
-                                        var result = merchantBankConnector.GetToken(serviceProvider, userLogin);
-
-                                        Log.RequestsAndResponses("MetBankTokenResponse", serviceProvider, result);
-
-                                        if (result.token_type.ToLower() == "bearer")
-                                        {
-                                            isTokenValid = true;
-                                            yoAppResponse.ResponseCode = "00000";
-                                            yoAppResponse.Description = "Token generated successfully";
-                                            yoAppResponse.Note = "Transaction Successful";
-
-                                            var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(result.expires_in));
-
-                                            result.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
-
-                                            var token = JsonConvert.SerializeObject(result);
-
-                                            yoAppResponse.Narrative = token;
-
-                                            Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
-                                            Log.StoreData("tokens", serviceProvider, result);
-
-                                            tokenFile = LoadMetBankJson(file);
-                                        }
-                                        else
-                                        {
-                                            yoAppResponse.ResponseCode = "00008";
-                                            yoAppResponse.Description = "Code could not be generated";
-                                            yoAppResponse.Note = "Transaction Failed";
-
-                                            Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
-
-                                            return yoAppResponse;
-                                        }
-                                    }
-
-                                    if (isTokenValid)
-                                    {
-                                        ClientRequest clientRequest = new ClientRequest();
-
-                                        tokenFile = LoadMetBankJson(file);
-
-                                        Log.RequestsAndResponses("GetNumberOfRegisteredClientsRequest", serviceProvider, clientRequest);
-
-                                        var registrationCountResponse = merchantBankConnector.GetNumberOfRegisteredClients(serviceProvider, clientRequest, tokenFile.access_token);
-
-                                        Log.RequestsAndResponses("GetNumberOfRegisteredClientsResponse", serviceProvider, registrationCountResponse);
-
-                                        if (registrationCountResponse.count > 0)
-                                        {
-                                            yoAppResponse.ResponseCode = "00000";
-                                            yoAppResponse.Description = "There are " + registrationCountResponse.count + " registered clients";
-                                            yoAppResponse.Note = "Successful";
-                                            yoAppResponse.Balance = registrationCountResponse.count.ToString();
-
-                                            Log.RequestsAndResponses("GetNumberOfRegisteredClientsResponse-YoApp", serviceProvider, yoAppResponse);
-
-                                            return yoAppResponse;
-                                        }
-                                        else
-                                        {
-                                            yoAppResponse.ResponseCode = "00008";
-                                            yoAppResponse.Description = "There are no registered clients in the system";
-                                            yoAppResponse.Note = "Failed";
-
-                                            Log.RequestsAndResponses("GetNumberOfRegisteredClientsResponse-YoApp", serviceProvider, yoAppResponse);
-
-                                            return yoAppResponse;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        yoAppResponse.ResponseCode = "00008";
-                                        yoAppResponse.Description = "Token is not Valid";
-                                        yoAppResponse.Note = "Request Failed";
-
-                                        Log.RequestsAndResponses("GetNumberOfRegisteredClientsResponse-YoApp", serviceProvider, yoAppResponse);
-
-                                        return yoAppResponse;
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Log.HttpError("Exception", serviceProvider, "Message: " + ex.Message + ", InnerException: " + ex.InnerException + ", StackTrace: " + ex.StackTrace);
-
-                                    return yoAppResponse;
-                                }
-
-                            case "320000": // Send Money
-
-                                #region Send Money Section
-
-                                try
-                                {
-                                    string file = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
-                                    var tokenFile = LoadMetBankJson(file);
-
-                                    if (tokenFile != null) // We have generated the Token Already
-                                    {
-                                        var expiryDateString = tokenFile.expires_in;
-
-                                        var expiryDate = DateTime.ParseExact(expiryDateString, "dd/MM/yyyy-HH:mm:ss", null);
-
-                                        var currentDateTime = DateTime.Now;
-
-                                        if (expiryDate > currentDateTime) // Token is still valid
-                                        {
-                                            isTokenValid = true;
-                                        }
-                                        else // Token is no longer valid
-                                        {
-                                            //RefreshMetBankToken(tokenFile.refresh_token);
-
-                                            GenerateMetBankToken();
-                                            isTokenValid = true;
-
-                                            //tokenFile = LoadMetBankJson(file);
-
-                                            //tokenFile = metBankCredentials.AccessToken;
-                                        }
-                                    }
-                                    else // Generate a new Token
-                                    {
-                                        userLogin.password = metBankCredentials.Password;
-                                        userLogin.username = metBankCredentials.Username;
-                                        userLogin.clientSecret = metBankCredentials.ClientSecret;
-                                        userLogin.clientId = metBankCredentials.ClientId;
-
-                                        Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
-
-                                        var result = merchantBankConnector.GetToken(serviceProvider, userLogin);
-
-                                        Log.RequestsAndResponses("MetBankTokenResponse", serviceProvider, result);
-
-                                        if (result.token_type.ToLower() == "bearer")
-                                        {
-                                            isTokenValid = true;
-                                            yoAppResponse.ResponseCode = "00000";
-                                            yoAppResponse.Description = "Token generated successfully";
-                                            yoAppResponse.Note = "Transaction Successful";
-
-                                            var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(result.expires_in));
-
-                                            result.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
-
-                                            var token = JsonConvert.SerializeObject(result);
-
-                                            yoAppResponse.Narrative = token;
-
-                                            Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
-                                            Log.StoreData("tokens", serviceProvider, result);
-
-                                            tokenFile = LoadMetBankJson(file);
-                                        }
-                                        else
-                                        {
-                                            yoAppResponse.ResponseCode = "00008";
-                                            yoAppResponse.Description = "Code could not be generated";
-                                            yoAppResponse.Note = "Transaction Failed";
-
-                                            Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
-
-                                            return yoAppResponse;
-                                        }
-                                    }
-
-                                    if (isTokenValid)
-                                    {
-                                        tokenFile = LoadMetBankJson(file);
-
-                                        // Send Money PreAuth Transaction
-                                        sendMoneyPreAuthRequest.amountSend = (decimal)narrative.Balance;
-                                        sendMoneyPreAuthRequest.sourceCountryCode = narrative.SourceCountry.Trim();
-                                        sendMoneyPreAuthRequest.destinationCountryCode = narrative.ServiceCountry.Trim();
-                                        sendMoneyPreAuthRequest.currencyCodeSend = narrative.Currency.Trim();
-                                        sendMoneyPreAuthRequest.clientId = Convert.ToInt32(narrative.ProviderAccountNumber.Trim());
-                                        sendMoneyPreAuthRequest.agentId = (int)tokenFile.agentId;
-                                        sendMoneyPreAuthRequest.collectionAmount = (decimal)narrative.Balance;
-                                        sendMoneyPreAuthRequest.collectionCurrencyCode = narrative.Currency.Trim();
-
-                                        if (narrative.Currency.ToUpper().Trim() == "ZWL")
-                                        {
-                                            sendMoneyPreAuthRequest.currencyCodeSend = "USD";
-                                            sendMoneyPreAuthRequest.collectionCurrencyCode = "USD";
-                                        }
-
-                                        sendMoneyPreAuthRequest.recipientId = Convert.ToInt32(narrative.ReceiverProviderAccountNumber.Trim());
-                                        sendMoneyPreAuthRequest.tellerId = 114;
-                                        sendMoneyPreAuthRequest.reasonForTransfer = narrative.Information1.Trim();
-                                        tokenFile = LoadMetBankJson(file);
-
-                                        Log.RequestsAndResponses("PreAuthSendMoneyRequest", serviceProvider, sendMoneyPreAuthRequest);
-
-                                        var sendMoneyPreAuthResponse = merchantBankConnector.PreAuthSendMoney(serviceProvider, sendMoneyPreAuthRequest, tokenFile.access_token);
-
-                                        Log.RequestsAndResponses("PreAuthSendMoneyResponse", serviceProvider, sendMoneyPreAuthResponse);
-
-                                        if (!string.IsNullOrEmpty(sendMoneyPreAuthResponse.preauthId))
-                                        {
-                                            sendMoneyRequest.amountSend = sendMoneyPreAuthRequest.amountSend;
-                                            sendMoneyRequest.sourceCountryCode = sendMoneyPreAuthRequest.sourceCountryCode;
-                                            sendMoneyRequest.destinationCountryCode = sendMoneyPreAuthRequest.destinationCountryCode;
-                                            sendMoneyRequest.currencyCodeSend = sendMoneyPreAuthRequest.currencyCodeSend;
-                                            sendMoneyRequest.clientId = sendMoneyPreAuthRequest.clientId;
-                                            sendMoneyRequest.agentId = sendMoneyPreAuthRequest.agentId;
-                                            sendMoneyRequest.collectionAmount = sendMoneyPreAuthRequest.collectionAmount;
-                                            sendMoneyRequest.collectionCurrencyCode = sendMoneyPreAuthRequest.collectionCurrencyCode;
-                                            sendMoneyRequest.recipientId = sendMoneyPreAuthRequest.recipientId;
-                                            sendMoneyRequest.reasonForTransfer = sendMoneyPreAuthRequest.reasonForTransfer;
-                                            sendMoneyRequest.tellerId = sendMoneyPreAuthRequest.tellerId;
-                                            sendMoneyRequest.preauthId = sendMoneyPreAuthResponse.preauthId;
-                                            tokenFile = LoadMetBankJson(file);
-
-                                            Log.RequestsAndResponses("SendMoneyRequest", serviceProvider, sendMoneyRequest);
-
-                                            var transactionResponse = merchantBankConnector.SendMoney(serviceProvider, sendMoneyRequest, tokenFile.access_token);
-
-                                            Log.RequestsAndResponses("SendMoneyResponse", serviceProvider, transactionResponse);
-
-                                            if (transactionResponse.status.ToUpper() == "COMPLETE")
-                                            {
-                                                yoAppResponse.Note = transactionResponse.transactionId.ToString();
-                                                yoAppResponse.Description = transactionResponse.description;
-                                                yoAppResponse.TransactionRef = transactionResponse.transactionReference;
-                                                yoAppResponse.Amount = Convert.ToDecimal(transactionResponse.amount);
-                                                yoAppResponse.Balance = transactionResponse.fees;
-                                                yoAppResponse.Note = transactionResponse.status;
-                                                yoAppResponse.Currency = transactionResponse.collectionCurrencyCode;
-                                                yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
-
-                                                Log.RequestsAndResponses("YoAppSendMoneyResponse", serviceProvider, yoAppResponse);
-
-                                                return yoAppResponse;
-                                            }
-                                            else
-                                            {
-                                                yoAppResponse.ResponseCode = "00008";
-                                                yoAppResponse.Note = "Failed";
-                                                yoAppResponse.Description = "Money was not sent!";
-
-                                                Log.RequestsAndResponses("YoAppSendMoneyResponse", serviceProvider, yoAppResponse);
-
-                                                return yoAppResponse;
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        yoAppResponse.ResponseCode = "00008";
-                                        yoAppResponse.Description = "Token is not Valid";
-                                        yoAppResponse.Note = "Request Failed";
-
-                                        Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
-
-                                        return yoAppResponse;
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Log.HttpError("Exception", serviceProvider, "Message: " + ex.Message + ", InnerException: " + ex.InnerException + ", StackTrace: " + ex.StackTrace);
-
-                                    return yoAppResponse;
-                                }
-
-                                #endregion
-
-                                break;
+                            //case "370000": // Request for Client's Details
+
+                            //    try
+                            //    {
+                            //        string file = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
+                            //        var tokenFile = LoadMetBankJson(file);
+
+                            //        if (tokenFile != null) // We have generated the Token Already
+                            //        {
+                            //            var expiryDateString = tokenFile.expires_in;
+
+                            //            var expiryDate = DateTime.ParseExact(expiryDateString, "dd/MM/yyyy-HH:mm:ss", null);
+
+                            //            var currentDateTime = DateTime.Now;
+
+                            //            if (expiryDate > currentDateTime) // Token is still valid
+                            //            {
+                            //                isTokenValid = true;
+                            //            }
+                            //            else // Token is no longer valid
+                            //            {
+                            //                RefreshMetBankToken(tokenFile.refresh_token);
+                            //                isTokenValid = true;
+
+                            //                tokenFile = LoadMetBankJson(file);
+                            //            }
+                            //        }
+                            //        else // Generate a new Token
+                            //        {
+                            //            userLogin.password = metBankCredentials.Password;
+                            //            userLogin.username = metBankCredentials.Username;
+
+                            //            Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
+
+                            //            var result = merchantBankConnector.GetToken(serviceProvider, userLogin);
+
+                            //            Log.RequestsAndResponses("MetBankTokenResponse", serviceProvider, result);
+
+                            //            if (result.token_type.ToLower() == "bearer")
+                            //            {
+                            //                isTokenValid = true;
+                            //                yoAppResponse.ResponseCode = "00000";
+                            //                yoAppResponse.Description = "Token generated successfully";
+                            //                yoAppResponse.Note = "Transaction Successful";
+
+                            //                var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(result.expires_in));
+
+                            //                result.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
+
+                            //                var token = JsonConvert.SerializeObject(result);
+
+                            //                yoAppResponse.Narrative = token;
+
+                            //                Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+                            //                Log.StoreData("tokens", serviceProvider, result);
+
+                            //                tokenFile = LoadMetBankJson(file);
+                            //            }
+                            //            else
+                            //            {
+                            //                yoAppResponse.ResponseCode = "00008";
+                            //                yoAppResponse.Description = "Code could not be generated";
+                            //                yoAppResponse.Note = "Transaction Failed";
+
+                            //                Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, yoAppResponse);
+
+                            //                return yoAppResponse;
+                            //            }
+                            //        }
+
+                            //        if (isTokenValid)
+                            //        {
+                            //            if (response.CustomerAccount != null) // Get Client Details Via ClientId
+                            //            {
+                            //                ClientRequest clientRequest = new ClientRequest();
+
+                            //                clientRequest.clientId = yoAppResponse.CustomerAccount;
+                            //                tokenFile = LoadMetBankJson(file);
+
+                            //                Log.RequestsAndResponses("ClientDetailsByIdRequest", serviceProvider, clientRequest);
+
+                            //                var client = merchantBankConnector.GetClientByClientId(serviceProvider, clientRequest, tokenFile.access_token);
+
+                            //                Log.RequestsAndResponses("ClientDetailsByIdResponse", serviceProvider, client);
+
+                            //                if (client != null && client.deleted == false && client.firstName != null)
+                            //                {
+                            //                    yoAppResponse.ResponseCode = "00000";
+                            //                    yoAppResponse.Description = "Client Found!";
+                            //                    narrative.DateCreated = DateTime.ParseExact(client.dateCreated, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
+                            //                    narrative.DatelastAccess = DateTime.ParseExact(client.dateModified, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
+                            //                    narrative.IsActive = client.deleted;
+                            //                    narrative.Status = client.status;
+                            //                    narrative.Id = (long)client.id;
+                            //                    narrative.ReceiversName = client.firstName;
+                            //                    narrative.ReceiversSurname = client.lastName;
+                            //                    yoAppResponse.Note = client.email;
+                            //                    narrative.ReceiverMobile = client.phoneNumber;
+                            //                    narrative.ReceiversIdentification = client.nationalId;
+                            //                    narrative.ReceiversGender = client.gender;
+                            //                    narrative.ServiceCountry = client.country;
+                            //                    narrative.CustomerId = client.userId.ToString();
+                            //                    yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
+
+                            //                    return yoAppResponse;
+                            //                }
+                            //                else
+                            //                {
+                            //                    yoAppResponse.ResponseCode = "00008";
+                            //                    yoAppResponse.Note = "Client not Found";
+                            //                    yoAppResponse.Description = "Received Nothing for the clientId submitted";
+
+                            //                    return yoAppResponse;
+                            //                }
+                            //            }
+                            //            else if (narrative.ReceiverMobile != null) // Get Client Details Via Phone Number
+                            //            {
+                            //                ClientRequest clientRequest = new ClientRequest();
+
+                            //                clientRequest.phoneNumber = narrative.ReceiverMobile;
+                            //                tokenFile = LoadMetBankJson(file);
+
+                            //                Log.RequestsAndResponses("ClientDetailsByMobileRequest", serviceProvider, clientRequest);
+
+                            //                var clientResponse = merchantBankConnector.GetClientByPhoneNumber(serviceProvider, clientRequest, tokenFile.access_token);
+
+                            //                Log.RequestsAndResponses("ClientDetailsByMobileResponse", serviceProvider, clientResponse);
+
+                            //                if (clientResponse.clientFound)
+                            //                {
+                            //                    yoAppResponse.ResponseCode = "00000";
+                            //                    yoAppResponse.Description = "Client Found!";
+                            //                    narrative.DateCreated = DateTime.ParseExact(clientResponse.client.dateCreated, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
+                            //                    narrative.DatelastAccess = DateTime.ParseExact(clientResponse.client.dateModified, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
+                            //                    narrative.IsActive = clientResponse.client.deleted;
+                            //                    narrative.Status = clientResponse.client.status;
+                            //                    narrative.Id = (long)clientResponse.client.id;
+                            //                    narrative.ReceiversName = clientResponse.client.firstName;
+                            //                    narrative.ReceiversSurname = clientResponse.client.lastName;
+                            //                    yoAppResponse.Note = clientResponse.client.email;
+                            //                    narrative.ReceiverMobile = clientResponse.client.phoneNumber;
+                            //                    narrative.ReceiversIdentification = clientResponse.client.nationalId;
+                            //                    narrative.ReceiversGender = clientResponse.client.gender;
+                            //                    narrative.ServiceCountry = clientResponse.client.country;
+                            //                    narrative.CustomerId = clientResponse.client.userId.ToString();
+                            //                    yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
+
+                            //                    return yoAppResponse;
+                            //                }
+                            //                else
+                            //                {
+                            //                    yoAppResponse.ResponseCode = "00008";
+                            //                    yoAppResponse.Note = "Failed";
+                            //                    yoAppResponse.Description = "Received Nothing for the clientId submitted";
+
+                            //                    return yoAppResponse;
+                            //                }
+                            //            }
+                            //            else if (narrative.ReceiversIdentification != null) // Get Client Details Via National Id
+                            //            {
+                            //                ClientRequest clientRequest = new ClientRequest();
+
+                            //                clientRequest.nationalId = narrative.ReceiversIdentification;
+                            //                tokenFile = LoadMetBankJson(file);
+
+                            //                Log.RequestsAndResponses("ClientDetailsByNationalIdRequest", serviceProvider, clientRequest);
+
+                            //                var clientResponse = merchantBankConnector.GetClientByNationalId(serviceProvider, clientRequest, tokenFile.access_token);
+
+                            //                Log.RequestsAndResponses("ClientDetailsByNationalIdResponse", serviceProvider, clientResponse);
+
+                            //                if (clientResponse.clientFound)
+                            //                {
+                            //                    yoAppResponse.ResponseCode = "00000";
+                            //                    yoAppResponse.Description = "Clinet Found!";
+                            //                    narrative.DateCreated = DateTime.ParseExact(clientResponse.client.dateCreated, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
+                            //                    narrative.DatelastAccess = DateTime.ParseExact(clientResponse.client.dateModified, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
+                            //                    narrative.IsActive = clientResponse.client.deleted;
+                            //                    narrative.Status = clientResponse.client.status;
+                            //                    narrative.Id = (long)clientResponse.client.id;
+                            //                    narrative.ReceiversName = clientResponse.client.firstName;
+                            //                    narrative.ReceiversSurname = clientResponse.client.lastName;
+                            //                    yoAppResponse.Note = clientResponse.client.email;
+                            //                    narrative.ReceiverMobile = clientResponse.client.phoneNumber;
+                            //                    narrative.ReceiversIdentification = clientResponse.client.nationalId;
+                            //                    narrative.ReceiversGender = clientResponse.client.gender;
+                            //                    narrative.ServiceCountry = clientResponse.client.country;
+                            //                    narrative.CustomerId = clientResponse.client.userId.ToString();
+                            //                    yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
+
+                            //                    return yoAppResponse;
+                            //                }
+                            //                else
+                            //                {
+                            //                    yoAppResponse.ResponseCode = "00008";
+                            //                    yoAppResponse.Note = "Failed";
+                            //                    yoAppResponse.Description = "Received Nothing for the clientId submitted";
+
+                            //                    return yoAppResponse;
+                            //                }
+                            //            }
+                            //            else if (narrative.Information1 != null) // Get Client Details By Page and Number of entries per page
+                            //            {
+                            //                ClientRequest clientRequest = new ClientRequest();
+
+                            //                var parts = narrative.Information1.Split(new char[] { '~' }, StringSplitOptions.RemoveEmptyEntries);
+
+                            //                clientRequest.page = parts[0];
+                            //                clientRequest.size = parts[1];
+
+                            //                tokenFile = LoadMetBankJson(file);
+
+                            //                Log.RequestsAndResponses("ClientDetailsByPageAndSizeRequest", serviceProvider, clientRequest);
+
+                            //                var pageClient = merchantBankConnector.GetClientsByPagesAndSize(serviceProvider, clientRequest, tokenFile.access_token);
+
+                            //                Log.RequestsAndResponses("ClientDetailsByPageAndSizeResponse", serviceProvider, pageClient);
+
+                            //                if (pageClient.totalPages > 0)
+                            //                {
+                            //                    response.CustomerData = pageClient.totalElements.ToString();
+                            //                    response.CustomerAccount = pageClient.totalPages.ToString();
+
+                            //                    var serializedContent = JsonConvert.SerializeObject(pageClient.content);
+
+                            //                    response.Note = serializedContent;
+                            //                    response.TerminalId = pageClient.number.ToString();
+
+                            //                    var serializedSort = JsonConvert.SerializeObject(pageClient.sort);
+
+                            //                    response.TransactionRef = serializedSort;
+                            //                    response.IsActive = pageClient.first;
+
+                            //                    var serializedPageable = JsonConvert.SerializeObject(pageClient.pageable);
+
+                            //                    response.Product = serializedPageable;
+                            //                    response.Quantity = pageClient.numberOfElements;
+                            //                    narrative.IsActive = pageClient.last;
+                            //                    narrative.CustomerName = pageClient.empty.ToString();
+                            //                    response.Narrative = JsonConvert.SerializeObject(narrative);
+
+                            //                    return yoAppResponse;
+                            //                }
+                            //                else
+                            //                {
+                            //                    yoAppResponse.ResponseCode = "00008";
+                            //                    yoAppResponse.Note = "Client not found!";
+                            //                    yoAppResponse.Description = "Received Nothing for the clientId submitted";
+
+                            //                    return yoAppResponse;
+                            //                }
+                            //            }
+                            //            else
+                            //            {
+                            //                yoAppResponse.ResponseCode = "00008";
+                            //                yoAppResponse.Note = "Failed";
+                            //                yoAppResponse.Description = "Received Nothing for the clientId submitted";
+
+                            //                return yoAppResponse;
+                            //            }
+                            //        }
+                            //        else
+                            //        {
+                            //            yoAppResponse.ResponseCode = "00008";
+                            //            yoAppResponse.Description = "Token is not Valid";
+                            //            yoAppResponse.Note = "Request Failed";
+
+                            //            Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+
+                            //            return yoAppResponse;
+                            //        }
+                            //    }
+                            //    catch (Exception ex)
+                            //    {
+                            //        Log.HttpError("Exception", serviceProvider, "Message: " + ex.Message + ", InnerException: " + ex.InnerException + ", StackTrace: " + ex.StackTrace);
+
+                            //        return yoAppResponse;
+                            //    }
+
+                            //case "1": // Edit Client
+
+                            //    try
+                            //    {
+                            //        string file = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
+                            //        var tokenFile = LoadMetBankJson(file);
+
+                            //        if (tokenFile != null) // We have generated the Token Already
+                            //        {
+                            //            var expiryDateString = tokenFile.expires_in;
+
+                            //            var expiryDate = DateTime.ParseExact(expiryDateString, "dd/MM/yyyy-HH:mm:ss", null);
+
+                            //            var currentDateTime = DateTime.Now;
+
+                            //            if (expiryDate > currentDateTime) // Token is still valid
+                            //            {
+                            //                isTokenValid = true;
+                            //            }
+                            //            else // Token is no longer valid
+                            //            {
+                            //                RefreshMetBankToken(tokenFile.refresh_token);
+                            //                isTokenValid = true;
+
+                            //                tokenFile = LoadMetBankJson(file);
+                            //            }
+                            //        }
+                            //        else // Generate a new Token
+                            //        {
+                            //            userLogin.password = metBankCredentials.Password;
+                            //            userLogin.username = metBankCredentials.Username;
+
+                            //            Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
+
+                            //            var result = merchantBankConnector.GetToken(serviceProvider, userLogin);
+
+                            //            Log.RequestsAndResponses("MetBankTokenResponse", serviceProvider, result);
+
+                            //            if (result.token_type.ToLower() == "bearer")
+                            //            {
+                            //                isTokenValid = true;
+                            //                yoAppResponse.ResponseCode = "00000";
+                            //                yoAppResponse.Description = "Token generated successfully";
+                            //                yoAppResponse.Note = "Transaction Successful";
+
+                            //                var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(result.expires_in));
+
+                            //                result.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
+
+                            //                var token = JsonConvert.SerializeObject(result);
+
+                            //                yoAppResponse.Narrative = token;
+
+                            //                Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+                            //                Log.StoreData("tokens", serviceProvider, result);
+
+                            //                tokenFile = LoadMetBankJson(file);
+                            //            }
+                            //            else
+                            //            {
+                            //                yoAppResponse.ResponseCode = "00008";
+                            //                yoAppResponse.Description = "Code could not be generated";
+                            //                yoAppResponse.Note = "Transaction Failed";
+
+                            //                Log.RequestsAndResponses("Wafaya-TokenResponse-YoApp", serviceProvider, yoAppResponse);
+
+                            //                return yoAppResponse;
+                            //            }
+                            //        }
+
+                            //        if (isTokenValid)
+                            //        {
+                            //            if (response.CustomerAccount != null)
+                            //            {
+                            //                ClientRequest clientRequest = new ClientRequest();
+
+                            //                clientRequest.clientId = yoAppResponse.CustomerAccount;
+
+                            //                tokenFile = LoadMetBankJson(file);
+
+                            //                Log.RequestsAndResponses("ClientEditRequest", serviceProvider, clientRequest);
+
+                            //                var client = merchantBankConnector.PutClient(serviceProvider, clientRequest, tokenFile.access_token);
+
+                            //                Log.RequestsAndResponses("ClientEditResponse", serviceProvider, client);
+
+                            //                if (client != null)
+                            //                {
+                            //                    narrative.DateCreated = DateTime.ParseExact(client.dateCreated, "MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+                            //                    narrative.DatelastAccess = DateTime.ParseExact(client.dateModified, "MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+                            //                    narrative.IsActive = client.deleted;
+                            //                    narrative.Status = client.status;
+                            //                    narrative.Id = (long)client.id;
+                            //                    narrative.ReceiversName = client.firstName;
+                            //                    narrative.ReceiversSurname = client.lastName;
+                            //                    yoAppResponse.Note = client.email;
+                            //                    narrative.ReceiverMobile = client.phoneNumber;
+                            //                    narrative.ReceiversIdentification = client.nationalId;
+                            //                    narrative.ReceiversGender = client.gender;
+                            //                    narrative.ServiceCountry = client.country;
+                            //                    narrative.CustomerId = client.userId.ToString();
+                            //                    yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
+
+                            //                    return yoAppResponse;
+                            //                }
+                            //                else
+                            //                {
+                            //                    yoAppResponse.ResponseCode = "00008";
+                            //                    yoAppResponse.Note = "Failed";
+                            //                    yoAppResponse.Description = "Received Nothing for the clientId submitted";
+
+                            //                    return yoAppResponse;
+                            //                }
+                            //            }
+                            //            else
+                            //            {
+                            //                yoAppResponse.ResponseCode = "00008";
+                            //                yoAppResponse.Note = "Failed";
+                            //                yoAppResponse.Description = "Received Nothing for the clientId submitted";
+
+                            //                return yoAppResponse;
+                            //            }
+                            //        }
+                            //        else
+                            //        {
+                            //            yoAppResponse.ResponseCode = "00008";
+                            //            yoAppResponse.Description = "Token is not Valid";
+                            //            yoAppResponse.Note = "Request Failed";
+
+                            //            Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+
+                            //            return yoAppResponse;
+                            //        }
+                            //    }
+                            //    catch (Exception ex)
+                            //    {
+                            //        Log.HttpError("Exception", serviceProvider, "Message: " + ex.Message + ", InnerException: " + ex.InnerException + ", StackTrace: " + ex.StackTrace);
+
+                            //        return yoAppResponse;
+                            //    }
+
+                            //case "2": // Delete Client
+
+                            //    if (response.CustomerAccount != null)
+                            //    {
+                            //        Log.RequestsAndResponses("ClientDeleteRequest", serviceProvider, yoAppResponse.CustomerAccount);
+
+                            //        ClientRequest clientRequest = new ClientRequest();
+
+                            //        clientRequest.clientId = yoAppResponse.CustomerAccount;
+
+                            //        var client = merchantBankConnector.DeleteClient(clientRequest);
+
+                            //        Log.RequestsAndResponses("ClientDeleteResponse", serviceProvider, client);
+
+                            //        if (client != null)
+                            //        {
+                            //            narrative.DateCreated = DateTime.ParseExact(client.dateCreated, "MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+                            //            narrative.DatelastAccess = DateTime.ParseExact(client.dateModified, "MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+                            //            narrative.IsActive = client.deleted;
+                            //            narrative.Status = client.status;
+                            //            narrative.Id = (long)client.id;
+                            //            narrative.ReceiversName = client.firstName;
+                            //            narrative.ReceiversSurname = client.lastName;
+                            //            yoAppResponse.Note = client.email;
+                            //            narrative.ReceiverMobile = client.phoneNumber;
+                            //            narrative.ReceiversIdentification = client.nationalId;
+                            //            narrative.ReceiversGender = client.gender;
+                            //            narrative.ServiceCountry = client.country;
+                            //            narrative.CustomerId = client.userId.ToString();
+                            //            yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
+
+                            //            return yoAppResponse;
+                            //        }
+                            //        else
+                            //        {
+                            //            yoAppResponse.ResponseCode = "00008";
+                            //            yoAppResponse.Note = "Failed";
+                            //            yoAppResponse.Description = "Received Nothing for the clientId submitted";
+
+                            //            return yoAppResponse;
+                            //        }
+                            //    }
+                            //    else
+                            //    {
+                            //        yoAppResponse.ResponseCode = "00008";
+                            //        yoAppResponse.Note = "Failed";
+                            //        yoAppResponse.Description = "Received Nothing for the clientId submitted";
+
+                            //        return yoAppResponse;
+                            //    }
+
+                            ////case "360000": // Client Registration                                
+
+                            //case "410000": // Client Login Request
+
+                            //    if (response.MTI != null && response.MTI == "0100")
+                            //    {
+                            //        Log.RequestsAndResponses("ClientLoginRequest", serviceProvider, yoAppResponse.CustomerAccount);
+
+                            //        ClientRequest clientRequest = new ClientRequest();
+
+                            //        clientRequest.clientId = yoAppResponse.CustomerAccount;
+
+                            //        var client = merchantBankConnector.GetClientByClientId(serviceProvider, clientRequest, "");
+
+                            //        Log.RequestsAndResponses("ClientLoginResponse", serviceProvider, client);
+
+                            //        if (client != null)
+                            //        {
+                            //            narrative.DateCreated = DateTime.ParseExact(client.dateCreated, "MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+                            //            narrative.DatelastAccess = DateTime.ParseExact(client.dateModified, "MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+                            //            narrative.IsActive = client.deleted;
+                            //            narrative.Status = client.status;
+                            //            narrative.Id = (long)client.id;
+                            //            narrative.ReceiversName = client.firstName;
+                            //            narrative.ReceiversSurname = client.lastName;
+                            //            yoAppResponse.Note = client.email;
+                            //            narrative.ReceiverMobile = client.phoneNumber;
+                            //            narrative.ReceiversIdentification = client.nationalId;
+                            //            narrative.ReceiversGender = client.gender;
+                            //            narrative.ServiceCountry = client.country;
+                            //            narrative.CustomerId = client.userId.ToString();
+                            //            yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
+
+                            //            return yoAppResponse;
+                            //        }
+                            //        else
+                            //        {
+                            //            yoAppResponse.ResponseCode = "00008";
+                            //            yoAppResponse.Note = "Failed";
+                            //            yoAppResponse.Description = "Received Nothing for the clientId submitted";
+
+                            //            return yoAppResponse;
+                            //        }
+                            //    }
+                            //    else
+                            //    {
+                            //        yoAppResponse.ResponseCode = "00008";
+                            //        yoAppResponse.Note = "Failed";
+                            //        yoAppResponse.Description = "Received Nothing for the clientId submitted";
+
+                            //        return yoAppResponse;
+                            //    }
+
+                            //case "500000": // Approve Client
+
+                            //    try
+                            //    {
+                            //        string file = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
+                            //        var tokenFile = LoadMetBankJson(file);
+
+                            //        if (tokenFile != null) // We have generated the Token Already
+                            //        {
+                            //            var expiryDateString = tokenFile.expires_in;
+
+                            //            var expiryDate = DateTime.ParseExact(expiryDateString, "dd/MM/yyyy-HH:mm:ss", null);
+
+                            //            var currentDateTime = DateTime.Now;
+
+                            //            if (expiryDate > currentDateTime) // Token is still valid
+                            //            {
+                            //                isTokenValid = true;
+                            //            }
+                            //            else // Token is no longer valid
+                            //            {
+                            //                RefreshMetBankToken(tokenFile.refresh_token);
+                            //                isTokenValid = true;
+
+                            //                tokenFile = LoadMetBankJson(file);
+                            //            }
+                            //        }
+                            //        else // Generate a new Token
+                            //        {
+                            //            userLogin.password = metBankCredentials.Password;
+                            //            userLogin.username = metBankCredentials.Username;
+
+                            //            Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
+
+                            //            var result = merchantBankConnector.GetToken(serviceProvider, userLogin);
+
+                            //            Log.RequestsAndResponses("MetBankTokenResponse", serviceProvider, result);
+
+                            //            if (result.token_type.ToLower() == "bearer")
+                            //            {
+                            //                isTokenValid = true;
+                            //                yoAppResponse.ResponseCode = "00000";
+                            //                yoAppResponse.Description = "Token generated successfully";
+                            //                yoAppResponse.Note = "Transaction Successful";
+
+                            //                var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(result.expires_in));
+
+                            //                result.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
+
+                            //                var token = JsonConvert.SerializeObject(result);
+
+                            //                yoAppResponse.Narrative = token;
+
+                            //                Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+                            //                Log.StoreData("tokens", serviceProvider, result);
+
+                            //                tokenFile = LoadMetBankJson(file);
+                            //            }
+                            //            else
+                            //            {
+                            //                yoAppResponse.ResponseCode = "00008";
+                            //                yoAppResponse.Description = "Code could not be generated";
+                            //                yoAppResponse.Note = "Transaction Failed";
+
+                            //                Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+
+                            //                return yoAppResponse;
+                            //            }
+                            //        }
+
+                            //        if (isTokenValid)
+                            //        {
+                            //            ClientRequest clientRequest = new ClientRequest();
+
+                            //            clientRequest.clientId = yoAppResponse.CustomerAccount;
+                            //            tokenFile = LoadMetBankJson(file);
+
+                            //            Log.RequestsAndResponses("ApproveClientRequest", serviceProvider, clientRequest);
+
+                            //            var client = merchantBankConnector.ApproveClient(serviceProvider, clientRequest, tokenFile.access_token);
+
+                            //            Log.RequestsAndResponses("ApproveClientResponse", serviceProvider, client);
+
+                            //            if (client != null && client.deleted == false && client.firstName != null)
+                            //            {
+                            //                yoAppResponse.ResponseCode = "00000";
+                            //                yoAppResponse.Description = "Client Found!";
+                            //                narrative.DateCreated = DateTime.ParseExact(client.dateCreated, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
+                            //                narrative.DatelastAccess = DateTime.ParseExact(client.dateModified, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
+                            //                narrative.IsActive = client.deleted;
+                            //                narrative.Status = client.status;
+                            //                narrative.Id = (long)client.id;
+                            //                narrative.ReceiversName = client.firstName;
+                            //                narrative.ReceiversSurname = client.lastName;
+                            //                yoAppResponse.Note = client.email;
+                            //                narrative.ReceiverMobile = client.phoneNumber;
+                            //                narrative.ReceiversIdentification = client.nationalId;
+                            //                narrative.ReceiversGender = client.gender;
+                            //                narrative.ServiceCountry = client.country;
+                            //                narrative.CustomerId = client.userId.ToString();
+                            //                yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
+
+                            //                return yoAppResponse;
+                            //            }
+                            //            else
+                            //            {
+                            //                yoAppResponse.ResponseCode = "00008";
+                            //                yoAppResponse.Note = "Client not Found";
+                            //                yoAppResponse.Description = "Received Nothing for the clientId submitted";
+
+                            //                return yoAppResponse;
+                            //            }
+                            //        }
+                            //        else
+                            //        {
+                            //            yoAppResponse.ResponseCode = "00008";
+                            //            yoAppResponse.Description = "Token is not Valid";
+                            //            yoAppResponse.Note = "Request Failed";
+
+                            //            Log.RequestsAndResponses("ApproveClientResponse-YoApp", serviceProvider, yoAppResponse);
+
+                            //            return yoAppResponse;
+                            //        }
+                            //    }
+                            //    catch (Exception ex)
+                            //    {
+                            //        Log.HttpError("Exception", serviceProvider, "Message: " + ex.Message + ", InnerException: " + ex.InnerException + ", StackTrace: " + ex.StackTrace);
+
+                            //        return yoAppResponse;
+                            //    }
+
+                            //case "510000": // Disapprove Client
+
+                            //    try
+                            //    {
+                            //        string file = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
+                            //        var tokenFile = LoadMetBankJson(file);
+
+                            //        if (tokenFile != null) // We have generated the Token Already
+                            //        {
+                            //            var expiryDateString = tokenFile.expires_in;
+
+                            //            var expiryDate = DateTime.ParseExact(expiryDateString, "dd/MM/yyyy-HH:mm:ss", null);
+
+                            //            var currentDateTime = DateTime.Now;
+
+                            //            if (expiryDate > currentDateTime) // Token is still valid
+                            //            {
+                            //                isTokenValid = true;
+                            //            }
+                            //            else // Token is no longer valid
+                            //            {
+                            //                RefreshMetBankToken(tokenFile.refresh_token);
+                            //                isTokenValid = true;
+
+                            //                tokenFile = LoadMetBankJson(file);
+                            //            }
+                            //        }
+                            //        else // Generate a new Token
+                            //        {
+                            //            userLogin.password = metBankCredentials.Password;
+                            //            userLogin.username = metBankCredentials.Username;
+
+                            //            Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
+
+                            //            var result = merchantBankConnector.GetToken(serviceProvider, userLogin);
+
+                            //            Log.RequestsAndResponses("MetBankTokenResponse", serviceProvider, result);
+
+                            //            if (result.token_type.ToLower() == "bearer")
+                            //            {
+                            //                isTokenValid = true;
+                            //                yoAppResponse.ResponseCode = "00000";
+                            //                yoAppResponse.Description = "Token generated successfully";
+                            //                yoAppResponse.Note = "Transaction Successful";
+
+                            //                var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(result.expires_in));
+
+                            //                result.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
+
+                            //                var token = JsonConvert.SerializeObject(result);
+
+                            //                yoAppResponse.Narrative = token;
+
+                            //                Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+                            //                Log.StoreData("tokens", serviceProvider, result);
+
+                            //                tokenFile = LoadMetBankJson(file);
+                            //            }
+                            //            else
+                            //            {
+                            //                yoAppResponse.ResponseCode = "00008";
+                            //                yoAppResponse.Description = "Code could not be generated";
+                            //                yoAppResponse.Note = "Transaction Failed";
+
+                            //                Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+
+                            //                return yoAppResponse;
+                            //            }
+                            //        }
+
+                            //        if (isTokenValid)
+                            //        {
+                            //            ClientRequest clientRequest = new ClientRequest();
+
+                            //            clientRequest.clientId = yoAppResponse.CustomerAccount;
+                            //            tokenFile = LoadMetBankJson(file);
+
+                            //            Log.RequestsAndResponses("DisApproveClientRequest", serviceProvider, clientRequest);
+
+                            //            var client = merchantBankConnector.DisApproveClient(serviceProvider, clientRequest, tokenFile.access_token);
+
+                            //            Log.RequestsAndResponses("DisApproveClientResponse", serviceProvider, client);
+
+                            //            if (client != null && client.deleted == false && client.firstName != null)
+                            //            {
+                            //                yoAppResponse.ResponseCode = "00000";
+                            //                yoAppResponse.Description = "Client Found!";
+                            //                narrative.DateCreated = DateTime.ParseExact(client.dateCreated, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
+                            //                narrative.DatelastAccess = DateTime.ParseExact(client.dateModified, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
+                            //                narrative.IsActive = client.deleted;
+                            //                narrative.Status = client.status;
+                            //                narrative.Id = (long)client.id;
+                            //                narrative.ReceiversName = client.firstName;
+                            //                narrative.ReceiversSurname = client.lastName;
+                            //                yoAppResponse.Note = client.email;
+                            //                narrative.ReceiverMobile = client.phoneNumber;
+                            //                narrative.ReceiversIdentification = client.nationalId;
+                            //                narrative.ReceiversGender = client.gender;
+                            //                narrative.ServiceCountry = client.country;
+                            //                narrative.CustomerId = client.userId.ToString();
+                            //                yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
+
+                            //                return yoAppResponse;
+                            //            }
+                            //            else
+                            //            {
+                            //                yoAppResponse.ResponseCode = "00008";
+                            //                yoAppResponse.Note = "Client not Found";
+                            //                yoAppResponse.Description = "Received Nothing for the clientId submitted";
+
+                            //                return yoAppResponse;
+                            //            }
+                            //        }
+                            //        else
+                            //        {
+                            //            yoAppResponse.ResponseCode = "00008";
+                            //            yoAppResponse.Description = "Token is not Valid";
+                            //            yoAppResponse.Note = "Request Failed";
+
+                            //            Log.RequestsAndResponses("DisApproveClientResponse-YoApp", serviceProvider, yoAppResponse);
+
+                            //            return yoAppResponse;
+                            //        }
+                            //    }
+                            //    catch (Exception ex)
+                            //    {
+                            //        Log.HttpError("Exception", serviceProvider, "Message: " + ex.Message + ", InnerException: " + ex.InnerException + ", StackTrace: " + ex.StackTrace);
+
+                            //        return yoAppResponse;
+                            //    }
+
+                            //case "520000": // Number of Registered Clients
+
+                            //    try
+                            //    {
+                            //        string file = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
+                            //        var tokenFile = LoadMetBankJson(file);
+
+                            //        if (tokenFile != null) // We have generated the Token Already
+                            //        {
+                            //            var expiryDateString = tokenFile.expires_in;
+
+                            //            var expiryDate = DateTime.ParseExact(expiryDateString, "dd/MM/yyyy-HH:mm:ss", null);
+
+                            //            var currentDateTime = DateTime.Now;
+
+                            //            if (expiryDate > currentDateTime) // Token is still valid
+                            //            {
+                            //                isTokenValid = true;
+                            //            }
+                            //            else // Token is no longer valid
+                            //            {
+                            //                RefreshMetBankToken(tokenFile.refresh_token);
+                            //                isTokenValid = true;
+
+                            //                tokenFile = LoadMetBankJson(file);
+                            //            }
+                            //        }
+                            //        else // Generate a new Token
+                            //        {
+                            //            userLogin.password = metBankCredentials.Password;
+                            //            userLogin.username = metBankCredentials.Username;
+
+                            //            Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
+
+                            //            var result = merchantBankConnector.GetToken(serviceProvider, userLogin);
+
+                            //            Log.RequestsAndResponses("MetBankTokenResponse", serviceProvider, result);
+
+                            //            if (result.token_type.ToLower() == "bearer")
+                            //            {
+                            //                isTokenValid = true;
+                            //                yoAppResponse.ResponseCode = "00000";
+                            //                yoAppResponse.Description = "Token generated successfully";
+                            //                yoAppResponse.Note = "Transaction Successful";
+
+                            //                var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(result.expires_in));
+
+                            //                result.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
+
+                            //                var token = JsonConvert.SerializeObject(result);
+
+                            //                yoAppResponse.Narrative = token;
+
+                            //                Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+                            //                Log.StoreData("tokens", serviceProvider, result);
+
+                            //                tokenFile = LoadMetBankJson(file);
+                            //            }
+                            //            else
+                            //            {
+                            //                yoAppResponse.ResponseCode = "00008";
+                            //                yoAppResponse.Description = "Code could not be generated";
+                            //                yoAppResponse.Note = "Transaction Failed";
+
+                            //                Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+
+                            //                return yoAppResponse;
+                            //            }
+                            //        }
+
+                            //        if (isTokenValid)
+                            //        {
+                            //            ClientRequest clientRequest = new ClientRequest();
+
+                            //            tokenFile = LoadMetBankJson(file);
+
+                            //            Log.RequestsAndResponses("GetNumberOfRegisteredClientsRequest", serviceProvider, clientRequest);
+
+                            //            var registrationCountResponse = merchantBankConnector.GetNumberOfRegisteredClients(serviceProvider, clientRequest, tokenFile.access_token);
+
+                            //            Log.RequestsAndResponses("GetNumberOfRegisteredClientsResponse", serviceProvider, registrationCountResponse);
+
+                            //            if (registrationCountResponse.count > 0)
+                            //            {
+                            //                yoAppResponse.ResponseCode = "00000";
+                            //                yoAppResponse.Description = "There are " + registrationCountResponse.count + " registered clients";
+                            //                yoAppResponse.Note = "Successful";
+                            //                yoAppResponse.Balance = registrationCountResponse.count.ToString();
+
+                            //                Log.RequestsAndResponses("GetNumberOfRegisteredClientsResponse-YoApp", serviceProvider, yoAppResponse);
+
+                            //                return yoAppResponse;
+                            //            }
+                            //            else
+                            //            {
+                            //                yoAppResponse.ResponseCode = "00008";
+                            //                yoAppResponse.Description = "There are no registered clients in the system";
+                            //                yoAppResponse.Note = "Failed";
+
+                            //                Log.RequestsAndResponses("GetNumberOfRegisteredClientsResponse-YoApp", serviceProvider, yoAppResponse);
+
+                            //                return yoAppResponse;
+                            //            }
+                            //        }
+                            //        else
+                            //        {
+                            //            yoAppResponse.ResponseCode = "00008";
+                            //            yoAppResponse.Description = "Token is not Valid";
+                            //            yoAppResponse.Note = "Request Failed";
+
+                            //            Log.RequestsAndResponses("GetNumberOfRegisteredClientsResponse-YoApp", serviceProvider, yoAppResponse);
+
+                            //            return yoAppResponse;
+                            //        }
+                            //    }
+                            //    catch (Exception ex)
+                            //    {
+                            //        Log.HttpError("Exception", serviceProvider, "Message: " + ex.Message + ", InnerException: " + ex.InnerException + ", StackTrace: " + ex.StackTrace);
+
+                            //        return yoAppResponse;
+                            //    }
+
+                            //case "320000": // Send Money
+
+                            //    #region Send Money Section
+
+                            //    try
+                            //    {
+                            //        string file = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
+                            //        var tokenFile = LoadMetBankJson(file);
+
+                            //        if (tokenFile != null) // We have generated the Token Already
+                            //        {
+                            //            var expiryDateString = tokenFile.expires_in;
+
+                            //            var expiryDate = DateTime.ParseExact(expiryDateString, "dd/MM/yyyy-HH:mm:ss", null);
+
+                            //            var currentDateTime = DateTime.Now;
+
+                            //            if (expiryDate > currentDateTime) // Token is still valid
+                            //            {
+                            //                isTokenValid = true;
+                            //            }
+                            //            else // Token is no longer valid
+                            //            {
+                            //                //RefreshMetBankToken(tokenFile.refresh_token);
+
+                            //                GenerateMetBankToken();
+                            //                isTokenValid = true;
+
+                            //                //tokenFile = LoadMetBankJson(file);
+
+                            //                //tokenFile = metBankCredentials.AccessToken;
+                            //            }
+                            //        }
+                            //        else // Generate a new Token
+                            //        {
+                            //            userLogin.password = metBankCredentials.Password;
+                            //            userLogin.username = metBankCredentials.Username;
+                            //            userLogin.clientSecret = metBankCredentials.ClientSecret;
+                            //            userLogin.clientId = metBankCredentials.ClientId;
+
+                            //            Log.RequestsAndResponses("MetBankTokenRequest", serviceProvider, userLogin);
+
+                            //            var result = merchantBankConnector.GetToken(serviceProvider, userLogin);
+
+                            //            Log.RequestsAndResponses("MetBankTokenResponse", serviceProvider, result);
+
+                            //            if (result.token_type.ToLower() == "bearer")
+                            //            {
+                            //                isTokenValid = true;
+                            //                yoAppResponse.ResponseCode = "00000";
+                            //                yoAppResponse.Description = "Token generated successfully";
+                            //                yoAppResponse.Note = "Transaction Successful";
+
+                            //                var expDate = DateTime.Now.AddSeconds(Convert.ToDouble(result.expires_in));
+
+                            //                result.expires_in = expDate.ToString("dd/MM/yyyy-HH:mm:ss");
+
+                            //                var token = JsonConvert.SerializeObject(result);
+
+                            //                yoAppResponse.Narrative = token;
+
+                            //                Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+                            //                Log.StoreData("tokens", serviceProvider, result);
+
+                            //                tokenFile = LoadMetBankJson(file);
+                            //            }
+                            //            else
+                            //            {
+                            //                yoAppResponse.ResponseCode = "00008";
+                            //                yoAppResponse.Description = "Code could not be generated";
+                            //                yoAppResponse.Note = "Transaction Failed";
+
+                            //                Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+
+                            //                return yoAppResponse;
+                            //            }
+                            //        }
+
+                            //        if (isTokenValid)
+                            //        {
+                            //            tokenFile = LoadMetBankJson(file);
+
+                            //            // Send Money PreAuth Transaction
+                            //            sendMoneyPreAuthRequest.amountSend = (decimal)narrative.Balance;
+                            //            sendMoneyPreAuthRequest.sourceCountryCode = "ZW";
+                            //            sendMoneyPreAuthRequest.destinationCountryCode = narrative.ServiceCountry.Trim();
+                            //            sendMoneyPreAuthRequest.currencyCodeSend = narrative.Currency.Trim();
+                            //            sendMoneyPreAuthRequest.clientId = Convert.ToInt32(narrative.ProviderAccountNumber.Trim());
+                            //            sendMoneyPreAuthRequest.agentId = (int)tokenFile.agentId;
+                            //            sendMoneyPreAuthRequest.collectionAmount = (decimal)narrative.Balance;
+                            //            sendMoneyPreAuthRequest.collectionCurrencyCode = narrative.Currency.Trim();
+
+                            //            if (narrative.Currency.ToUpper().Trim() == "ZWL")
+                            //            {
+                            //                sendMoneyPreAuthRequest.currencyCodeSend = "USD";
+                            //                sendMoneyPreAuthRequest.collectionCurrencyCode = "USD";
+                            //            }
+
+                            //            sendMoneyPreAuthRequest.recipientId = Convert.ToInt32(narrative.ReceiverProviderAccountNumber.Trim());
+                            //            sendMoneyPreAuthRequest.tellerId = 114;
+                            //            sendMoneyPreAuthRequest.reasonForTransfer = narrative.Information1.Trim();
+                            //            tokenFile = LoadMetBankJson(file);
+
+                            //            Log.RequestsAndResponses("PreAuthSendMoneyRequest", serviceProvider, sendMoneyPreAuthRequest);
+
+                            //            var sendMoneyPreAuthResponse = merchantBankConnector.PreAuthSendMoney(serviceProvider, sendMoneyPreAuthRequest, tokenFile.access_token);
+
+                            //            Log.RequestsAndResponses("PreAuthSendMoneyResponse", serviceProvider, sendMoneyPreAuthResponse);
+
+                            //            if (!string.IsNullOrEmpty(sendMoneyPreAuthResponse.preauthId))
+                            //            {
+                            //                sendMoneyRequest.amountSend = sendMoneyPreAuthRequest.amountSend;
+                            //                sendMoneyRequest.sourceCountryCode = sendMoneyPreAuthRequest.sourceCountryCode;
+                            //                sendMoneyRequest.destinationCountryCode = sendMoneyPreAuthRequest.destinationCountryCode;
+                            //                sendMoneyRequest.currencyCodeSend = sendMoneyPreAuthRequest.currencyCodeSend;
+                            //                sendMoneyRequest.clientId = sendMoneyPreAuthRequest.clientId;
+                            //                sendMoneyRequest.agentId = sendMoneyPreAuthRequest.agentId;
+                            //                sendMoneyRequest.collectionAmount = sendMoneyPreAuthRequest.collectionAmount;
+                            //                sendMoneyRequest.collectionCurrencyCode = sendMoneyPreAuthRequest.collectionCurrencyCode;
+                            //                sendMoneyRequest.recipientId = sendMoneyPreAuthRequest.recipientId;
+                            //                sendMoneyRequest.reasonForTransfer = sendMoneyPreAuthRequest.reasonForTransfer;
+                            //                sendMoneyRequest.tellerId = sendMoneyPreAuthRequest.tellerId;
+                            //                sendMoneyRequest.preauthId = sendMoneyPreAuthResponse.preauthId;
+                            //                tokenFile = LoadMetBankJson(file);
+
+                            //                Log.RequestsAndResponses("SendMoneyRequest", serviceProvider, sendMoneyRequest);
+
+                            //                var transactionResponse = merchantBankConnector.SendMoney(serviceProvider, sendMoneyRequest, tokenFile.access_token);
+
+                            //                Log.RequestsAndResponses("SendMoneyResponse", serviceProvider, transactionResponse);
+
+                            //                if (transactionResponse.status != null)
+                            //                {
+                            //                    if (transactionResponse.status.ToUpper() == "COMPLETE")
+                            //                    {
+                            //                        yoAppResponse.ResponseCode = "00000";
+                            //                        yoAppResponse.Note = transactionResponse.transactionId.ToString();
+                            //                        yoAppResponse.Description = transactionResponse.description;
+                            //                        yoAppResponse.TransactionRef = transactionResponse.transactionReference;
+                            //                        yoAppResponse.Amount = decimal.Parse(transactionResponse.amount.Trim(), System.Globalization.CultureInfo.InvariantCulture);
+                            //                        yoAppResponse.Balance = transactionResponse.fees;
+                            //                        yoAppResponse.Note = transactionResponse.status;
+                            //                        yoAppResponse.Currency = transactionResponse.collectionCurrencyCode;
+                            //                        yoAppResponse.Narrative = JsonConvert.SerializeObject(narrative);
+
+                            //                        Log.RequestsAndResponses("YoAppSendMoneyResponse", serviceProvider, yoAppResponse);
+
+                            //                        return yoAppResponse;
+                            //                    }
+                            //                    else
+                            //                    {
+                            //                        yoAppResponse.ResponseCode = "00008";
+                            //                        yoAppResponse.Note = "Failed";
+                            //                        yoAppResponse.Description = "Money was not sent! The status was not 'COMPLETE'";
+
+                            //                        Log.RequestsAndResponses("YoAppSendMoneyResponse", serviceProvider, yoAppResponse);
+
+                            //                        return yoAppResponse;
+                            //                    }
+                            //                }
+                            //                else
+                            //                {
+                            //                    yoAppResponse.ResponseCode = "00008";
+                            //                    yoAppResponse.Note = "Failed";
+                            //                    yoAppResponse.Description = "Money was not sent! there was an error from Metbank Server. Check with Metbank";
+
+                            //                    Log.RequestsAndResponses("YoAppSendMoneyResponse", serviceProvider, yoAppResponse);
+
+                            //                    return yoAppResponse;
+                            //                }                                            
+                            //            }
+                            //        }
+                            //        else
+                            //        {
+                            //            yoAppResponse.ResponseCode = "00008";
+                            //            yoAppResponse.Description = "Token is not Valid";
+                            //            yoAppResponse.Note = "Request Failed";
+
+                            //            Log.RequestsAndResponses("MetBankTokenResponse-YoApp", serviceProvider, yoAppResponse);
+
+                            //            return yoAppResponse;
+                            //        }
+                            //    }
+                            //    catch (Exception ex)
+                            //    {
+                            //        Log.HttpError("Exception", serviceProvider, "Message: " + ex.Message + ", InnerException: " + ex.InnerException + ", StackTrace: " + ex.StackTrace);
+
+                            //        return yoAppResponse;
+                            //    }
+
+                            //    #endregion
+
+                            //    break;
 
                             #endregion                    
 
@@ -5368,6 +5382,7 @@ namespace YoAppWebProxy.Controllers
                                 try
                                 {
                                     string file = HttpContext.Current.Server.MapPath("~/App_Data/" + serviceProvider + "/Files/" + fileName + ".json");
+                                    
                                     var tokenFile = LoadMetBankJson(file);
 
                                     if (tokenFile != null) // We have generated the Token Already
@@ -5922,7 +5937,7 @@ namespace YoAppWebProxy.Controllers
                                         return yoAppResponse;
                                     }
 
-                                    return yoAppResponse;
+                                    //return yoAppResponse;
                                 }
                                 catch (Exception ex)
                                 {
@@ -5934,7 +5949,7 @@ namespace YoAppWebProxy.Controllers
                                 #endregion
                         }
 
-                        break;
+                        //break;
 
                     case 2: // Agents
 
@@ -6212,7 +6227,7 @@ namespace YoAppWebProxy.Controllers
                                                     yoAppResponse.Note = transactionResponse.transactionId.ToString();
                                                     yoAppResponse.Description = transactionResponse.description;
                                                     yoAppResponse.TransactionRef = transactionResponse.transactionReference;
-                                                    yoAppResponse.Amount = Convert.ToDecimal(transactionResponse.amount);
+                                                    yoAppResponse.Amount = decimal.Parse(transactionResponse.amount.Trim(), System.Globalization.CultureInfo.InvariantCulture);
                                                     yoAppResponse.Balance = transactionResponse.fees;
                                                     yoAppResponse.Note = transactionResponse.status;
                                                     yoAppResponse.Currency = transactionResponse.collectionCurrencyCode;
@@ -6373,7 +6388,7 @@ namespace YoAppWebProxy.Controllers
                                                 yoAppResponse.Note = transactionResponse.transactionId.ToString();
                                                 yoAppResponse.Description = transactionResponse.description;
                                                 yoAppResponse.TransactionRef = transactionResponse.transactionReference;
-                                                yoAppResponse.Amount = Convert.ToDecimal(transactionResponse.amount);
+                                                yoAppResponse.Amount = decimal.Parse(transactionResponse.amount.Trim(), System.Globalization.CultureInfo.InvariantCulture);
                                                 yoAppResponse.Balance = transactionResponse.fees;
                                                 yoAppResponse.Note = transactionResponse.status;
                                                 yoAppResponse.Currency = transactionResponse.collectionCurrencyCode;
@@ -6821,7 +6836,7 @@ namespace YoAppWebProxy.Controllers
                                                 yoAppResponse.Note = transactionResponse.transactionId.ToString();
                                                 yoAppResponse.Description = transactionResponse.description;
                                                 yoAppResponse.TransactionRef = transactionResponse.transactionReference;
-                                                yoAppResponse.Amount = Convert.ToDecimal(transactionResponse.amount);
+                                                yoAppResponse.Amount = decimal.Parse(transactionResponse.amount.Trim(), System.Globalization.CultureInfo.InvariantCulture);
                                                 yoAppResponse.Balance = transactionResponse.fees;
                                                 yoAppResponse.Currency = transactionResponse.collectionCurrencyCode;
                                                 yoAppResponse.Product = transactionResponse.status;
@@ -7697,7 +7712,7 @@ namespace YoAppWebProxy.Controllers
                                 ReceiveMoneyPreAuthRequest receiveMoneyPreAuthRequest = new ReceiveMoneyPreAuthRequest();
 
                                 receiveMoneyPreAuthRequest.agentId = (long)tokenFile.agentId;
-                                receiveMoneyPreAuthRequest.voucherNumber = response.CustomerAccount;
+                                receiveMoneyPreAuthRequest.voucherNumber = narrative.Information1;
                                 receiveMoneyPreAuthRequest.tellerId = "114";
 
                                 Log.RequestsAndResponses("ReceiveMoneyPreAuthRequest", serviceProvider, receiveMoneyPreAuthRequest);
@@ -7728,7 +7743,7 @@ namespace YoAppWebProxy.Controllers
                                         yoAppResponse.Note = transactionResponse.transactionId.ToString();
                                         yoAppResponse.Description = transactionResponse.description;
                                         yoAppResponse.TransactionRef = transactionResponse.transactionReference;
-                                        yoAppResponse.Amount = Convert.ToDecimal(transactionResponse.amount);
+                                        yoAppResponse.Amount = decimal.Parse(transactionResponse.amount.Trim(), System.Globalization.CultureInfo.InvariantCulture);
                                         yoAppResponse.Balance = transactionResponse.fees;
                                         yoAppResponse.Note = transactionResponse.status;
                                         yoAppResponse.Currency = transactionResponse.collectionCurrencyCode;
@@ -7913,10 +7928,11 @@ namespace YoAppWebProxy.Controllers
 
                                     if (transactionResponse.status.ToUpper() == "COMPLETE")
                                     {
+                                        yoAppResponse.ResponseCode = "00000";
                                         yoAppResponse.Note = transactionResponse.transactionId.ToString();
                                         yoAppResponse.Description = transactionResponse.description;
                                         yoAppResponse.TransactionRef = transactionResponse.transactionReference;
-                                        yoAppResponse.Amount = Convert.ToDecimal(transactionResponse.amount);
+                                        yoAppResponse.Amount = decimal.Parse(transactionResponse.amount, System.Globalization.CultureInfo.InvariantCulture);
                                         yoAppResponse.Balance = transactionResponse.fees;
                                         yoAppResponse.Note = transactionResponse.status;
                                         yoAppResponse.Currency = transactionResponse.collectionCurrencyCode;
@@ -7930,7 +7946,7 @@ namespace YoAppWebProxy.Controllers
                                     {
                                         yoAppResponse.ResponseCode = "00008";
                                         yoAppResponse.Note = "Failed";
-                                        yoAppResponse.Description = "Money was not sent!";
+                                        yoAppResponse.Description = "Money was not sent! See log for details.";
 
                                         Log.RequestsAndResponses("YoAppSendMoneyResponse", serviceProvider, yoAppResponse);
 
@@ -7952,6 +7968,9 @@ namespace YoAppWebProxy.Controllers
                         catch (Exception ex)
                         {
                             Log.HttpError("Exception", serviceProvider, "Message: " + ex.Message + ", InnerException: " + ex.InnerException + ", StackTrace: " + ex.StackTrace);
+
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Description = "There has been a fatal error from the server in trying to send the money. See Log for details";
 
                             return yoAppResponse;
                         }
@@ -8073,7 +8092,7 @@ namespace YoAppWebProxy.Controllers
                                     if (!string.IsNullOrEmpty(client.status))
                                     {
                                         yoAppResponse.ResponseCode = "00000";
-                                        yoAppResponse.Description = "Client Registered!";
+                                        yoAppResponse.Description = "Client Successfully Registered!";
                                         yoAppResponse.Note = "Success";
 
                                         //var dateCreatedResponse = DateTime.ParseExact(client.dateCreated, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
@@ -8105,7 +8124,7 @@ namespace YoAppWebProxy.Controllers
                                     {
                                         yoAppResponse.ResponseCode = "00008";
                                         yoAppResponse.Note = "Failed";
-                                        yoAppResponse.Description = "Received Nothing for the Client Status from Metbank Server submitted";
+                                        yoAppResponse.Description = "Failed to create client in the Met Remit Service. See log for details.";
 
                                         Log.RequestsAndResponses("YoAppClientRegistrationResponse", serviceProvider, yoAppResponse);
 
@@ -8137,6 +8156,9 @@ namespace YoAppWebProxy.Controllers
                         catch (Exception ex)
                         {
                             Log.HttpError("Exception", serviceProvider, "Message: " + ex.Message + ", InnerException: " + ex.InnerException + ", StackTrace: " + ex.StackTrace);
+
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Description = "There has been a fatal error from the server in trying to send the money. See Log for details";
 
                             return yoAppResponse;
                         }
@@ -8243,7 +8265,7 @@ namespace YoAppWebProxy.Controllers
                                 if (!string.IsNullOrEmpty(recipient.firstName) && !string.IsNullOrEmpty(recipient.lastName))
                                 {
                                     yoAppResponse.ResponseCode = "00000";
-                                    yoAppResponse.Description = "Recipient Created!";
+                                    yoAppResponse.Description = "Recipient Successfully Created!";
                                     yoAppResponse.Note = "Success";
 
                                     //var dateCreatedResponse = DateTime.ParseExact(recipient.dateCreated, "yyyy-mm-dd", System.Globalization.CultureInfo.InvariantCulture);
@@ -8277,7 +8299,7 @@ namespace YoAppWebProxy.Controllers
                                 else
                                 {
                                     yoAppResponse.ResponseCode = "00008";
-                                    yoAppResponse.Description = "Recipient not Created!";
+                                    yoAppResponse.Description = "Recipient not Created! See log for details";
                                     yoAppResponse.Note = "Failed";
 
                                     Log.RequestsAndResponses("YoAppReceipientRegistrationResponse", serviceProvider, yoAppResponse);
@@ -8299,6 +8321,9 @@ namespace YoAppWebProxy.Controllers
                         catch (Exception ex)
                         {
                             Log.HttpError("Exception", serviceProvider, "Message: " + ex.Message + ", InnerException: " + ex.InnerException + ", StackTrace: " + ex.StackTrace);
+
+                            yoAppResponse.ResponseCode = "00008";
+                            yoAppResponse.Description = "There has been a fatal error from the server in trying to send the money. See Log for detaild";
 
                             return yoAppResponse;
                         }
@@ -8391,9 +8416,7 @@ namespace YoAppWebProxy.Controllers
                                     Log.HttpError("Exception", serviceProvider, exceptionMessage);
 
                                     yoAppResponse.ResponseCode = "00008";
-                                    yoAppResponse.Description = "Message: " + ex.Message;
-
-                                    Log.RequestsAndResponses("YoAppStoreMpinResponse", serviceProvider, yoAppResponse);
+                                    yoAppResponse.Description = "There has been a fatal error from the server in trying to send the money. See Log for detaild";
 
                                     return yoAppResponse;
                                 }
@@ -8519,7 +8542,7 @@ namespace YoAppWebProxy.Controllers
                                                     yoAppResponse.Note = "Authorised";
                                                     yoAppResponse.Description = transactionResponse.description;
                                                     yoAppResponse.TransactionRef = transactionResponse.transactionReference;
-                                                    yoAppResponse.Amount = Convert.ToDecimal(transactionResponse.amount);
+                                                    yoAppResponse.Amount = decimal.Parse(transactionResponse.amount.Trim(), System.Globalization.CultureInfo.InvariantCulture);
                                                     yoAppResponse.Balance = transactionResponse.fees;
                                                     yoAppResponse.Note = transactionResponse.status;
                                                     yoAppResponse.Currency = transactionResponse.collectionCurrencyCode;
@@ -8580,9 +8603,9 @@ namespace YoAppWebProxy.Controllers
                                     Log.HttpError("Exception", serviceProvider, exceptionMessage);
 
                                     yoAppResponse.ResponseCode = "00008";
-                                    yoAppResponse.Description = "Message: " + ex.Message;
+                                    yoAppResponse.Description = "There has been a fatal error from the server in trying to send the money. See Log for detaild";
 
-                                    Log.RequestsAndResponses("YoAppReceiveMoneyResponse", serviceProvider, yoAppResponse);
+                                   // Log.RequestsAndResponses("YoAppReceiveMoneyResponse", serviceProvider, yoAppResponse);
 
                                     return yoAppResponse;
                                 }
