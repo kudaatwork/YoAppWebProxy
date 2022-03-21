@@ -405,7 +405,7 @@ namespace YoAppWebProxy.Controllers
                             paymentTransaction.CustomerEmail = payments.customerEmail;
                             paymentTransaction.CustomerPhoneNumber = payments.orgPhoneNumber;
                             paymentTransaction.TransactionReference = payments.paymentReference;
-                            paymentTransaction.Company = payments.orgName;
+                            paymentTransaction.Company = "AQUSALES";
                             paymentTransaction.Currency = payments.paymentCurrency;
                             paymentTransaction.PaymentMethod = payments.paymentMethod;
                             paymentTransaction.Amount = decimal.Parse(payments.transactionAmount, System.Globalization.CultureInfo.InvariantCulture);
