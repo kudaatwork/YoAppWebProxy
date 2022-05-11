@@ -45,6 +45,15 @@ namespace YoAppWebProxy.Controllers
 
             #endregion
 
+            //Log.RequestsAndResponses("WebHook-Push-1", serviceProvider, payload);
+
+            //WebPayments payments = new WebPayments();
+
+            //if (!string.IsNullOrEmpty(payload))
+            //{
+            //    payments = JsonConvert.DeserializeObject<WebPayments>(payload);
+            //}
+
             try
             {
                 Log.RequestsAndResponses("WebHook-Push", serviceProvider, payments);

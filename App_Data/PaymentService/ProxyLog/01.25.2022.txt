@@ -1,0 +1,36 @@
+{"DateTimeLogged":"01/25/2022 10:58:32","ServiceProvider":"PaymentService","LogType":"YoAppResponse","RequestResponse":{"ResponseCode":null,"Description":null,"Balance":null,"TransactionCode":null,"vouchers":null,"AgentCode":null,"Mpin":null,"Amount":0.0,"MaxSale":0.0,"MinSale":0.0,"TransactionBranch":null,"CustomerMSISDN":null,"IsActive":false,"HasProducts":false,"Currency":null,"ServiceId":0,"MTI":null,"TerminalId":null,"TransactionRef":null,"TransactionType":0,"CustomerAccount":null,"CustomerData":null,"Product":null,"Quantity":0,"Action":null,"ProcessingCode":null,"Note":null,"Narrative":null}}
+=============================================
+{"DateTimeLogged":"01/25/2022 11:40:20","ServiceProvider":"PaymentService","LogType":"YoAppResponse","RequestResponse":null}
+=============================================
+{"DateTimeLogged":"01/25/2022 12:06:08","ServiceProvider":"PaymentService","LogType":"WebHook-Push","RequestResponse":{"custmerEmail":"kudamundange@gmail.com","transactionAmount":"70.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/25/2022 12:06:08","ServiceProvider":"PaymentService","LogType":"WebHook-Response","RequestResponse":{"custmerEmail":"kudamundange@gmail.com","transactionAmount":"70.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/25/2022 12:38:10","ServiceProvider":"PaymentService","LogType":"WebHook-Push","RequestResponse":{"custmerEmail":"kudamundange@gmail.com","transactionAmount":"50.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/25/2022 12:38:10","ServiceProvider":"PaymentService","LogType":"WebHook-Response","RequestResponse":{"custmerEmail":"kudamundange@gmail.com","transactionAmount":"50.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/25/2022 12:43:47","ServiceProvider":"PaymentService","LogType":"WebHook-Push","RequestResponse":{"custmerEmail":"kudamundange@gmail.com","transactionAmount":"20","paymentCurrency":"USD","Status":"paymentType","Description":null}}
+=============================================
+{"DateTimeLogged":"01/25/2022 12:43:47","ServiceProvider":"PaymentService","LogType":"WebHook-Response","RequestResponse":{"custmerEmail":"kudamundange@gmail.com","transactionAmount":"20","paymentCurrency":"USD","Status":"paymentType","Description":null}}
+=============================================
+{"DateTimeLogged":"01/25/2022 14:21:16","ServiceProvider":"PaymentService","LogType":"WebHook-Push","RequestResponse":{"custmerEmail":"kudamundange@gmail.com","transactionAmount":"40.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/25/2022 14:21:16","ServiceProvider":"PaymentService","LogType":"WebHook-Response","RequestResponse":{"custmerEmail":"kudamundange@gmail.com","transactionAmount":"40.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/25/2022 14:24:24","ServiceProvider":"PaymentService","LogType":"WebHook-Push","RequestResponse":{"custmerEmail":"kudamundange@gmail.com","transactionAmount":"40.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/25/2022 14:24:24","ServiceProvider":"PaymentService","LogType":"WebHook-Response","RequestResponse":{"custmerEmail":"kudamundange@gmail.com","transactionAmount":"40.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/25/2022 16:08:36","ServiceProvider":"PaymentService","LogType":"WebHook-Push","RequestResponse":{"custmerEmail":"kinso1996@gmail.com","transactionAmount":"40.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/25/2022 16:08:36","ServiceProvider":"PaymentService","LogType":"WebHook-Response","RequestResponse":{"custmerEmail":"kinso1996@gmail.com","transactionAmount":"40.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/25/2022 16:18:08","ServiceProvider":"PaymentService","LogType":"WebHook-Push","RequestResponse":{"custmerEmail":"kudamundange@gmail.com","transactionAmount":"40.00","paymentCurrency":"USD","Status":null,"Description":null}}
+=============================================
+{"DateTimeLogged":"01/25/2022 16:18:08","ServiceProvider":"PaymentService","LogType":"YoAppPaymentsRequest","RequestResponse":{"merchantCode":"5-0001-0000509:baskiti2020","successURL":"https://www.aqusales.com/","failedURL":"https://www.aqusales.com/aqusales-lite/","ReceiptNo":"YOAPP012522161808","custmerEmail":"kudamundange@gmail.com","transactionAmount":"40.00","paymentCurrency":"USD","transactionDescription":"Aqusales Lite Payment","paymentref":"REF012522161808","paymentType":null,"status":"Success","hash":"System.Byte[]"}}
+=============================================
+{"DateTimeLogged":"01/25/2022 16:18:09","ServiceProvider":"PaymentService","LogType":"YoAppPaymentsResponse","RequestResponse":"https://yomoneyservice.com/Payment/Index/?Id=02b341adaf7db5d4c45b415f46effaa605d0ac9fa6e0cc11f6ba36ab3d990ce2ea64939032af693242a738c70430bd65f1-https://yomoneyservice.com/Payment/Polls/?Id=02b341adaf7db5d4c45b415f46effaa605d0ac9fa6e0cc11f6ba36ab3d990ce2ea64939032af693242a738c70430bd65f1"}
+=============================================
+{"DateTimeLogged":"01/25/2022 16:18:09","ServiceProvider":"PaymentService","LogType":"WebHook-Response","RequestResponse":{"custmerEmail":null,"transactionAmount":null,"paymentCurrency":null,"Status":"Success","Description":"Received the relevant payment details and redirecting to https://yomoneyservice.com/Payment/Index/?Id=02b341adaf7db5d4c45b415f46effaa605d0ac9fa6e0cc11f6ba36ab3d990ce2ea64939032af693242a738c70430bd65f1"}}
+=============================================

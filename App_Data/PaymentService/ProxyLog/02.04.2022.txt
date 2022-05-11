@@ -1,2 +1,0 @@
-{"DateTimeLogged":"02/04/2022 15:24:38","ServiceProvider":"PaymentService","LogType":"WebHook-Push","RequestResponse":{"customerEmail":null,"transactionAmount":"50.00","paymentCurrency":"USD","orgName":"Company A","orgPhoneNumber":" 263784607691","orgAddress":"2215 Mount Pleasant Heights, Mount Pleasant, Harare, Harare, 263, ZW","packageType":null,"contactPersonName":"Kudakwashe","contactPersonLastName":null,"orgLocation":"ZW","username":"kaydizz","password":"Kaydizzy2","Status":null,"Description":null}}
-=============================================
